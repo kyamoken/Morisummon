@@ -1,0 +1,12 @@
+{% load django_vite %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>Morisummon</title>
+    {% vite_asset 'frontend/src/main.tsx' %}
+    <link rel="stylesheet" href="/static/fonts/MPLUSRounded1c-Medium.css">
+</head>
+<body>
+<div id="root"></div>
+</body>
+</html>

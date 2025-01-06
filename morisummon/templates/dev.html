@@ -1,0 +1,13 @@
+{% load django_vite %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>Morisummon (dev)</title>
+    {% vite_hmr_client %}
+    {% vite_react_refresh %}
+    {% vite_asset 'frontend/src/main.tsx' %}
+</head>
+<body>
+<div id="root"></div>
+</body>
+</html>
