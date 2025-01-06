@@ -1,0 +1,28 @@
+# Environment
+.env
+*.env*.local
+
+# Python
+*.py[cod]
+__pycache__/
+.venv/
+
+# Django
+db.sqlite3
+local_settings.py
+media/
+staticfiles/
+
+# Frontend
+node_modules/
+dist/
+npm-debug.log
+
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
