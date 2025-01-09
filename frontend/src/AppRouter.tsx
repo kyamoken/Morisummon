@@ -6,6 +6,7 @@ import Register from './pages/Register.tsx';
 import Page404 from "./pages/404.tsx";
 import Matching from "./matching.tsx";
 import Battle from "./battle.tsx";
+import Home from "./Home.tsx";
 
 const AppRouter: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const AppRouter: React.FC = () => {
       <Route path="/" element={<App />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/matching" element={<Matching />} />
       <Route path="/battle" element={<Battle />} />
       <Route path="*" element={<Page404 />} />
