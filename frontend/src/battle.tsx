@@ -117,9 +117,8 @@ const Bench = styled.div`
 const MainArea = styled.div`
   display: flex;
   justify-content: center;
-  margin: 10px 0;
+  margin: 20px 0; /* ここを60pxから20pxに変更 */
 `;
-
 const Card = styled.div`
   width: 50px;
   height: 70px;
