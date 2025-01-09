@@ -133,8 +133,9 @@ VITE_DEV = env('VITE_DEV')
 
 DJANGO_VITE = {
     "default": {
-        "manifest_path": BASE_DIR / "static/manifest.json",
-        "dev_mode": env('VITE_DEV')
+        "manifest_path": BASE_DIR / "static/build/manifest.json",
+        "static_url_prefix": "build",
+        "dev_mode": env('VITE_DEV'),
     }
 }
 

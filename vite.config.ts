@@ -10,7 +10,7 @@ export default defineConfig({
     svgr(),  // 追加
   ],
 
-  base: '/static/',
+  base: '/static/build/',
 
   server: {
     host: true,
@@ -19,7 +19,7 @@ export default defineConfig({
   build: {
     sourcemap: true,
     manifest: 'manifest.json',
-    outDir: resolve(__dirname, './static'),
+    outDir: resolve(__dirname, './static/build'),
     emptyOutDir: true,
 
     rollupOptions: {
