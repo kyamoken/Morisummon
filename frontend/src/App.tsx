@@ -109,7 +109,7 @@ function App() {
           <MainButton onClick={() => navigate('/login')}>
             ログイン
           </MainButton>
-          <MainButton onClick={() => navigate('/battle')}>
+          <MainButton onClick={() => navigate('/home')}>
             デバッグ
           </MainButton>
         </ButtonsContainer>

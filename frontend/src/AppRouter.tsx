@@ -7,6 +7,8 @@ import Page404 from "./pages/404.tsx";
 import Matching from "./matching.tsx";
 import Battle from "./battle.tsx";
 import Home from "./Home.tsx";
+import Deck from "./Deck.tsx";
+import Setting from "./setting.tsx";
 
 const AppRouter: React.FC = () => {
   return (
@@ -15,8 +17,10 @@ const AppRouter: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/deck" element={<Deck />} />
       <Route path="/matching" element={<Matching />} />
       <Route path="/battle" element={<Battle />} />
+      <Route path="/settings" element={<Setting />} />
       <Route path="*" element={<Page404 />} />
     </Routes>
   );

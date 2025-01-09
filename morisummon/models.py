@@ -2,10 +2,18 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class CustomUser(AbstractUser):
-    rank = models.IntegerField(default=0) # ランク
-    wins = models.IntegerField(default=0) # 勝利数
-    # deck = models.ForeignKey('Deck', on_delete=models.CASCADE, null=True, blank=True) # デッキ
-    money = models.IntegerField(default=0) # お金
+    rank = models.IntegerField(default=0)
+    wins = models.IntegerField(default=0)
+    money = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.username
+
+# class CustomUser(AbstractUser):
+    # rank = models.IntegerField(default=0) # ランク
+    # wins = models.IntegerField(default=0) # 勝利数
+    # # deck = models.ForeignKey('Deck', on_delete=models.CASCADE, null=True, blank=True) # デッキ
+    # money = models.IntegerField(default=0) # お金
 
 # class Card(models.Model):
 #     name = models.CharField(max_length=255) # 名前

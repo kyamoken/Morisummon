@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import ky from 'ky';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Helmet } from "react-helmet-async";
 import styled from 'styled-components';
 import '../GlobalStyle.css'; // CSSファイルをインポート
 import Header from '../components/Header.tsx'; // インポート
 
-// コンポーネントの定義
 const Login: React.FC = () => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      const response = await ky.post('http://localhost:8000/api/token/', {
+      const response: { token: string } = await ky.post('http://localhost:8000/api/token/', {
         json: {
           username: username,
           password: password
@@ -22,6 +22,8 @@ const Login: React.FC = () => {
       }).json();
       console.log(response);
       // トークンを保存し、次の画面に遷移する処理を追加します
+      localStorage.setItem('token', response.token);
+      navigate('/dashboard'); // ダッシュボードなどの次の画面に遷移
     } catch (error) {
       console.error('ログインに失敗しました:', error);
     }
