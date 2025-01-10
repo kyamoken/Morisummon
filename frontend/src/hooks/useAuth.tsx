@@ -45,6 +45,7 @@ export default function useAuth() {
     }
 
     localStorage.setItem('token', response.token);
+    mutate('/api/auth/me/', response.user ? { user: response.user } : undefined);
     navigate(options?.redirectTo || '/');
 
     return true;
