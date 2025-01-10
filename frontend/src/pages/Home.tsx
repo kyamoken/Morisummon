@@ -1,12 +1,26 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router';
-import Header from './components/Header.tsx'; // ヘッダーコンポーネントをインポート
+import Header from '@/components/Header.tsx'; // ヘッダーコンポーネントをインポート
+import useAuth from '@/hooks/useAuth.tsx';
 
 const Home: React.FC = () => {
+  const { user, isLoading, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  }
+
   return (
     <HomeContainer>
       <Header />
+      {isLoading ? (
+        <p>ロード中...</p>
+      ) : user ? (
+        <p>{user.username}さん、こんにちは！</p>
+      ) : (
+        <p>ログインしていません</p>
+      )}
       <Content>
         <h1>ボケモンカードへようこそ！</h1>
         <ButtonContainer>
@@ -14,7 +28,7 @@ const Home: React.FC = () => {
           <Button as={Link} to="/deck">デッキ</Button>
           <Button as={Link} to="/settings">設定</Button>
         </ButtonContainer>
-        <LogoutButton>ログアウト</LogoutButton>
+        <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>
       </Content>
     </HomeContainer>
   );

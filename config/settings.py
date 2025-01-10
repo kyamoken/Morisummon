@@ -35,19 +35,31 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'morisummon.apps.MorisummonConfig',
+    'corsheaders',
     'django_vite',
+    'rest_framework.authtoken',
+
+    'morisummon.apps.MorisummonConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
 
 ROOT_URLCONF = 'config.urls'
 
@@ -153,4 +165,5 @@ CHANNEL_LAYERS = {
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'  # RedisのURL
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # タスクの結果を格納する場所
 
-AUTH_USER_MODEL = 'morisummon.CustomUser'
+# AUTH_USER_MODEL = 'morisummon.CustomUser'
+

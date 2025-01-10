@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter } from "react-router";
 import AppRouter from "./AppRouter.tsx";
+import "@/styles/globals.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

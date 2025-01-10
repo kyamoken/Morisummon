@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import Header from './components/Header.tsx'; // ヘッダーコンポーネントをインポート
+import Header from '@/components/Header.tsx'; // ヘッダーコンポーネントをインポート
 
 const Deck: React.FC = () => {
   const [deck, setDeck] = useState<string[]>(Array(10).fill(''));

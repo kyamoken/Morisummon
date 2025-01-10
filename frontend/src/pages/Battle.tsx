@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import './GlobalStyle.css';
 
 const Battle: React.FC = () => {
   return (

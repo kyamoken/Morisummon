@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npx concurrently -c \"#1d9668,#fdba74\" --kill-others \"npm run dev:django\" \"npm run dev:vite\" --names=django,vite",
+    "dev": "concurrently -c \"#1d9668,#fdba74\" --kill-others \"npm run dev:django\" \"npm run dev:vite\" --names=django,vite",
     "dev:vite": "vite",
     "dev:django": "cross-env VITE_DEV=true python manage.py runserver",
     "build": "tsc -b && vite build",
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@mui/icons-material": "^6.3.1",
-    "styled-components": "^6.1.14"
+    "styled-components": "^6.1.14",
+    "swr": "^2.3.0"
   }
 }

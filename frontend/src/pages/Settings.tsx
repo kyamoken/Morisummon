@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import Header from './components/Header.tsx'; // ヘッダーコンポーネントをインポート
+import Header from '@/components/Header.tsx'; // ヘッダーコンポーネントをインポート
 
 const Settings: React.FC = () => {
   const [theme, setTheme] = useState<string>('light');

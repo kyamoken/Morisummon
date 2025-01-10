@@ -1,7 +1,60 @@
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
-import './GlobalStyle.css';
 import Header from './components/Header.tsx';
+import useAuth from './hooks/useAuth.tsx';
+
+function App() {
+  const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
+
+  const handleCardClick = (url: string) => {
+    window.open(url, '_blank');
+  };
+
+  return (
+    <AppContainer>
+      <Header /> {/* ヘッダーを追加 */}
+
+      {/* Main Content */}
+      <Main>
+        <ButtonsContainer>
+          {isLoading ? (
+            <p>ロード中...</p>
+          ) : user ? (
+            <MainButton onClick={() => navigate('/home')}>
+              ホーム
+            </MainButton>
+          ) : (
+            <MainButton onClick={() => navigate('/login')}>
+              ログイン
+            </MainButton>
+          )}
+        </ButtonsContainer>
+
+        <DevelopersSection>
+          <h2>デベロッパー</h2>
+          <DeveloperCards>
+            <DeveloperCard onClick={() => handleCardClick('https://github.com/kyamoken')}>
+              <img src="/static/images/kyamokenICON.png" width="125" height="125" alt="icon"/>
+              <DeveloperName>Kyamoken</DeveloperName>
+            </DeveloperCard>
+            <DeveloperCard onClick={() => handleCardClick('https://github.com/kp63')}>
+              <img src="/static/images/sawakiLOGO.png" alt="GitHub" width="125" height="125" />
+              <DeveloperName>kp63</DeveloperName>
+            </DeveloperCard>
+          </DeveloperCards>
+        </DevelopersSection>
+      </Main>
+
+      {/* Footer */}
+      <Footer>
+        <p>プライバシーポリシー | 利用規約 | お問い合わせ: kamoken0531@gmail.com</p>
+        <p>© 2025 ボケモン. Developed by Kyamoken</p>
+      </Footer>
+    </AppContainer>
+  );
+}
+
 
 const AppContainer = styled.div`
   display: flex;
@@ -92,50 +145,5 @@ const Footer = styled.footer`
   margin-top: auto;
 `;
 
-function App() {
-  const navigate = useNavigate();
-
-  const handleCardClick = (url: string) => {
-    window.open(url, '_blank');
-  };
-
-  return (
-    <AppContainer>
-      <Header /> {/* ヘッダーを追加 */}
-
-      {/* Main Content */}
-      <Main>
-        <ButtonsContainer>
-          <MainButton onClick={() => navigate('/login')}>
-            ログイン
-          </MainButton>
-          <MainButton onClick={() => navigate('/home')}>
-            デバッグ
-          </MainButton>
-        </ButtonsContainer>
-
-        <DevelopersSection>
-          <h2>デベロッパー</h2>
-          <DeveloperCards>
-            <DeveloperCard onClick={() => handleCardClick('https://github.com/kyamoken')}>
-              <img src="/static/images/kyamokenICON.png" width="125" height="125" alt="icon"/>
-              <DeveloperName>Kyamoken</DeveloperName>
-            </DeveloperCard>
-            <DeveloperCard onClick={() => handleCardClick('https://github.com/kp63')}>
-              <img src="/static/images/sawakiLOGO.png" alt="GitHub" width="125" height="125" />
-              <DeveloperName>kp63</DeveloperName>
-            </DeveloperCard>
-          </DeveloperCards>
-        </DevelopersSection>
-      </Main>
-
-      {/* Footer */}
-      <Footer>
-        <p>プライバシーポリシー | 利用規約 | お問い合わせ: kamoken0531@gmail.com</p>
-        <p>© 2025 ボケモン. Developed by Kyamoken</p>
-      </Footer>
-    </AppContainer>
-  );
-}
 
 export default App;

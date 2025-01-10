@@ -3,6 +3,31 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
 
+const Header: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
+  return (
+    <HeaderContainer>
+      <img
+        src="/static/images/morisummonLOGO.png"
+        alt="Logo"
+        width="100"
+        height="100"
+        onClick={handleLogoClick}
+        style={{ cursor: 'pointer' }}
+      />
+      <LanguageButton>
+        <img src="/static/images/globe.svg" alt="Language" />
+      </LanguageButton>
+    </HeaderContainer>
+  );
+};
+
+
 const HeaderContainer = styled.header`
   position: fixed;
   top: 0;
@@ -28,28 +53,5 @@ const LanguageButton = styled.button`
   }
 `;
 
-const Header: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleLogoClick = () => {
-    navigate('/');
-  };
-
-  return (
-    <HeaderContainer>
-      <img
-        src="/static/images/morisummonLOGO.png"
-        alt="Logo"
-        width="100"
-        height="100"
-        onClick={handleLogoClick}
-        style={{ cursor: 'pointer' }}
-      />
-      <LanguageButton>
-        <img src="/static/images/globe.svg" alt="Language" />
-      </LanguageButton>
-    </HeaderContainer>
-  );
-};
 
 export default Header;

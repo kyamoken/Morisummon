@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import ky from 'ky';
 import { Link } from 'react-router';
-import '../GlobalStyle.css'; // CSSファイルをインポート
-import Header from '../components/Header.tsx'; // インポート
+import Header from '@/components/Header.tsx'; // インポート
 
 const theme = {
   primaryColor: '#2d2d67',
@@ -25,7 +23,7 @@ const Register: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      const response = await ky.post('http://localhost:8000/api/register/', {
+      const response = await api.post('api/register/', {
         json: { username, password, email },
       }).json();
       console.log(response);
@@ -74,6 +72,7 @@ const Register: React.FC = () => {
 
 // Styled Components
 import styled from 'styled-components';
+import { api } from '@/utils/api';
 
 const Container = styled.div`
   display: flex;

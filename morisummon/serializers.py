@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import CustomUser
+from django.contrib.auth.models import User
+# from django.conf import settings
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomUser
-        fields = '__all__'
+        model = User
+        exclude = ['password']

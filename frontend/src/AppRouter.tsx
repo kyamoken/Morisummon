@@ -1,14 +1,14 @@
 import React from 'react';
 import { Route, Routes } from 'react-router';
 import App from './App';
-import Login from './pages/Login.tsx';
-import Register from './pages/Register.tsx';
-import Page404 from "./pages/404.tsx";
-import Matching from "./matching.tsx";
-import Battle from "./battle.tsx";
-import Home from "./Home.tsx";
-import Deck from "./Deck.tsx";
-import Setting from "./setting.tsx";
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Page404 from "./pages/404";
+import Matching from "./pages/Matching";
+import Battle from "./pages/Battle";
+import Home from "./pages/Home";
+import Deck from "./pages/Deck";
+import Setting from "./pages/Settings";
 
 const AppRouter: React.FC = () => {
   return (
