@@ -23,8 +23,12 @@ def login(request):
     user = authenticate(username=username, password=password)
     if user is not None:
         token = Token.objects.get_or_create(user=user)
+        user = UserSerializer(user)
 
-        return JsonResponse({'token': str(token[0])}, status=200)
+        return JsonResponse({
+            'token': str(token[0]),
+            'user': user.data
+        }, status=200)
     else:
         return JsonResponse({'error': 'Invalid credentials'}, status=400)
 
