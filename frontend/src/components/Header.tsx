@@ -1,4 +1,3 @@
-// Header.tsx
 import React from 'react';
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
@@ -10,6 +9,9 @@ const Header: React.FC = () => {
     navigate('/');
   };
 
+  const userName = "Kyamoken";
+  const gachaStones = 5;
+
   return (
     <HeaderContainer>
       <img
@@ -20,9 +22,10 @@ const Header: React.FC = () => {
         onClick={handleLogoClick}
         style={{ cursor: 'pointer' }}
       />
-      <LanguageButton>
-        <img src="/static/images/globe.svg" alt="Language" />
-      </LanguageButton>
+      <UserInfo>
+        <div>{userName}</div>
+        <div>魔法石: {gachaStones}</div>
+      </UserInfo>
     </HeaderContainer>
   );
 };
@@ -43,13 +46,22 @@ const HeaderContainer = styled.header`
   box-shadow: var(--box-shadow);
 `;
 
-const LanguageButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
+const UserInfo = styled.div`
+  display: flex;
+  align-items: center;
+  color: white;
+  font-size: 16px;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 
-  img {
-    height: 28px;
+  & > div {
+    margin-left: 20px;
+  }
+
+  & > div:not(:last-child) {
+    margin-right: 20px; /* 右側の距離を追加 */
   }
 `;
 

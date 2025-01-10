@@ -7,6 +7,7 @@ urlpatterns = [
 
     # 認証
     path('api/auth/login/', views.login, name='login'),
+    path('api/auth/register/', views.register, name='register'),
     path('api/auth/me/', views.me, name='me'),
     path('api/auth/logout/', views.logout_view, name='logout'),
 

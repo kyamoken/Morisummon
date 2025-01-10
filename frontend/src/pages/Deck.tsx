@@ -4,7 +4,7 @@ import Header from '@/components/Header.tsx'; // ヘッダーコンポーネン�
 
 const Deck: React.FC = () => {
   const [deck, setDeck] = useState<string[]>(Array(10).fill(''));
-  const [cards, setCards] = useState<string[]>(['カード1', 'カード2', 'カード3', 'カード4', 'カード5']);
+  const [cards, /* setcards */] = useState<string[]>(['カード1', 'カード2', 'カード3', 'カード4', 'カード5']);
 
   const handleAddCardToDeck = (card: string) => {
     const emptyIndex = deck.indexOf('');

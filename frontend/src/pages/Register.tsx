@@ -1,40 +1,43 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { Helmet } from "react-helmet-async";
+import styled from 'styled-components';
 import Header from '@/components/Header.tsx'; // インポート
+import useAuth from '@/hooks/useAuth';
 
-const theme = {
-  primaryColor: '#2d2d67',
-  backgroundColor: '#1a1a23',
-  textColor: '#333',
-  cardBackground: '#7a7a7a',
-  buttonHover: '#005bb5',
-  inputBorder: '#8a8a8a',
-  inputFocusBorder: '#0078d4',
-  borderRadius: '8px',
-  boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)',
-};
-
-// コンポーネント定義
 const Register: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
+  const { register } = useAuth();
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    try {
-      const response = await api.post('api/register/', {
-        json: { username, password, email },
-      }).json();
-      console.log(response);
-    } catch (error) {
-      console.error('登録に失敗しました:', error);
+
+    if (!username || !password || !confirmPassword) {
+      alert('全てのフィールドを入力してください');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert('パスワードが一致しません');
+      return;
+    }
+
+    if (await register(username, password)) {
+      navigate('/');
+    } else {
+      alert('登録に失敗しました');
     }
   };
 
   return (
     <Container>
       <div className="global-style" /> {/* GlobalStyleの代わりにdivを追加 */}
+      <Helmet>
+        <title>登録</title>
+      </Helmet>
       <Header /> {/* ヘッダーを追加 */}
       <Form onSubmit={handleSubmit}>
         <FormGroup>
@@ -46,14 +49,6 @@ const Register: React.FC = () => {
           />
         </FormGroup>
         <FormGroup>
-          <Label>メールアドレス:</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </FormGroup>
-        <FormGroup>
           <Label>パスワード:</Label>
           <Input
             type="password"
@@ -61,33 +56,40 @@ const Register: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </FormGroup>
+        <FormGroup>
+          <Label>パスワード確認:</Label>
+          <Input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+        </FormGroup>
         <Button type="submit">登録</Button>
       </Form>
       <LoginLink>
-        アカウントが存在しますか？ <Link to="/login">ログインはこちら</Link>
+        <p>既にアカウントをお持ちですか？ <Link to="/login">ログインはこちら</Link></p>
       </LoginLink>
     </Container>
   );
 };
 
-// Styled Components
-import styled from 'styled-components';
-import { api } from '@/utils/api';
+export default Register;
 
+// スタイルの定義（下に移動）
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: ${theme.backgroundColor};
+  background-color: #1a1a23;
   padding-top: 70px; /* ヘッダーの高さ分の余白を追加 */
 `;
 
 const Form = styled.form`
-  background-color: ${theme.cardBackground};
-  border-radius: ${theme.borderRadius};
-  box-shadow: ${theme.boxShadow};
+  background-color: #7a7a7a;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   padding: 30px;
   max-width: 450px;
   width: 100%;
@@ -103,50 +105,44 @@ const Label = styled.label`
   margin-bottom: 8px;
   font-size: 16px;
   font-weight: bold;
-  color: ${theme.textColor};
+  color: #333;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 12px 18px;
-  border: 1px solid ${theme.inputBorder};
-  border-radius: ${theme.borderRadius};
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
   font-size: 16px;
   transition: border-color 0.3s ease;
+
   &:focus {
-    border-color: ${theme.inputFocusBorder};
+    border-color: #0078d4;
     outline: none;
   }
 `;
 
 const Button = styled.button`
-  background-color: ${theme.primaryColor};
+  background-color: #2d2d67;
   color: white;
   border: none;
-  border-radius: ${theme.borderRadius};
+  border-radius: 8px;
   padding: 12px 30px;
   font-size: 18px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+
   &:hover {
-    background-color: ${theme.buttonHover};
+    background-color: #005bb5;
     transform: scale(1.05);
   }
 `;
 
 const LoginLink = styled.div`
-  margin-top: 15px;
-  font-size: 14px;
-  color: ${theme.textColor};
-  a {
-    color: ${theme.primaryColor};
-    text-decoration: none;
-    &:hover {
-      text-decoration: underline;
-    }
-  }
+  margin-top: 20px;
+  font-size: 16px;
+  color: #333;
+  opacity: 0.8;
 `;
-
-export default Register;

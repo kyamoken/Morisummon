@@ -50,10 +50,36 @@ export default function useAuth() {
     return true;
   }
 
+  async function register(username: string, password: string) {
+    const response = await api.post('api/auth/register/', {
+      json: {
+        username: username,
+        password: password,
+      },
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+      }
+    }).json<{ token: string; user: User } | null>()
+    .catch((error) => {
+      console.error('登録に失敗しました:', error);
+      return null;
+    });
+
+    if (!response?.token) {
+      return false;
+    }
+
+    localStorage.setItem('token', response.token);
+    navigate('/');
+
+    return true;
+  }
+
   return {
     user: data,
     logout,
     login,
+    register,
     ...rest,
   };
 }
