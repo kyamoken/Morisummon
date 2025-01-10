@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Header from "./Header";
 
 type Props = {
   children: ReactNode;
@@ -7,8 +8,7 @@ type Props = {
 export default function AppLayout({ children }: Props) {
   return (
     <div className="app-layout">
-      <header>
-      </header>
+      <Header />
       <main>
         {children}
       </main>
