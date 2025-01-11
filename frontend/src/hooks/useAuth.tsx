@@ -86,12 +86,52 @@ export default function useAuth() {
     }
   }
 
+  async function saveDeck(deck: string[]) {
+    try {
+      const response = await api.post('/api/save-deck/', {
+        json: { deck },
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+        }
+      }).json<{ message: string } | null>();
+
+      if (response) {
+        console.log(response.message);
+      }
+    } catch (error) {
+      console.error('デッキの保存に失敗しました:', error);
+    }
+  }
+
+  async function getDeck() {
+    try {
+      const response = await api.get('/api/get-deck/').json<{ cards: string[] } | null>();
+      return response?.cards || [];
+    } catch (error) {
+      console.error('デッキの取得に失敗しました:', error);
+      return [];
+    }
+  }
+
+  async function userCards() {
+    try {
+      const response = await api.get('/api/user-cards').json<{ name: string, amount: number }[]>();
+      return response;
+    } catch (error) {
+      console.error('ユーザーカードの取得に失敗しました:', error);
+      return [];
+    }
+  }
+
   return {
     user: data,
     logout,
     login,
     register,
     gacha,
+    saveDeck,
+    getDeck,
+    userCards,
     ...rest,
   };
 }

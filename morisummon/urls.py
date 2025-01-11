@@ -11,6 +11,9 @@ urlpatterns = [
     path('api/auth/logout/', views.logout_view, name='logout'),
     path('api/gacha/', views.gacha, name='gacha'),
     path('api/user-cards', views.user_cards, name='user-cards'),
+    path('api/save-deck/', views.save_deck, name='deck_list'),
+    path('api/get-deck/', views.get_deck, name='get_deck'),
+
     # ユーザー
     # path('api/users/', views.custom_user_list, name='custom_user_list'),
     # path('api/users/<int:pk>/', views.custom_user_detail, name='custom_user_detail'),

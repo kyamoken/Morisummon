@@ -50,13 +50,15 @@ const Deck: React.FC = () => {
             </CardSlot>
           ))}
         </DeckArea>
-        <CardList>
-          {cards.map((card, index) => (
-            <Card key={index} onClick={() => handleAddCardToDeck(card.name)}>
-              {card.name} ({card.amount})
-            </Card>
-          ))}
-        </CardList>
+        <ScrollableArea>
+          <CardList>
+            {cards.map((card, index) => (
+              <Card key={index} onClick={() => handleAddCardToDeck(card.name)}>
+                {card.name} ({card.amount})
+              </Card>
+            ))}
+          </CardList>
+        </ScrollableArea>
         <Button type="button" onClick={handleSaveDeck}>デッキを保存</Button>
       </Content>
     </DeckContainer>
@@ -73,7 +75,7 @@ const DeckContainer = styled.div`
   color: white;
   width: 100%;
   text-align: center;
-  padding-top: 120px; // いずれ直したい
+  padding-top: 120px; /* ヘッダーのスペースを確保 */
 `;
 
 const Content = styled.div`
@@ -104,14 +106,26 @@ const CardSlot = styled.div`
   cursor: pointer;
 `;
 
+const ScrollableArea = styled.div`
+  width: 90%; /* 横スクロールエリアの幅を画面サイズに調整 */
+  max-width: 600px; /* 最大幅を設定 */
+  overflow-x: auto; /* 横スクロールを許可 */
+  margin: 0 auto; /* 中央寄せ */
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  padding: 10px; /* 内側の余白 */
+  box-sizing: border-box;
+`;
+
 const CardList = styled.div`
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 20px;
+  flex-wrap: nowrap; /* 横方向に並べる */
+  white-space: nowrap; /* 改行を防止 */
 `;
 
 const Card = styled.div`
+  flex: 0 0 auto; /* 横スクロール用に幅を固定 */
   width: 100px;
   height: 150px;
   background-color: var(--card-background);
