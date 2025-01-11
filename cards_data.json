@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Card 1",
+    "hp": 100,
+    "attack": 50,
+    "image": "cards/image1.png"
+  },
+  {
+    "name": "Card 2",
+    "hp": 200,
+    "attack": 100,
+    "image": "cards/image2.png"
+  },
+  {
+    "name": "Card 3",
+    "hp": 300,
+    "attack": 150,
+    "image": "cards/image3.png"
+  }
+]

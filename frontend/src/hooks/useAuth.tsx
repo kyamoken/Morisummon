@@ -76,11 +76,22 @@ export default function useAuth() {
     return true;
   }
 
+  async function gacha() {
+    try {
+      const response = await api.get('/api/gacha/').json<{ cards: any[] }>();
+      return response.cards;
+    } catch (error) {
+      console.error('ガチャに失敗しました:', error);
+      return [];
+    }
+  }
+
   return {
     user: data,
     logout,
     login,
     register,
+    gacha,
     ...rest,
   };
 }

@@ -10,6 +10,13 @@ from rest_framework.authtoken.models import Token
 from rest_framework import authentication
 from morisummon.serializers import UserSerializer
 from django.contrib.auth.models import User
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Card
+from .serializers import CardSerializer
+import random
+
+
 
 def index(request):
     template_name = 'dev.html' if settings.VITE_DEV else 'index.html'
@@ -70,3 +77,9 @@ def register(request):
 
     return JsonResponse({'token': str(token)}, status=201)
 
+@api_view(['GET'])
+def gacha(request):
+    cards = Card.objects.all()
+    drawn_cards = random.sample(list(cards), k=5)  # 5枚のカードをランダムに引く
+    serializer = CardSerializer(drawn_cards, many=True)
+    return Response({'cards': serializer.data})

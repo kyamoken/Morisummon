@@ -1,15 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
+import useAuth from '@/hooks/useAuth.tsx';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleLogoClick = () => {
     navigate('/');
   };
 
-  const userName = "Kyamoken";
   const gachaStones = 5;
 
   return (
@@ -23,13 +24,12 @@ const Header: React.FC = () => {
         style={{ cursor: 'pointer' }}
       />
       <UserInfo>
-        <div>{userName}</div>
+        <div>{user ? user.username + " さん"　: 'ゲスト さん'}</div>
         <div>魔法石: {gachaStones}</div>
       </UserInfo>
     </HeaderContainer>
   );
 };
-
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -64,6 +64,5 @@ const UserInfo = styled.div`
     margin-right: 20px; /* 右側の距離を追加 */
   }
 `;
-
 
 export default Header;

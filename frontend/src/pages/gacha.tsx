@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import Header from './components/Header.tsx'; // ヘッダーコンポーネントをインポート
+import Header from '@/components/Header.tsx';
+import useAuth from '@/hooks/useAuth';
 
 const Gacha: React.FC = () => {
-  const [result, setResult] = useState<string | null>(null);
+  const { gacha } = useAuth();
+  const [result, setResult] = useState<string[] | null>(null);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
-  const handleGacha = () => {
+  const handleGacha = async () => {
     setIsAnimating(true);
-    setTimeout(() => {
-      const items = ['カード1', 'カード2', 'カード3', 'カード4', 'カード5'];
-      const randomItem = items[Math.floor(Math.random() * items.length)];
-      setResult(randomItem);
-      setIsAnimating(false);
-    }, 500);
+    const cards = await gacha();
+    setResult(cards.map((card: any) => card.name));
+    setIsAnimating(false);
   };
 
   return (
@@ -26,7 +25,16 @@ const Gacha: React.FC = () => {
           {isAnimating ? 'ガチャ中...' : 'ガチャを引く'}
         </Button>
         {isAnimating && <Animation />}
-        {result && !isAnimating && <Result>結果: {result}</Result>}
+        {result && !isAnimating && (
+          <Result>
+            結果:
+            <ul>
+              {result.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </Result>
+        )}
       </Content>
     </GachaContainer>
   );
@@ -101,6 +109,15 @@ const Result = styled.div`
   margin-top: 20px;
   font-size: 18px;
   color: white;
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  li {
+    margin: 5px 0;
+  }
 `;
 
 export default Gacha;

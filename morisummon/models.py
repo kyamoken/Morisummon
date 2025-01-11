@@ -1,6 +1,15 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+class Card(models.Model):
+    name = models.CharField(max_length=255) # 名前
+    hp = models.IntegerField(default=0) # 体力
+    attack = models.IntegerField(default=0) # 攻撃力
+    image = models.ImageField(upload_to='images/') # 画像
+
+    def __str__(self):
+        return self.name
+
 # class CustomUser(AbstractUser):
 #     rank = models.IntegerField(default=0)
 #     wins = models.IntegerField(default=0)
