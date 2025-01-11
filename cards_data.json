@@ -16,5 +16,47 @@
     "hp": 300,
     "attack": 150,
     "image": "cards/image3.png"
+  },
+  {
+    "name": "Card 4",
+    "hp": 400,
+    "attack": 200,
+    "image": "cards/image4.png"
+  },
+  {
+    "name": "Card 5",
+    "hp": 500,
+    "attack": 250,
+    "image": "cards/image5.png"
+  },
+  {
+    "name": "Card 6",
+    "hp": 600,
+    "attack": 300,
+    "image": "cards/image6.png"
+  },
+  {
+    "name": "Card 7",
+    "hp": 700,
+    "attack": 350,
+    "image": "cards/image7.png"
+  },
+  {
+    "name": "Card 8",
+    "hp": 800,
+    "attack": 400,
+    "image": "cards/image8.png"
+  },
+  {
+    "name": "Card 9",
+    "hp": 900,
+    "attack": 450,
+    "image": "cards/image9.png"
+  },
+  {
+    "name": "Card 10",
+    "hp": 1000,
+    "attack": 500,
+    "image": "cards/image10.png"
   }
 ]

@@ -7,16 +7,12 @@ from django.middleware.csrf import get_token
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from rest_framework import authentication
 from morisummon.serializers import UserSerializer
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import Card
+from .models import Card, UserCard
 from .serializers import CardSerializer
 import random
-
-
+from django.core.exceptions import ObjectDoesNotExist
 
 def index(request):
     template_name = 'dev.html' if settings.VITE_DEV else 'index.html'
@@ -79,7 +75,32 @@ def register(request):
 
 @api_view(['GET'])
 def gacha(request):
-    cards = Card.objects.all()
-    drawn_cards = random.sample(list(cards), k=5)  # 5枚のカードをランダムに引く
-    serializer = CardSerializer(drawn_cards, many=True)
-    return Response({'cards': serializer.data})
+    user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+    try:
+        cards = Card.objects.all()
+        if not cards.exists():
+            return JsonResponse({'error': 'No cards available'}, status=404)
+
+        drawn_cards = random.sample(list(cards), k=5)  # 5枚のカードをランダムに引く
+        for card in drawn_cards:
+            user_card, created = UserCard.objects.get_or_create(user=user, card=card)
+            user_card.amount += 1
+            user_card.save()
+
+        serializer = CardSerializer(drawn_cards, many=True)
+        return Response({'cards': serializer.data})
+    except ObjectDoesNotExist:
+        return JsonResponse({'error': 'Cards not found'}, status=404)
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': 'Internal Server Error'}, status=500)
+
+@api_view(['GET'])
+def user_cards(request):
+    user_cards = UserCard.objects.filter(user=request.user)
+    data = [{'name': uc.card.name, 'amount': uc.amount} for uc in user_cards]
+    return JsonResponse(data, safe=False)

@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User
 from django.db import models
 
 class Card(models.Model):
@@ -9,6 +9,14 @@ class Card(models.Model):
 
     def __str__(self):
         return self.name
+
+class UserCard(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    amount = models.IntegerField(default=0)  # 所持数
+
+    class Meta:
+        unique_together = ('user', 'card')
 
 # class CustomUser(AbstractUser):
 #     rank = models.IntegerField(default=0)

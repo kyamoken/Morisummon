@@ -26,6 +26,7 @@ const Home: React.FC = () => {
         <ButtonContainer>
           <Button as={Link} to="/matching">マッチング</Button>
           <Button as={Link} to="/deck">デッキ</Button>
+          <Button as={Link} to="/gacha">ガチャ</Button>
           <Button as={Link} to="/settings">設定</Button>
         </ButtonContainer>
         <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>

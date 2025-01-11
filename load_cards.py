@@ -2,7 +2,7 @@ import json
 import os
 import django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'morisummon.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from morisummon.models import Card

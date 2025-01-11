@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Header from '@/components/Header.tsx'; // ヘッダーコンポーネントをインポート
 
 const Deck: React.FC = () => {
   const [deck, setDeck] = useState<string[]>(Array(10).fill(''));
-  const [cards, /* setcards */] = useState<string[]>(['カード1', 'カード2', 'カード3', 'カード4', 'カード5']);
+  const [cards, setCards] = useState<{ name: string, amount: number }[]>([]);
+
+  useEffect(() => {
+    // ユーザーのカードをバックエンドから取得
+    fetch('/api/user-cards')
+      .then(response => response.json())
+      .then(data => {
+        // 所持数が1以上のカードのみをフィルタリング
+        const filteredCards = data.filter((card: { name: string, amount: number }) => card.amount > 0);
+        setCards(filteredCards);
+      })
+      .catch(error => console.error('Error fetching cards:', error));
+  }, []);
 
   const handleAddCardToDeck = (card: string) => {
     const emptyIndex = deck.indexOf('');
@@ -40,8 +52,8 @@ const Deck: React.FC = () => {
         </DeckArea>
         <CardList>
           {cards.map((card, index) => (
-            <Card key={index} onClick={() => handleAddCardToDeck(card)}>
-              {card}
+            <Card key={index} onClick={() => handleAddCardToDeck(card.name)}>
+              {card.name} ({card.amount})
             </Card>
           ))}
         </CardList>
@@ -61,6 +73,7 @@ const DeckContainer = styled.div`
   color: white;
   width: 100%;
   text-align: center;
+  padding-top: 120px; // いずれ直したい
 `;
 
 const Content = styled.div`

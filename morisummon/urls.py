@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/auth/me/', views.me, name='me'),
     path('api/auth/logout/', views.logout_view, name='logout'),
     path('api/gacha/', views.gacha, name='gacha'),
+    path('api/user-cards', views.user_cards, name='user-cards'),
     # ユーザー
     # path('api/users/', views.custom_user_list, name='custom_user_list'),
     # path('api/users/<int:pk>/', views.custom_user_detail, name='custom_user_detail'),
