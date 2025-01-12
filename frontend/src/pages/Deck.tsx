@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Header from '@/components/Header.tsx'; // ヘッダーコンポーネントをインポート
+import Header from '@/components/Header.tsx';
+import useAuth from '@/hooks/useAuth';
 
 const Deck: React.FC = () => {
+  const { saveDeck, getDeck } = useAuth();
   const [deck, setDeck] = useState<string[]>(Array(10).fill(''));
   const [cards, setCards] = useState<{ name: string, amount: number }[]>([]);
 
@@ -11,12 +13,18 @@ const Deck: React.FC = () => {
     fetch('/api/user-cards')
       .then(response => response.json())
       .then(data => {
-        // 所持数が1以上のカードのみをフィルタリング
         const filteredCards = data.filter((card: { name: string, amount: number }) => card.amount > 0);
         setCards(filteredCards);
       })
       .catch(error => console.error('Error fetching cards:', error));
-  }, []);
+
+    // デッキをバックエンドから取得
+    getDeck().then(fetchedDeck => {
+      if (fetchedDeck.length > 0) {
+        setDeck(fetchedDeck);
+      }
+    }).catch(error => console.error('Error fetching deck:', error));
+  }, [getDeck]);
 
   const handleAddCardToDeck = (card: string) => {
     const emptyIndex = deck.indexOf('');
@@ -34,8 +42,9 @@ const Deck: React.FC = () => {
   };
 
   const handleSaveDeck = () => {
-    // デッキ保存のロジックを追加
-    console.log('デッキ:', deck);
+    saveDeck(deck).then(() => {
+      console.log('デッキが保存されました');
+    }).catch(error => console.error('デッキの保存に失敗しました:', error));
   };
 
   return (
