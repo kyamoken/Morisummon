@@ -18,6 +18,13 @@ class UserCard(models.Model):
     class Meta:
         unique_together = ('user', 'card')
 
+class Deck(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    cards = models.JSONField()  # JSONField to store the list of cards
+
+    def __str__(self):
+        return f"{self.user.username}'s Deck"
+
 # class CustomUser(AbstractUser):
 #     rank = models.IntegerField(default=0)
 #     wins = models.IntegerField(default=0)

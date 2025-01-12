@@ -1,11 +1,16 @@
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
 import Header from './components/Header.tsx';
 import useAuth from './hooks/useAuth.tsx';
+import PrivacyPolicyModal from './components/PrivacyPolicyModal';
+import TermsOfServiceModal from './components/TermsOfServiceModal';
 
 function App() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const [isPrivacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
+  const [isTermsOfServiceOpen, setTermsOfServiceOpen] = useState(false);
 
   const handleCardClick = (url: string) => {
     window.open(url, '_blank');
@@ -48,13 +53,19 @@ function App() {
 
       {/* Footer */}
       <Footer>
-        <p>プライバシーポリシー | 利用規約 | お問い合わせ: kamoken0531@gmail.com</p>
+        <p>
+          <span onClick={() => setPrivacyPolicyOpen(true)}>プライバシーポリシー</span> |
+          <span onClick={() => setTermsOfServiceOpen(true)}>利用規約</span> |
+          お問い合わせ: kamoken0531@gmail.com
+        </p>
         <p>© 2025 ボケモン. Developed by Kyamoken</p>
       </Footer>
+
+      <PrivacyPolicyModal isOpen={isPrivacyPolicyOpen} onClose={() => setPrivacyPolicyOpen(false)} />
+      <TermsOfServiceModal isOpen={isTermsOfServiceOpen} onClose={() => setTermsOfServiceOpen(false)} />
     </AppContainer>
   );
 }
-
 
 const AppContainer = styled.div`
   display: flex;
@@ -143,7 +154,11 @@ const Footer = styled.footer`
   color: var(--text-color);
   font-size: 14px;
   margin-top: auto;
-`;
 
+  span {
+    cursor: pointer;
+    text-decoration: underline;
+  }
+`;
 
 export default App;

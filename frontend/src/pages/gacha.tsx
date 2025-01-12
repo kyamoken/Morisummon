@@ -120,4 +120,6 @@ const Result = styled.div`
   }
 `;
 
+
+
 export default Gacha;

@@ -1,15 +1,15 @@
 from django.conf import settings
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, logout
 from django.middleware.csrf import get_token
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from morisummon.serializers import UserSerializer
+from morisummon.serializers import UserSerializer, DeckSerializer
 from django.contrib.auth.models import User
-from .models import Card, UserCard
+from .models import Card, UserCard, Deck
 from .serializers import CardSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist
@@ -51,7 +51,6 @@ def me(request):
     else:
         return JsonResponse({'user': None}, status=200)
 
-@csrf_exempt
 @api_view(['GET'])
 def csrf_token(request):
     token = get_token(request)
@@ -104,3 +103,28 @@ def user_cards(request):
     user_cards = UserCard.objects.filter(user=request.user)
     data = [{'name': uc.card.name, 'amount': uc.amount} for uc in user_cards]
     return JsonResponse(data, safe=False)
+
+@api_view(['POST'])
+def save_deck(request):
+    user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+    serializer = DeckSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=user)
+        return Response({"message": "デッキが正常に保存されました"}, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_deck(request):
+    user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+    try:
+        deck = Deck.objects.get(user=user)
+        serializer = DeckSerializer(deck)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Deck.DoesNotExist:
+        return Response({"error": "Deck not found"}, status=status.HTTP_404_NOT_FOUND)
