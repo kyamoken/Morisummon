@@ -158,10 +158,12 @@ def get_deck(request):
     user = request.user
 
     deck = Deck.objects.filter(user=user).first()
-
     serialized = DeckSerializer(deck)
 
-    deck_cards = serialized.data['cards']
+    try:
+        deck_cards = serialized.data['cards']
+    except KeyError:
+        deck_cards = [None for _ in range(settings.MORISUMMON_DECK_SIZE)]
 
     return Response({
         'deck_cards': deck_cards
