@@ -5,14 +5,18 @@ import useAuth from '@/hooks/useAuth';
 
 const Gacha: React.FC = () => {
   const { gacha } = useAuth();
-  const [result, setResult] = useState<string[] | null>(null);
+  const [result, setResult] = useState<{ name: string; image?: string }[] | null>(null);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   const handleGacha = async () => {
     setIsAnimating(true);
     const cards = await gacha();
-    setResult(cards.map((card: any) => card.name));
-    setIsAnimating(false);
+    setResult(cards);
+  };
+
+  const handleClose = () => {
+    setResult(null);
+    setIsAnimating(false); // モーダルを閉じる際にリセット
   };
 
   return (
@@ -24,16 +28,22 @@ const Gacha: React.FC = () => {
         <Button onClick={handleGacha} disabled={isAnimating}>
           {isAnimating ? 'ガチャ中...' : 'ガチャを引く'}
         </Button>
-        {isAnimating && <Animation />}
-        {result && !isAnimating && (
-          <Result>
-            結果:
-            <ul>
-              {result.map((item, index) => (
-                <li key={index}>{item}</li>
+        {isAnimating && !result && <Animation />}
+        {result && (
+          <Modal>
+            <CardContainer>
+              {result.map((card, index) => (
+                <Card key={index} delay={index * 0.5}>
+                  {card.image ? (
+                    <CardImage src={card.image} alt={card.name} />
+                  ) : (
+                    <CardText>{card.name}</CardText>
+                  )}
+                </Card>
               ))}
-            </ul>
-          </Result>
+            </CardContainer>
+            <CloseButton onClick={handleClose}>もどる</CloseButton>
+          </Modal>
         )}
       </Content>
     </GachaContainer>
@@ -105,21 +115,80 @@ const Animation = styled.div`
   animation: ${spin} 1s linear infinite;
 `;
 
-const Result = styled.div`
-  margin-top: 20px;
-  font-size: 18px;
-  color: white;
+const Modal = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 600px;
+`;
 
-  ul {
-    list-style-type: none;
-    padding: 0;
+const CardContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-
-  li {
-    margin: 5px 0;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 `;
 
+const Card = styled.div<{ delay: number }>`
+  width: 100px;
+  height: 150px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  opacity: 0; /* 初期値として非表示に設定 */
+  animation: ${fadeIn} 0.5s ease-in-out forwards;
+  animation-delay: ${({ delay }) => delay}s;
+`;
 
+
+
+const CardImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const CardText = styled.div`
+  font-size: 14px;
+  color: black;
+  text-align: center;
+  padding: 5px;
+`;
+
+const CloseButton = styled.button`
+  margin-top: 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: var(--button-hover);
+  }
+`;
 
 export default Gacha;

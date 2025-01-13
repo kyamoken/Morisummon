@@ -1,9 +1,9 @@
 [
   {
-    "name": "Card 1",
+    "name": "ジャスティス",
     "hp": 100,
     "attack": 50,
-    "image": "cards/image1.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 2",
