@@ -4,7 +4,7 @@ from pathlib import Path
 
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False),
+    DEBUG=(bool, True),
     VITE_DEV=(bool, False),
 )
 
@@ -54,9 +54,9 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
     ]
 }
 
@@ -160,6 +160,8 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+MORISUMMON_DECK_SIZE = 5 # デッキのサイズ
 
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'  # RedisのURL
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # タスクの結果を格納する場所

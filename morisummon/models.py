@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.forms import ValidationError
 
 class Card(models.Model):
     name = models.CharField(max_length=255) # 名前
@@ -20,7 +22,22 @@ class UserCard(models.Model):
 
 class Deck(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    cards = models.JSONField()  # JSONField to store the list of cards
+    card_ids = models.JSONField(default=list)  # JSONField to store the list of cards
+
+    def clean(self):
+        card_ids = list(None for _ in range(settings.MORISUMMON_DECK_SIZE))
+
+        for i, card_id in enumerate(self.card_ids):
+            if not isinstance(card_id, int):
+                continue
+
+            try:
+                card = Card.objects.get(pk=card_id)
+                card_ids[i] = card
+            except Card.DoesNotExist:
+                raise ValidationError('存在しないカードが含まれています')
+
+        self.card_ids = card_ids
 
     def __str__(self):
         return f"{self.user.username}'s Deck"

@@ -1,50 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import Header from '@/components/Header.tsx';
-import useAuth from '@/hooks/useAuth';
+import useCardManager from '@/hooks/useCardManager';
+import useDeckManager from '@/hooks/useDeckManager';
+import type { Card } from '@/types/models';
 
 const Deck: React.FC = () => {
-  const { saveDeck, getDeck } = useAuth();
-  const [deck, setDeck] = useState<string[]>(Array(10).fill(''));
-  const [cards, setCards] = useState<{ name: string, amount: number }[]>([]);
-
-  useEffect(() => {
-    // ユーザーのカードをバックエンドから取得
-    fetch('/api/user-cards')
-      .then(response => response.json())
-      .then(data => {
-        const filteredCards = data.filter((card: { name: string, amount: number }) => card.amount > 0);
-        setCards(filteredCards);
-      })
-      .catch(error => console.error('Error fetching cards:', error));
-
-    // デッキをバックエンドから取得
-    getDeck().then(fetchedDeck => {
-      if (fetchedDeck.length > 0) {
-        setDeck(fetchedDeck);
-      }
-    }).catch(error => console.error('Error fetching deck:', error));
-  }, [getDeck]);
-
-  const handleAddCardToDeck = (card: string) => {
-    const emptyIndex = deck.indexOf('');
-    if (emptyIndex !== -1) {
-      const newDeck = [...deck];
-      newDeck[emptyIndex] = card;
-      setDeck(newDeck);
-    }
-  };
+  const { cards } = useCardManager();
+  const deckManager = useDeckManager();
 
   const handleRemoveCardFromDeck = (index: number) => {
-    const newDeck = [...deck];
-    newDeck[index] = '';
-    setDeck(newDeck);
+    deckManager.removeCardFromDeck(index);
+  }
+
+  const handleAddCardToDeck = (card: Card) => {
+    deckManager.addCardToDeck(card);
   };
 
   const handleSaveDeck = () => {
-    saveDeck(deck).then(() => {
+    deckManager.saveDeck()
+    .then(() => {
       console.log('デッキが保存されました');
-    }).catch(error => console.error('デッキの保存に失敗しました:', error));
+    }
+    ).catch(error => {
+      console.error('デッキの保存に失敗しました:', error);
+    });
   };
 
   return (
@@ -52,23 +32,31 @@ const Deck: React.FC = () => {
       <Header />
       <Content>
         <h1>デッキ編集</h1>
-        <DeckArea>
-          {deck.map((card, index) => (
-            <CardSlot key={index} onClick={() => handleRemoveCardFromDeck(index)}>
-              {card || '空'}
-            </CardSlot>
-          ))}
-        </DeckArea>
-        <ScrollableArea>
-          <CardList>
-            {cards.map((card, index) => (
-              <Card key={index} onClick={() => handleAddCardToDeck(card.name)}>
-                {card.name} ({card.amount})
-              </Card>
-            ))}
-          </CardList>
-        </ScrollableArea>
-        <Button type="button" onClick={handleSaveDeck}>デッキを保存</Button>
+        {deckManager.isLoading ? (
+          <p>ロード中...</p>
+        ) : (
+          <>
+            <DeckArea>
+              {deckManager.editingDeck.map((card, index) => (
+                <CardSlot key={index} onClick={() => handleRemoveCardFromDeck(index)}>
+                  {card?.name || '未設定'}
+                </CardSlot>
+              ))}
+            </DeckArea>
+            {cards && (
+              <ScrollableArea>
+                <CardList>
+                  {cards.map((item, index) => (
+                    <Card key={index} onClick={() => handleAddCardToDeck(item.card)}>
+                      {item.card.name} ({item.amount})
+                    </Card>
+                  ))}
+                </CardList>
+              </ScrollableArea>
+            )}
+            <Button type="button" onClick={handleSaveDeck}>デッキを保存</Button>
+          </>
+        )}
       </Content>
     </DeckContainer>
   );

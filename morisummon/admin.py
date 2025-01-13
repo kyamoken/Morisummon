@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Card, UserCard
+from .models import Card, Deck, UserCard
 
 class UserCardInline(admin.TabularInline):
     model = UserCard
@@ -9,3 +9,11 @@ class UserCardInline(admin.TabularInline):
 class CardAdmin(admin.ModelAdmin):
     list_display = ('name', 'hp', 'attack', 'image')
     inlines = [UserCardInline]
+
+@admin.register(UserCard)
+class UserCardAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Deck)
+class DeckAdmin(admin.ModelAdmin):
+    pass

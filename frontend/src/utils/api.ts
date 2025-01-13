@@ -1,18 +1,17 @@
-import ky from "ky";
+import _ky from "ky";
+import { getCookie } from "./cookie";
 
-export const api = ky.create({
+export const ky = _ky.create({
   prefixUrl: '',
   credentials: 'include',
-  // mode: 'no-cors',
+  mode: 'cors',
   hooks: {
     beforeRequest: [
       async (request) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-          request.headers.set('Authorization', `Token ${token}`);
+        const csrfToken = getCsrfToken();
+        if (csrfToken) {
+          request.headers.set('X-CSRFToken', csrfToken);
         }
-
-        request.headers.set('X-CSRFToken', localStorage.getItem('X-CSRF-TOKEN') || '');
       }
     ]
   }
@@ -20,8 +19,7 @@ export const api = ky.create({
 
 export const fetchCsrfToken = () => ky.get('/api/csrf-token/').json<{ csrfToken: string }>()
   .then((data) => {
-    localStorage.setItem('X-CSRF-TOKEN', data.csrfToken);
     return data.csrfToken;
   });
 
-export const getCsrfToken = () => localStorage.getItem('X-CSRF-TOKEN');
+export const getCsrfToken = () => getCookie('csrftoken');

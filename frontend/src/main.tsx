@@ -4,12 +4,20 @@ import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter } from "react-router";
 import AppRouter from "./AppRouter.tsx";
 import "@/styles/globals.css";
+import { SWRConfig, SWRConfiguration } from "swr";
+import { ky } from "./utils/api.ts";
+
+const swrConfig: SWRConfiguration = {
+  fetcher: (url) => ky.get(url).json(),
+};
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <HelmetProvider>
       <BrowserRouter>
-        <AppRouter />
+        <SWRConfig value={swrConfig}>
+          <AppRouter />
+        </SWRConfig>
       </BrowserRouter>
     </HelmetProvider>
   </StrictMode>,

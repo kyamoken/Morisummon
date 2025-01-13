@@ -24,7 +24,7 @@ const Header: React.FC = () => {
         style={{ cursor: 'pointer' }}
       />
       <UserInfo>
-        <div>{user ? user.username + " さん"　: 'ゲスト さん'}</div>
+        <div>{user ? user.username + " さん" : 'ゲスト さん'}</div>
         <div>魔法石: {gachaStones}</div>
       </UserInfo>
     </HeaderContainer>

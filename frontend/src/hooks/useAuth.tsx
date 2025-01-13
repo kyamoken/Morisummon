@@ -1,5 +1,5 @@
 import { User } from '@/types/models';
-import { api } from '@/utils/api';
+import { ky } from '@/utils/api';
 import { getCookie } from '@/utils/cookie';
 import { useNavigate } from 'react-router';
 import useSWR, { mutate } from 'swr';
@@ -7,13 +7,12 @@ import useSWR, { mutate } from 'swr';
 export default function useAuth() {
   const navigate = useNavigate();
   const { data, ...rest } = useSWR('/api/auth/me/', async (url) => {
-    const response = await api.get(url).json<{ user: User | null } | null>();
+    const response = await ky.get(url).json<{ user: User | null } | null>();
     return response?.user || null;
   });
 
   async function logout(redirectTo: string | null = "/") {
-    localStorage.removeItem('token');
-    await api.post('/api/auth/logout/');
+    await ky.post('/api/auth/logout/');
 
     if (redirectTo) {
       navigate(redirectTo);
@@ -26,7 +25,7 @@ export default function useAuth() {
   }
 
   async function login(username: string, password: string, options: LoginOptions = {}) {
-    const response = await api.post('api/auth/login/', {
+    const response = await ky.post('/api/auth/login/', {
       json: {
         username: username,
         password: password,
@@ -34,17 +33,16 @@ export default function useAuth() {
       headers: {
         'X-CSRFToken': getCookie('csrftoken'),
       }
-    }).json<{ token: string; user: User } | null>()
+    }).json<{ user: User } | null>()
     .catch((error) => {
       console.error('ログインに失敗しました:', error);
       return null;
     });
 
-    if (!response?.token) {
+    if (!response?.user) {
       return false;
     }
 
-    localStorage.setItem('token', response.token);
     mutate('/api/auth/me/', response.user ? { user: response.user } : undefined);
     navigate(options?.redirectTo || '/');
 
@@ -52,7 +50,7 @@ export default function useAuth() {
   }
 
   async function register(username: string, password: string) {
-    const response = await api.post('api/auth/register/', {
+    const response = await ky.post('api/auth/register/', {
       json: {
         username: username,
         password: password,
@@ -78,7 +76,7 @@ export default function useAuth() {
 
   async function gacha() {
     try {
-      const response = await api.get('/api/gacha/').json<{ cards: any[] }>();
+      const response = await ky.get('/api/gacha/').json<{ cards: any[] }>();
       return response.cards;
     } catch (error) {
       console.error('ガチャに失敗しました:', error);
@@ -88,7 +86,7 @@ export default function useAuth() {
 
   async function saveDeck(deck: string[]) {
     try {
-      const response = await api.post('/api/save-deck/', {
+      const response = await ky.post('/api/save-deck/', {
         json: { deck },
         headers: {
           'X-CSRFToken': getCookie('csrftoken'),
@@ -105,7 +103,7 @@ export default function useAuth() {
 
   async function getDeck() {
     try {
-      const response = await api.get('/api/get-deck/').json<{ cards: string[] } | null>();
+      const response = await ky.get('/api/get-deck/').json<{ cards: string[] } | null>();
       return response?.cards || [];
     } catch (error) {
       console.error('デッキの取得に失敗しました:', error);
@@ -115,7 +113,7 @@ export default function useAuth() {
 
   async function userCards() {
     try {
-      const response = await api.get('/api/user-cards').json<{ name: string, amount: number }[]>();
+      const response = await ky.get('/api/user-cards').json<{ name: string, amount: number }[]>();
       return response;
     } catch (error) {
       console.error('ユーザーカードの取得に失敗しました:', error);

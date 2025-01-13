@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Deck from "./pages/Deck";
 import Setting from "./pages/Settings";
 import Gacha from "./pages/gacha";
+import Cards from './pages/Cards';
 
 const AppRouter: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ const AppRouter: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/cards" element={<Cards />} />
       <Route path="/deck" element={<Deck />} />
       <Route path="/matching" element={<Matching />} />
       <Route path="/gacha" element={<Gacha />} />

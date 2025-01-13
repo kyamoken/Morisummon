@@ -15,3 +15,11 @@ export interface User {
 
   [key: string]: any;
 }
+
+export interface Card {
+  id: number;
+  name: string;
+  image: string;
+  attack: number;
+  hp: number;
+}

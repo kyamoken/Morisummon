@@ -1,16 +1,17 @@
+import json
 from django.conf import settings
 from django.shortcuts import render
-from django.http import JsonResponse
-from django.contrib.auth import authenticate, logout
+from django.contrib.auth import authenticate, login as auth_login, logout
 from django.middleware.csrf import get_token
-from rest_framework import status
-from rest_framework.decorators import api_view
+from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from morisummon.serializers import UserSerializer, DeckSerializer
+from morisummon.serializers import UserSerializer
 from django.contrib.auth.models import User
 from .models import Card, UserCard, Deck
-from .serializers import CardSerializer
+from .serializers import CardSerializer, DeckSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -25,15 +26,17 @@ def login(request):
 
     user = authenticate(username=username, password=password)
     if user is not None:
-        token = Token.objects.get_or_create(user=user)
+        auth_login(request, user)
+
+        # token = Token.objects.get_or_create(user=user)
         user = UserSerializer(user)
 
-        return JsonResponse({
-            'token': str(token[0]),
+        return Response({
+            # 'token': str(token[0]),
             'user': user.data
         }, status=200)
     else:
-        return JsonResponse({'error': 'Invalid credentials'}, status=400)
+        return Response({'error': 'Invalid credentials'}, status=400)
 
 @api_view(['POST'])
 def logout_view(request):
@@ -47,14 +50,17 @@ def me(request):
     user = request.user
     if user.is_authenticated:
         serializer = UserSerializer(user)
-        return JsonResponse({'user': serializer.data}, status=200)
+        return Response({'user': serializer.data}, status=200)
     else:
-        return JsonResponse({'user': None}, status=200)
+        return Response({'user': None}, status=200)
 
+@ensure_csrf_cookie
 @api_view(['GET'])
 def csrf_token(request):
     token = get_token(request)
-    return JsonResponse({'csrfToken': token}, status=200)
+    # setcookie
+    # return Response({'csrfToken': token}, status=200)
+    return Response(status=204)
 
 @api_view(['POST'])
 def register(request):
@@ -62,26 +68,25 @@ def register(request):
     password = request.data.get('password')
 
     if not username or not password:
-        return JsonResponse({'error': 'Username and password are required'}, status=400)
+        return Response({'error': 'Username and password are required'}, status=400)
 
     if User.objects.filter(username=username).exists():
-        return JsonResponse({'error': 'Username already exists'}, status=400)
+        return Response({'error': 'Username already exists'}, status=400)
 
     user = User.objects.create_user(username=username, password=password)
     token = Token.objects.create(user=user)
 
-    return JsonResponse({'token': str(token)}, status=201)
+    return Response({'token': str(token)}, status=201)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def gacha(request):
     user = request.user
-    if not user.is_authenticated:
-        return JsonResponse({'error': 'User not authenticated'}, status=401)
 
     try:
         cards = Card.objects.all()
         if not cards.exists():
-            return JsonResponse({'error': 'No cards available'}, status=404)
+            return Response({'error': 'No cards available'}, status=404)
 
         drawn_cards = random.sample(list(cards), k=5)  # 5枚のカードをランダムに引く
         for card in drawn_cards:
@@ -92,39 +97,72 @@ def gacha(request):
         serializer = CardSerializer(drawn_cards, many=True)
         return Response({'cards': serializer.data})
     except ObjectDoesNotExist:
-        return JsonResponse({'error': 'Cards not found'}, status=404)
+        return Response({'error': 'Cards not found'}, status=404)
     except ValueError as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        return Response({'error': str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({'error': 'Internal Server Error'}, status=500)
+        return Response({'error': 'Internal Server Error'}, status=500)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def user_cards(request):
-    user_cards = UserCard.objects.filter(user=request.user)
-    data = [{'name': uc.card.name, 'amount': uc.amount} for uc in user_cards]
-    return JsonResponse(data, safe=False)
+    user = request.user
+
+    user_cards = UserCard.objects.filter(user=user)
+    data = [{'card': CardSerializer(uc.card).data, 'amount': uc.amount} for uc in user_cards]
+    return Response(data)
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def save_deck(request):
     user = request.user
-    if not user.is_authenticated:
-        return JsonResponse({'error': 'User not authenticated'}, status=401)
 
-    serializer = DeckSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(user=user)
-        return Response({"message": "デッキが正常に保存されました"}, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    deck_card_ids = request.data
+    if len(deck_card_ids) != 5:
+        return Response({'error': 'デッキは5枚で構成されている必要があります'}, status=400)
+
+    filtered_cards = []
+    for card_id in deck_card_ids:
+        if not isinstance(card_id, int):
+            filtered_cards.append(None)
+            continue
+
+        try:
+            card = Card.objects.get(pk=card_id)
+            UserCard.objects.get(user=user, card=card)
+
+            filtered_cards.append(card.pk)
+        except Card.DoesNotExist:
+            return Response({'error': '存在しないカードが含まれています'}, status=400)
+        except UserCard.DoesNotExist:
+            return Response({'error': '所有していないカードが含まれています'}, status=400)
+
+
+    # Save deck
+    try:
+        deck = Deck.objects.filter(user=user).first()
+        if not deck:
+            deck = Deck(user=user)
+
+        deck.card_ids = filtered_cards
+
+        deck.save()
+        return Response({"message": "デッキが正常に保存されました"})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_deck(request):
     user = request.user
-    if not user.is_authenticated:
-        return JsonResponse({'error': 'User not authenticated'}, status=401)
 
-    try:
-        deck = Deck.objects.get(user=user)
-        serializer = DeckSerializer(deck)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except Deck.DoesNotExist:
-        return Response({"error": "Deck not found"}, status=status.HTTP_404_NOT_FOUND)
+    deck = Deck.objects.filter(user=user).first()
+
+    serialized = DeckSerializer(deck)
+
+    deck_cards = serialized.data['cards']
+
+    return Response({
+        'deck_cards': deck_cards
+    })

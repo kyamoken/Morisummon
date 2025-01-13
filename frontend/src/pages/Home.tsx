@@ -17,7 +17,7 @@ const Home: React.FC = () => {
       {isLoading ? (
         <p>ロード中...</p>
       ) : user ? (
-        <p>{user.username}　さん、こんにちは！</p>
+        <p>{user.username} さん、こんにちは！</p>
       ) : (
         <p>ログインしていません</p>
       )}
