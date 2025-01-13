@@ -9,114 +9,114 @@
     "name": "Card 2",
     "hp": 200,
     "attack": 100,
-    "image": "cards/image2.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 3",
     "hp": 300,
     "attack": 150,
-    "image": "cards/image3.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 4",
     "hp": 400,
     "attack": 200,
-    "image": "cards/image4.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 5",
     "hp": 500,
     "attack": 250,
-    "image": "cards/image5.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 6",
     "hp": 600,
     "attack": 300,
-    "image": "cards/image6.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 7",
     "hp": 700,
     "attack": 350,
-    "image": "cards/image7.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 8",
     "hp": 800,
     "attack": 400,
-    "image": "cards/image8.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 9",
     "hp": 900,
     "attack": 450,
-    "image": "cards/image9.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 10",
     "hp": 1000,
     "attack": 500,
-    "image": "cards/image10.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 11",
     "hp": 1100,
     "attack": 550,
-    "image": "cards/image11.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 12",
     "hp": 1200,
     "attack": 600,
-    "image": "cards/image12.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 13",
     "hp": 1300,
     "attack": 650,
-    "image": "cards/image13.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 14",
     "hp": 1400,
     "attack": 700,
-    "image": "cards/image14.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 15",
     "hp": 1500,
     "attack": 750,
-    "image": "cards/image15.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 16",
     "hp": 1600,
     "attack": 800,
-    "image": "cards/image16.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 17",
     "hp": 1700,
     "attack": 850,
-    "image": "cards/image17.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 18",
     "hp": 1800,
     "attack": 900,
-    "image": "cards/image18.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 19",
     "hp": 1900,
     "attack": 950,
-    "image": "cards/image19.png"
+    "image": "/static/images/cards/card01.png"
   },
   {
     "name": "Card 20",
     "hp": 2000,
     "attack": 1000,
-    "image": "cards/image20.png"
+    "image": "/static/images/cards/card01.png"
   }
 ]

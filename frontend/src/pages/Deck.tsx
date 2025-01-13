@@ -12,20 +12,21 @@ const Deck: React.FC = () => {
 
   const handleRemoveCardFromDeck = (index: number) => {
     deckManager.removeCardFromDeck(index);
-  }
+  };
 
   const handleAddCardToDeck = (card: Card) => {
     deckManager.addCardToDeck(card);
   };
 
   const handleSaveDeck = () => {
-    deckManager.saveDeck()
-    .then(() => {
-      toast.success('デッキが保存されました');
-    }
-    ).catch(_error => {
-      toast.error('保存に失敗しました');
-    });
+    deckManager
+      .saveDeck()
+      .then(() => {
+        toast.success('デッキが保存されました');
+      })
+      .catch(_error => {
+        toast.error('保存に失敗しました');
+      });
   };
 
   return (
@@ -40,28 +41,61 @@ const Deck: React.FC = () => {
             <DeckArea>
               {deckManager.editingDeck.map((card, index) => (
                 <CardSlot key={index} onClick={() => handleRemoveCardFromDeck(index)}>
-                  {card?.name || '未設定'}
+                  {card?.image ? (
+                    <CardImage src={card.image} alt={card.name || 'カード画像'} />
+                  ) : (
+                    <CardName>{card?.name || '未設定'}</CardName>
+                  )}
                 </CardSlot>
               ))}
             </DeckArea>
             {cards && (
               <ScrollableArea>
                 <CardList>
-                  {cards.map((item, index) => (
-                    <Card key={index} onClick={() => handleAddCardToDeck(item.card)}>
-                      {item.card.name} ({item.amount})
-                    </Card>
-                  ))}
-                </CardList>
+                        {cards.map((item, index) => (
+                          <Card key={index} onClick={() => handleAddCardToDeck(item.card)}>
+                    {item.card.image ? (
+                      <CardImage src={item.card.image} alt={item.card.name} />
+                    ) : (
+                      <CardText>{item.card.name} ({item.amount})</CardText>
+                    )}
+                  </Card>
+                ))}
+              </CardList>
+
               </ScrollableArea>
             )}
-            <Button type="button" onClick={handleSaveDeck}>デッキを保存</Button>
+            <Button type="button" onClick={handleSaveDeck}>
+              デッキを保存
+            </Button>
           </>
         )}
       </Content>
     </DeckContainer>
   );
 };
+
+const CardImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--border-radius);
+  z-index: 1;
+`;
+
+const CardName = styled.div`
+  font-size: 14px;
+  color: white;
+  text-align: center;
+`;
+
+const CardText = styled.div`
+  font-size: 14px;
+  color: blue;
+  text-align: center;
+  padding: 5px;
+  z-index: 2;
+`;
 
 const DeckContainer = styled.div`
   display: flex;
