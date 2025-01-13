@@ -10,8 +10,8 @@ const Header: React.FC = () => {
   const handleLogoClick = () => {
     navigate('/');
   };
-
-  const gachaStones = 5;
+  
+  const gachaStones = user?.magic_stones || 0; // ユーザーがいない場合は0
 
   return (
     <HeaderContainer>
@@ -61,7 +61,7 @@ const UserInfo = styled.div`
   }
 
   & > div:not(:last-child) {
-    margin-right: 20px; /* 右側の距離を追加 */
+    margin-right: 20px;
   }
 `;
 

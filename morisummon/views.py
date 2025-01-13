@@ -1,7 +1,7 @@
 import json
 from django.conf import settings
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login as auth_login, logout
+from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.decorators import api_view, permission_classes
@@ -9,11 +9,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from morisummon.serializers import UserSerializer
-from django.contrib.auth.models import User
 from .models import Card, UserCard, Deck
 from .serializers import CardSerializer, DeckSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist
+
+# Custom User modelを取得
+User = get_user_model()
 
 def index(request):
     template_name = 'dev.html' if settings.VITE_DEV else 'index.html'
@@ -82,8 +84,17 @@ def register(request):
 @permission_classes([IsAuthenticated])
 def gacha(request):
     user = request.user
+    required_stones = 10  # 1回のガチャで必要なガチャ石の数
+
+    # ユーザーのガチャ石を確認
+    if user.magic_stones < required_stones:
+        return Response({'error': 'ガチャ石が足りません'}, status=400)
 
     try:
+        # ガチャ石を消費する
+        user.magic_stones -= required_stones
+        user.save()
+
         cards = Card.objects.all()
         if not cards.exists():
             return Response({'error': 'No cards available'}, status=404)
@@ -102,6 +113,7 @@ def gacha(request):
         return Response({'error': str(e)}, status=400)
     except Exception as e:
         return Response({'error': 'Internal Server Error'}, status=500)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

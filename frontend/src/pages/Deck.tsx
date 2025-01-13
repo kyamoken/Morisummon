@@ -4,6 +4,7 @@ import Header from '@/components/Header.tsx';
 import useCardManager from '@/hooks/useCardManager';
 import useDeckManager from '@/hooks/useDeckManager';
 import type { Card } from '@/types/models';
+import { toast } from 'react-hot-toast';
 
 const Deck: React.FC = () => {
   const { cards } = useCardManager();
@@ -20,10 +21,10 @@ const Deck: React.FC = () => {
   const handleSaveDeck = () => {
     deckManager.saveDeck()
     .then(() => {
-      console.log('デッキが保存されました');
+      toast.success('デッキが保存されました');
     }
-    ).catch(error => {
-      console.error('デッキの保存に失敗しました:', error);
+    ).catch(_error => {
+      toast.error('保存に失敗しました');
     });
   };
 

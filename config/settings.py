@@ -166,5 +166,5 @@ MORISUMMON_DECK_SIZE = 5 # デッキのサイズ
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'  # RedisのURL
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # タスクの結果を格納する場所
 
-# AUTH_USER_MODEL = 'morisummon.CustomUser'
+AUTH_USER_MODEL = 'morisummon.CustomUser'
 

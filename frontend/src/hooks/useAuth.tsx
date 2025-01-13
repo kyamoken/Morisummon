@@ -77,6 +77,7 @@ export default function useAuth() {
   async function gacha() {
     try {
       const response = await ky.get('/api/gacha/').json<{ cards: any[] }>();
+      mutate('/api/auth/me/');
       return response.cards;
     } catch (error) {
       console.error('ガチャに失敗しました:', error);

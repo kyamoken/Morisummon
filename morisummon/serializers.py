@@ -1,12 +1,12 @@
 from django.conf import settings
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from morisummon.models import Card, Deck
+from morisummon.models import Card, Deck, CustomUser
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = CustomUser  # カスタムユーザーモデルを指定
         exclude = ['password']
+
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
