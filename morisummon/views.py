@@ -133,6 +133,10 @@ def save_deck(request):
     if len(deck_card_ids) != 5:
         return Response({'error': 'デッキは5枚で構成されている必要があります'}, status=400)
 
+    # 同一カードのバリデーション
+    if len(deck_card_ids) != len(set(deck_card_ids)):
+        return Response({'error': 'duplicate_card', 'message': '同一カードを複数枚デッキに追加することはできません'},status=400)
+
     filtered_cards = []
     for card_id in deck_card_ids:
         if not isinstance(card_id, int):
@@ -149,19 +153,19 @@ def save_deck(request):
         except UserCard.DoesNotExist:
             return Response({'error': '所有していないカードが含まれています'}, status=400)
 
-
-    # Save deck
+    # デッキ保存処理
     try:
         deck = Deck.objects.filter(user=user).first()
         if not deck:
             deck = Deck(user=user)
 
         deck.card_ids = filtered_cards
-
         deck.save()
+
         return Response({"message": "デッキが正常に保存されました"})
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
 
 
 @api_view(['GET'])

@@ -1,26 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 const Battle: React.FC = () => {
+  const [turn, setTurn] = useState(1);
+  const [playerHP, setPlayerHP] = useState(100);
+  const [opponentHP, setOpponentHP] = useState(100);
+
+  const handleAction = (action: string) => {
+    if (action === 'attack') {
+      setOpponentHP(opponentHP - 10);
+    } else if (action === 'heal') {
+      setPlayerHP(playerHP + 10);
+    }
+    setTurn(turn + 1);
+  };
+
   return (
     <>
       <div className="global-style" />
       <BattleContainer>
         <OpponentInfo>
           <p>相手の名前: DummyOpponent</p>
-          <p>残りHP: 100</p>
+          <p>残りHP: {opponentHP}</p>
         </OpponentInfo>
         <TurnInfo>
-          <p>現在のターン: 1</p>
+          <p>現在のターン: {turn}</p>
         </TurnInfo>
         <PlayerInfo>
           <p>自分の名前: DummyPlayer</p>
-          <p>残りHP: 100</p>
+          <p>残りHP: {playerHP}</p>
         </PlayerInfo>
         <ActionButtons>
-          <button>ボタン1</button>
-          <button>ボタン2</button>
-          <button>ボタン3</button>
+          <button onClick={() => handleAction('attack')}>攻撃</button>
+          <button onClick={() => handleAction('heal')}>回復</button>
+          <button onClick={() => handleAction('defend')}>防御</button>
         </ActionButtons>
         <HandCards>
           <p>手札: カード1, カード2, カード3</p>
@@ -116,8 +129,9 @@ const Bench = styled.div`
 const MainArea = styled.div`
   display: flex;
   justify-content: center;
-  margin: 20px 0; /* ここを60pxから20pxに変更 */
+  margin: 20px 0;
 `;
+
 const Card = styled.div`
   width: 50px;
   height: 70px;

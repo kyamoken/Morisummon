@@ -19,15 +19,31 @@ const Deck: React.FC = () => {
   };
 
   const handleSaveDeck = () => {
-    deckManager
-      .saveDeck()
-      .then(() => {
-        toast.success('デッキが保存されました');
-      })
-      .catch(_error => {
-        toast.error('保存に失敗しました');
-      });
-  };
+  deckManager
+    .saveDeck()
+    .then(() => {
+      toast.success('デッキが保存されました');
+    })
+    .catch(async (error) => {
+      console.log('Error caught:', error);
+      try {
+        // responseをbodyから持ってくる必要があるっぽ
+        const errorData = error.response ? await error.response.json() : null;
+        console.log('Error Data:', errorData);
+
+        if (errorData?.error === 'duplicate_card') {
+          toast.error(errorData.message || '同一カードを複数枚追加することはできません');
+        } else {
+          toast.error('保存に失敗しました');
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        toast.error('エラーが発生しました');
+      }
+    });
+};
+
+
 
   return (
     <DeckContainer>

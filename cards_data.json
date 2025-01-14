@@ -6,22 +6,22 @@
     "image": "/static/images/cards/card01.png"
   },
   {
-    "name": "Card 2",
-    "hp": 200,
-    "attack": 100,
-    "image": "/static/images/cards/card01.png"
+    "name": "B.B",
+    "hp": 60,
+    "attack": 20,
+    "image": "/static/images/cards/card02.png"
   },
   {
-    "name": "Card 3",
-    "hp": 300,
-    "attack": 150,
-    "image": "/static/images/cards/card01.png"
+    "name": "パンダリン",
+    "hp": 70,
+    "attack": 40,
+    "image": "/static/images/cards/card03.png"
   },
   {
-    "name": "Card 4",
-    "hp": 400,
-    "attack": 200,
-    "image": "/static/images/cards/card01.png"
+    "name": "ピコトゲ",
+    "hp": 40,
+    "attack": 50,
+    "image": "/static/images/cards/card04.png"
   },
   {
     "name": "Card 5",

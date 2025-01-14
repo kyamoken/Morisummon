@@ -15,6 +15,18 @@
   --box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
+.light-theme {
+  --primary-color: #007bff;
+  --background-color: #ffffff;
+  --text-color: #000000;
+  --card-background: #f8f9fa;
+  --button-hover: #0056b3;
+  --input-border: #ced4da;
+  --input-focus-border: #80bdff;
+  --border-radius: 8px;
+  --box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
 body {
   font-family: "M PLUS Rounded 1c", "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin: 0;

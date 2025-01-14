@@ -3,13 +3,17 @@ import styled from 'styled-components';
 import Header from '@/components/Header.tsx';
 
 const Settings: React.FC = () => {
-  const [theme, setTheme] = useState<string>('light');
-  const [notifications, setNotifications] = useState<boolean>(true);
+  const [selectedTheme, setSelectedTheme] = useState<string>('dark');
+  const [theme, setTheme] = useState<string>('dark');
+
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedTheme(e.target.value);
+  };
 
   const handleSaveSettings = () => {
-    // セッティング保存のロジックを追加
-    console.log('テーマ:', theme);
-    console.log('通知:', notifications);
+    setTheme(selectedTheme);
+    document.documentElement.className = selectedTheme === 'light' ? 'light-theme' : '';
+    console.log('テーマ:', selectedTheme);
   };
 
   return (
@@ -20,18 +24,10 @@ const Settings: React.FC = () => {
         <Form>
           <FormGroup>
             <Label>テーマ:</Label>
-            <Select value={theme} onChange={(e) => setTheme(e.target.value)}>
-              <option value="light">ダーク</option>
-              <option value="dark">ライト</option>
+            <Select value={selectedTheme} onChange={handleThemeChange}>
+              <option value="dark">ダーク</option>
+              <option value="light">ライト</option>
             </Select>
-          </FormGroup>
-          <FormGroup>
-            <Label>通知:</Label>
-            <Checkbox
-              type="checkbox"
-              checked={notifications}
-              onChange={(e) => setNotifications(e.target.checked)}
-            />
           </FormGroup>
           <Button type="button" onClick={handleSaveSettings}>設定を保存</Button>
         </Form>
@@ -47,7 +43,7 @@ const SettingsContainer = styled.div`
   justify-content: center;
   height: 100vh;
   background-color: var(--background-color);
-  color: white;
+  color: var(--text-color);
   width: 100%;
   text-align: center;
 `;
@@ -77,7 +73,7 @@ const FormGroup = styled.div`
 const Label = styled.label`
   font-size: 16px;
   font-weight: bold;
-  color: white;
+  color: var(--text-color);
 `;
 
 const Select = styled.select`
@@ -92,11 +88,6 @@ const Select = styled.select`
     border-color: var(--input-focus-border);
     outline: none;
   }
-`;
-
-const Checkbox = styled.input`
-  width: 20px;
-  height: 20px;
 `;
 
 const Button = styled.button`

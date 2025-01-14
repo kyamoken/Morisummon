@@ -22,7 +22,7 @@ const Home: React.FC = () => {
         <p>ログインしていません</p>
       )}
       <Content>
-        <h1>ボケモンカードへようこそ！</h1>
+        <h1>エッジワースカードベルトへようこそ！</h1>
         <ButtonContainer>
           <Button as={Link} to="/matching">マッチング</Button>
           <Button as={Link} to="/deck">デッキ</Button>
