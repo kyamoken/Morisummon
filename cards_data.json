@@ -24,16 +24,16 @@
     "image": "/static/images/cards/card04.png"
   },
   {
-    "name": "Card 5",
-    "hp": 500,
-    "attack": 250,
-    "image": "/static/images/cards/card01.png"
+    "name": "C.C",
+    "hp": 60,
+    "attack": 30,
+    "image": "/static/images/cards/card05.png"
   },
   {
-    "name": "Card 6",
-    "hp": 600,
-    "attack": 300,
-    "image": "/static/images/cards/card01.png"
+    "name": "スレンダー",
+    "hp": 90,
+    "attack": 10,
+    "image": "/static/images/cards/card06.png"
   },
   {
     "name": "Card 7",
@@ -58,65 +58,6 @@
     "hp": 1000,
     "attack": 500,
     "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 11",
-    "hp": 1100,
-    "attack": 550,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 12",
-    "hp": 1200,
-    "attack": 600,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 13",
-    "hp": 1300,
-    "attack": 650,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 14",
-    "hp": 1400,
-    "attack": 700,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 15",
-    "hp": 1500,
-    "attack": 750,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 16",
-    "hp": 1600,
-    "attack": 800,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 17",
-    "hp": 1700,
-    "attack": 850,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 18",
-    "hp": 1800,
-    "attack": 900,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 19",
-    "hp": 1900,
-    "attack": 950,
-    "image": "/static/images/cards/card01.png"
-  },
-  {
-    "name": "Card 20",
-    "hp": 2000,
-    "attack": 1000,
-    "image": "/static/images/cards/card01.png"
   }
+
 ]

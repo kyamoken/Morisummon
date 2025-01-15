@@ -4,14 +4,12 @@ import Header from '@/components/Header.tsx';
 
 const Settings: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState<string>('dark');
-  const [theme, setTheme] = useState<string>('dark');
 
   const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTheme(e.target.value);
   };
 
   const handleSaveSettings = () => {
-    setTheme(selectedTheme);
     document.documentElement.className = selectedTheme === 'light' ? 'light-theme' : '';
     console.log('テーマ:', selectedTheme);
   };
@@ -25,7 +23,7 @@ const Settings: React.FC = () => {
           <FormGroup>
             <Label>テーマ:</Label>
             <Select value={selectedTheme} onChange={handleThemeChange}>
-              <option value="dark">ダーク</option>
+              <option value="dark">ダーク(推奨)</option>
               <option value="light">ライト</option>
             </Select>
           </FormGroup>

@@ -5,7 +5,7 @@ import Header from '@/components/Header.tsx'; // ヘッダーコンポーネン�
 import useAuth from '@/hooks/useAuth.tsx';
 
 const Home: React.FC = () => {
-  const { user, isLoading, logout } = useAuth();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -14,19 +14,13 @@ const Home: React.FC = () => {
   return (
     <HomeContainer>
       <Header />
-      {isLoading ? (
-        <p>ロード中...</p>
-      ) : user ? (
-        <p>{user.username} さん、こんにちは！</p>
-      ) : (
-        <p>ログインしていません</p>
-      )}
       <Content>
         <h1>エッジワースカードベルトへようこそ！</h1>
         <ButtonContainer>
           <Button as={Link} to="/matching">マッチング</Button>
           <Button as={Link} to="/deck">デッキ</Button>
           <Button as={Link} to="/gacha">ガチャ</Button>
+          <Button as={Link} to="/card-collection">図鑑</Button> {/* 図鑑ページへのリンクを追加 */}
           <Button as={Link} to="/settings">設定</Button>
         </ButtonContainer>
         <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>

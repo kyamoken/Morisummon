@@ -99,7 +99,7 @@ def gacha(request):
         if not cards.exists():
             return Response({'error': 'No cards available'}, status=404)
 
-        drawn_cards = random.sample(list(cards), k=5)  # 5枚のカードをランダムに引く
+        drawn_cards = random.choices(list(cards), k=5)  # 5枚のカードをランダムに引く
         for card in drawn_cards:
             user_card, created = UserCard.objects.get_or_create(user=user, card=card)
             user_card.amount += 1

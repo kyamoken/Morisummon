@@ -11,6 +11,7 @@ import Deck from "./pages/Deck";
 import Setting from "./pages/Settings";
 import Gacha from "./pages/gacha";
 import Cards from './pages/Cards';
+import CardCollection from "@/pages/CardCollection.tsx";
 
 const handleContextMenu = (e: MouseEvent) => {
   e.preventDefault();
@@ -35,6 +36,7 @@ const AppRouter: React.FC = () => {
       <Route path="/deck" element={<Deck />} />
       <Route path="/matching" element={<Matching />} />
       <Route path="/gacha" element={<Gacha />} />
+      <Route path="/card-collection" element={<CardCollection />} />
       <Route path="/battle" element={<Battle />} />
       <Route path="/settings" element={<Setting />} />
       <Route path="*" element={<Page404 />} />
