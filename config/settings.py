@@ -25,9 +25,15 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+CSRF_TRUSTED_ORIGINS = []
+
+if env('VITE_DEV'):
+    CSRF_TRUSTED_ORIGINS.append('http://localhost:5173')
+
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
