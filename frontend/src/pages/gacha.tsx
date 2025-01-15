@@ -28,7 +28,7 @@ const Gacha: React.FC = () => {
         <Button onClick={handleGacha} disabled={isAnimating}>
           {isAnimating ? 'ガチャ中...' : 'ガチャを引く'}
         </Button>
-        {isAnimating && !result && <Animation />}
+        {/*{isAnimating && !result && <Animation />}*/}
         {result && (
           <Modal>
             <CardContainer>
@@ -100,23 +100,22 @@ const Button = styled.button`
   }
 `;
 
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
-
-const Animation = styled.div`
-  margin-top: 20px;
-  width: 50px;
-  height: 50px;
-  border: 5px solid var(--primary-color);
-  border-top: 5px solid white;
-  border-radius: 50%;
-  animation: ${spin} 1s linear infinite;
-`;
+// const spin = keyframes`
+//   0% { transform: rotate(0deg); }
+//   100% { transform: rotate(360deg); }
+// `;
+//
+// // const Animation = styled.div`
+// //   margin-top: 20px;
+// //   width: 50px;
+// //   height: 50px;
+// //   border: 5px solid var(--primary-color);
+// //   border-top: 5px solid white;
+// //   border-radius: 50%;
+// //   animation: ${spin} 1s linear infinite;
+// // `;
 
 const Modal = styled.div`
-  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -125,14 +124,7 @@ const Modal = styled.div`
   border-radius: 10px;
   width: 80%;
   max-width: 600px;
-`;
-
-const CardContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  position: fixed;
 `;
 
 const fadeIn = keyframes`
@@ -146,6 +138,14 @@ const fadeIn = keyframes`
   }
 `;
 
+const CardContainer = styled.div`
+  animation: ${fadeIn} 0.5s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
 const Card = styled.div<{ delay: number }>`
   width: 100px;
   height: 150px;

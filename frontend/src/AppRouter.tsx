@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Route, Routes } from 'react-router';
 import App from './App';
 import Login from './pages/Login';
@@ -12,7 +12,19 @@ import Setting from "./pages/Settings";
 import Gacha from "./pages/gacha";
 import Cards from './pages/Cards';
 
+const handleContextMenu = (e: MouseEvent) => {
+  e.preventDefault();
+}
+
 const AppRouter: React.FC = () => {
+  useEffect(() => {
+    window.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+    }
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<App />} />
