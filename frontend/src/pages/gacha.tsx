@@ -28,8 +28,7 @@ const Gacha: React.FC = () => {
         <Button onClick={handleGacha} disabled={isAnimating}>
           {isAnimating ? 'ガチャ中...' : "ガチャを引く"}
         </Button>
-        {isAnimating && !result && <Animation />}
-        {result && (
+        {!!result && (
           <Modal>
             <CardContainer>
               {result.map((card, index) => (
