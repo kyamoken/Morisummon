@@ -13,5 +13,5 @@ export default function AppLayout({ children }: Props) {
         {children}
       </main>
     </div>
-  )
+  );
 }

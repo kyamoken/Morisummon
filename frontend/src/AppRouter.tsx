@@ -12,10 +12,11 @@ import Setting from "./pages/Settings";
 import Gacha from "./pages/gacha";
 import Cards from './pages/Cards';
 import CardCollection from "@/pages/CardCollection.tsx";
+import Demo from './pages/Demo';
 
 const handleContextMenu = (e: MouseEvent) => {
   e.preventDefault();
-}
+};
 
 const AppRouter: React.FC = () => {
   useEffect(() => {
@@ -23,7 +24,7 @@ const AppRouter: React.FC = () => {
 
     return () => {
       window.removeEventListener('contextmenu', handleContextMenu);
-    }
+    };
   }, []);
 
   return (
@@ -39,6 +40,7 @@ const AppRouter: React.FC = () => {
       <Route path="/card-collection" element={<CardCollection />} />
       <Route path="/battle" element={<Battle />} />
       <Route path="/settings" element={<Setting />} />
+      <Route path="/demo" element={<Demo />} />
       <Route path="*" element={<Page404 />} />
     </Routes>
   );

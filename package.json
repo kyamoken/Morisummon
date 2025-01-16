@@ -10,8 +10,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "watch": "vite build --watch",
-    "lint": "tsc -b && eslint frontend/src",
-    "fix": "tsc -b && eslint frontend/src --fix"
+    "lint": "tsc -b && eslint --cache --cache-location node_modules/.cache/eslint/ frontend/src",
+    "fix": "tsc -b && eslint --cache --cache-location node_modules/.cache/eslint/ frontend/src --fix"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -39,6 +39,7 @@
   "dependencies": {
     "@mui/icons-material": "^6.3.1",
     "react-hot-toast": "^2.5.1",
+    "react-use-websocket": "^4.11.1",
     "styled-components": "^6.1.14",
     "swr": "^2.3.0"
   }

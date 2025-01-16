@@ -10,7 +10,7 @@ const Header: React.FC = () => {
   const handleLogoClick = () => {
     navigate('/');
   };
-  
+
   const gachaStones = user?.magic_stones || 0; // ユーザーがいない場合は0
 
   return (

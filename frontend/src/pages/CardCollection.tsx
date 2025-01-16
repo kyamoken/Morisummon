@@ -38,7 +38,7 @@ const CardCollection: React.FC = () => {
         </CardGrid>
       </Content>
 
-      {selectedCard && (
+      {!!selectedCard && (
         <ModalCard onClick={handleCloseModal}>
           <ExpandedCardImage
             src={selectedCard.image || ''}

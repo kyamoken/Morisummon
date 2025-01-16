@@ -34,10 +34,10 @@ export default function useAuth() {
         'X-CSRFToken': getCookie('csrftoken'),
       }
     }).json<{ user: User } | null>()
-    .catch((error) => {
-      console.error('ログインに失敗しました:', error);
-      return null;
-    });
+      .catch((error) => {
+        console.error('ログインに失敗しました:', error);
+        return null;
+      });
 
     if (!response?.user) {
       return false;
@@ -59,10 +59,10 @@ export default function useAuth() {
         'X-CSRFToken': getCookie('csrftoken'),
       }
     }).json<{ token: string; user: User } | null>()
-    .catch((error) => {
-      console.error('登録に失敗しました:', error);
-      return null;
-    });
+      .catch((error) => {
+        console.error('登録に失敗しました:', error);
+        return null;
+      });
 
     if (!response?.token) {
       return false;

@@ -50,7 +50,7 @@ const useDeckManager = () => {
     const newDeck = [...editingDeck];
     newDeck[index] = null;
     setEditingDeck(newDeck);
-  }
+  };
 
   /**
    * デッキのindex番目にカードをセットする
@@ -70,7 +70,7 @@ const useDeckManager = () => {
     const newDeck = [...editingDeck];
     newDeck[index] = card;
     setEditingDeck(newDeck);
-  }
+  };
 
   /**
    * デッキの空きスロットにカードを追加する
@@ -83,7 +83,7 @@ const useDeckManager = () => {
       newDeck[emptySlotIndex] = card;
       setEditingDeck(newDeck);
     }
-  }
+  };
 
 
   /**
@@ -103,7 +103,7 @@ const useDeckManager = () => {
 
     // デッキ保存後に編集用デッキを更新
     setEditingDeck(deck);
-  }
+  };
 
 
   /**

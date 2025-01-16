@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import Header from '@/components/Header.tsx';
 import useAuth from '@/hooks/useAuth';
+import Header from '@/components/Header.tsx';
 
 const Gacha: React.FC = () => {
   const { gacha } = useAuth();
@@ -26,9 +26,9 @@ const Gacha: React.FC = () => {
         <h1>ガチャページ</h1>
         <Banner src="../static/images/kyamokenICON.png" alt="Banner" />
         <Button onClick={handleGacha} disabled={isAnimating}>
-          {isAnimating ? 'ガチャ中...' : 'ガチャを引く'}
+          {isAnimating ? 'ガチャ中...' : "ガチャを引く"}
         </Button>
-        {/*{isAnimating && !result && <Animation />}*/}
+        {isAnimating && !result && <Animation />}
         {result && (
           <Modal>
             <CardContainer>

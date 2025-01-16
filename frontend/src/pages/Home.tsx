@@ -9,7 +9,7 @@ const Home: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-  }
+  };
 
   return (
     <HomeContainer>
