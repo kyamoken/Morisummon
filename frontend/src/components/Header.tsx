@@ -1,18 +1,25 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import useAuth from '@/hooks/useAuth.tsx';
 import useWebSocket from 'react-use-websocket';
+
+interface Message {
+  message: string;
+  user?: {
+    name: string;
+  };
+}
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { sendJsonMessage, lastJsonMessage } = useWebSocket('ws://localhost:8000/ws/somepath/');
+  const { sendJsonMessage, lastJsonMessage } = useWebSocket<Message>('ws://localhost:8000/ws/somepath/');
 
-  const [receivedMessages, setReceivedMessages] = useState([]);
+  const [receivedMessages, setReceivedMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const chatEndRef = useRef(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (lastJsonMessage) {
@@ -30,7 +37,7 @@ const Header: React.FC = () => {
     navigate('/');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue) return;
     sendJsonMessage({ message: inputValue });
@@ -54,34 +61,50 @@ const Header: React.FC = () => {
         <div>{user ? user.username + " さん" : 'ゲスト さん'}</div>
         <div>魔法石: {gachaStones}</div>
       </UserInfo>
-      {isModalOpen && (
-        <Modal>
-          <ModalContent>
-            <ChatForm onSubmit={handleSubmit}>
-              <input
-                type="text"
-                className="message-input"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-              />
-              <button type="submit">送信</button>
-            </ChatForm>
-            <ChatItems>
-              {receivedMessages.map((m, i) => (
-                <ChatItem key={i}>
-                  <p>{m.message}</p>
-                  <small style={{ color: 'gray' }}>By {m?.user?.name || 'Anonymous'}</small>
-                </ChatItem>
-              ))}
-              <div ref={chatEndRef} />
-            </ChatItems>
-            <CloseButton onClick={() => setIsModalOpen(false)}>閉じる</CloseButton>
-          </ModalContent>
-        </Modal>
-      )}
+      {isModalOpen ? <Modal>
+        <ModalContent>
+          <ChatForm onSubmit={handleSubmit}>
+            <input
+              type="text"
+              className="message-input"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+            />
+            <button type="submit">送信</button>
+          </ChatForm>
+          <ChatItems>
+            {receivedMessages.map((m, i) => (
+              <ChatItem key={i}>
+                <p>{m.message}</p>
+                <small style={{ color: 'gray' }}>By {m?.user?.name || 'Anonymous'}</small>
+              </ChatItem>
+            ))}
+            <div ref={chatEndRef} />
+          </ChatItems>
+          <CloseButton onClick={() => setIsModalOpen(false)}>閉じる</CloseButton>
+        </ModalContent>
+      </Modal> : null}
     </HeaderContainer>
   );
 };
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const slideUp = keyframes`
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+`;
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -136,11 +159,12 @@ const Modal = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(211, 211, 211, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1001;
+  animation: ${fadeIn} 0.5s ease-out;
 `;
 
 const ModalContent = styled.div`
@@ -152,6 +176,7 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  animation: ${slideUp} 0.5s ease-out;
 `;
 
 const ChatForm = styled.form`
