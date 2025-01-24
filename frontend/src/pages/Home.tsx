@@ -17,7 +17,7 @@ const Home: React.FC = () => {
       <Content>
         <h1>エッジワースカードへようこそ！</h1>
         <ButtonContainer>
-          <Button as={Link} to="/matching">マッチング</Button>
+          <Button as={Link} to="/battle">マッチング</Button>
           <Button as={Link} to="/deck">デッキ</Button>
           <Button as={Link} to="/gacha">ガチャ</Button>
           <Button as={Link} to="/card-collection">図鑑</Button> {/* 図鑑ページへのリンクを追加 */}

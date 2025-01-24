@@ -2,6 +2,25 @@ from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
 from django.contrib.auth.models import AbstractUser
+from mongoengine import Document, fields
+
+class PlayerStats(Document):
+    user = fields.ReferenceField(settings.AUTH_USER_MODEL)
+    hp = fields.IntField(default=100)
+    attack = fields.IntField(default=10)
+
+    def __str__(self):
+        return self.user.username
+
+
+class Battle(Document):
+    history = fields.ListField(fields.StringField())
+    player1 = fields.ReferenceField(PlayerStats)
+    player2 = fields.ReferenceField(PlayerStats)
+    turn = fields.IntField(default=1)
+
+    def __str__(self):
+        return self.name
 
 
 class CustomUser(AbstractUser):

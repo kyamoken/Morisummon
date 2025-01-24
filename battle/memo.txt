@@ -1,0 +1,36 @@
+◯各名称の説明
+BattleStatus → 戦闘状態、その戦闘に関する全ての状態が入っている
+BattleUserInfo → ユーザー情報、戦闘に関する情報は入っていない
+Battle
+
+◯battle status
+
+.player1 プレイヤー状態1
+.player2 プレイヤー状態2
+（以降playerの後にある1,2は省略）
+.player.info プレイヤー情報
+.player.info.name プレイヤー名
+.player.status プレイヤーの状態
+.player.status.protected 本人しか確認できない状態
+.player.status.hidden バックエンドでのみ処理する非公開状態
+
+.key   # public    双方に公開
+._key  # protected 本人しか確認できない
+.__key # private   バックエンドでのみ処理する非公開
+
+{
+    status: 'waiting',
+    turn: 1,
+    player: {
+        info: {
+            name: 'player1'
+        },
+        status: {
+            battle_card: Card,
+            bench_cards: Card[],
+            _hand_cards: Card[], # protected
+            hand_cards_count: 5, # public
+            __yamafuda: Card[],
+        }
+    },
+}

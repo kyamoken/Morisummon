@@ -1,6 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
-import json
 from django.contrib.auth.models import AnonymousUser
+import json
 
 from morisummon.models import CustomUser
 

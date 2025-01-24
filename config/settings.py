@@ -2,17 +2,18 @@ import environ
 import os
 from pathlib import Path
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# environ
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, True),
     VITE_DEV=(bool, False),
+    VITE_DEV_PORT=(int, 5173),
+
 )
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Take environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -21,14 +22,15 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = 'django-insecure-t7cj!95!!@4=(rit00rq(q(0i9=^kk^g9c1^#!l05^32l7#roi'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
+VITE_DEV = env('VITE_DEV')
 
 ALLOWED_HOSTS = []
 
 CSRF_TRUSTED_ORIGINS = []
 
-if env('VITE_DEV'):
-    CSRF_TRUSTED_ORIGINS.append('http://localhost:5173')
+if VITE_DEV:
+    CSRF_TRUSTED_ORIGINS.append('http://localhost:' + str(env('VITE_DEV_PORT')))
 
 # Application definition
 
@@ -45,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'morisummon.apps.MorisummonConfig',
+    'battle.apps.BattleConfig',
 ]
 
 MIDDLEWARE = [
@@ -146,31 +149,85 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-VITE_DEV = env('VITE_DEV')
-
 DJANGO_VITE = {
     "default": {
         "manifest_path": BASE_DIR / "static/build/manifest.json",
         "static_url_prefix": "build",
-        "dev_mode": env('VITE_DEV'),
+        "dev_mode": VITE_DEV,
     }
 }
 
 ASGI_APPLICATION = 'config.asgi.application'
 
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [('127.0.0.1', 6379)],
-#         },
-#     },
-# }
+CHANNEL_LAYERS = {
+    'default': {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [('127.0.0.1', 6379)],
+        # },
+    },
+}
 
 MORISUMMON_DECK_SIZE = 5 # デッキのサイズ
 
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'  # RedisのURL
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # タスクの結果を格納する場所
-
 AUTH_USER_MODEL = 'morisummon.CustomUser'
 
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        # "file": {
+        #     "level": "DEBUG",
+        #     "class": "logging.FileHandler",
+        #     "filename": os.path.join(BASE_DIR, "logs", "django.log"),
+        #     "formatter": "verbose",
+        # },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "battle": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
+
+# MongoEngine
+import mongoengine
+
+MONGO_HOST = "mongodb://" + env.str("MONGO_HOST", "localhost") + ":" + env.str("MONGO_PORT", "27017")
+MONGO_DATABASE = env.str("MONGO_DATABASE", "morisummon")
+MONGO_USERNAME = env.str("MONGO_USERNAME", "")
+MONGO_PASSWORD = env.str("MONGO_PASSWORD", "")
+
+mongoengine.connect(
+    db=MONGO_DATABASE,
+    host=MONGO_HOST,
+    username=MONGO_USERNAME,
+    password=MONGO_PASSWORD,
+)

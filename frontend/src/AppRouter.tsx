@@ -4,7 +4,6 @@ import App from './App';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Page404 from "./pages/404";
-import Matching from "./pages/Matching";
 import Battle from "./pages/Battle";
 import Home from "./pages/Home";
 import Deck from "./pages/Deck";
@@ -35,7 +34,6 @@ const AppRouter: React.FC = () => {
       <Route path="/home" element={<Home />} />
       <Route path="/cards" element={<Cards />} />
       <Route path="/deck" element={<Deck />} />
-      <Route path="/matching" element={<Matching />} />
       <Route path="/gacha" element={<Gacha />} />
       <Route path="/card-collection" element={<CardCollection />} />
       <Route path="/battle" element={<Battle />} />
