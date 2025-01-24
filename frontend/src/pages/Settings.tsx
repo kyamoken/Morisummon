@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router';
 import Header from '@/components/Header.tsx';
 
 const Settings: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState<string>('dark');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setSelectedTheme(savedTheme);
+      document.documentElement.className = savedTheme === 'light' ? 'light-theme' : '';
+    }
+  }, []);
 
   const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTheme(e.target.value);
+    const newTheme = e.target.value;
+    setSelectedTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.className = newTheme === 'light' ? 'light-theme' : '';
   };
 
   const handleSaveSettings = () => {
-    document.documentElement.className = selectedTheme === 'light' ? 'light-theme' : '';
     console.log('テーマ:', selectedTheme);
+    navigate('/');
   };
 
   return (
@@ -21,7 +34,7 @@ const Settings: React.FC = () => {
         <h1>設定</h1>
         <Form>
           <FormGroup>
-            <Label>テーマ:</Label>
+            <Label>テーマ選択:</Label>
             <Select value={selectedTheme} onChange={handleThemeChange}>
               <option value="dark">ダーク(推奨)</option>
               <option value="light">ライト</option>
@@ -46,7 +59,7 @@ const SettingsContainer = styled.div`
   text-align: center;
 
   h1 {
-    color: var(--setting-highlight-color); /* 色を変更 */
+    color: var(--setting-highlight-color);
   }
 `;
 
