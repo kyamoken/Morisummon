@@ -112,6 +112,7 @@ const MainButton = styled.button`
 const DevelopersSection = styled.section`
   margin-top: 50px;
   text-align: center;
+  color: var(--developer-title-color);
 `;
 
 const DeveloperCards = styled.div`
@@ -160,5 +161,6 @@ const Footer = styled.footer`
     text-decoration: underline;
   }
 `;
+
 
 export default App;

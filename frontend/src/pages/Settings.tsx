@@ -44,6 +44,10 @@ const SettingsContainer = styled.div`
   color: var(--text-color);
   width: 100%;
   text-align: center;
+
+  h1 {
+    color: var(--setting-highlight-color); /* 色を変更 */
+  }
 `;
 
 const Content = styled.div`
@@ -71,7 +75,7 @@ const FormGroup = styled.div`
 const Label = styled.label`
   font-size: 16px;
   font-weight: bold;
-  color: var(--text-color);
+  color: var(--setting-highlight-color);
 `;
 
 const Select = styled.select`

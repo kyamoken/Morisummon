@@ -15,7 +15,7 @@ const Home: React.FC = () => {
     <HomeContainer>
       <Header />
       <Content>
-        <h1>エッジワースカードベルトへようこそ！</h1>
+        <h1>エッジワースカードへようこそ！</h1>
         <ButtonContainer>
           <Button as={Link} to="/matching">マッチング</Button>
           <Button as={Link} to="/deck">デッキ</Button>

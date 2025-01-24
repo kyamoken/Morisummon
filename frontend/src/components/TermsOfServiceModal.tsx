@@ -49,6 +49,7 @@ const ModalContent = styled.div`
   box-shadow: var(--box-shadow);
   transform: scale(0.8);
   animation: scaleIn 0.3s ease-in-out forwards;
+  color: var(--privacy-service-text-color);
 
   @keyframes scaleIn {
     to {
