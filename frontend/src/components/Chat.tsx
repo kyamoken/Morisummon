@@ -4,9 +4,11 @@ import useWebSocket from 'react-use-websocket';
 
 interface Message {
   message: string;
-  user?: {
+  sender: {
+    id: number;
     name: string;
   };
+  timestamp: string;
 }
 
 interface ChatProps {
@@ -15,7 +17,10 @@ interface ChatProps {
 }
 
 const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
-  const { sendJsonMessage, lastJsonMessage } = useWebSocket<Message>('ws://localhost:8000/ws/somepath/');
+  const groupName = 'test';
+  const { sendJsonMessage, lastJsonMessage } = useWebSocket<Message>(
+    groupName ? `ws://localhost:8000/ws/chat/${groupName}/` : null
+  );
   const [receivedMessages, setReceivedMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -34,7 +39,7 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue) return;
+    if (!inputValue || !groupName) return;
     sendJsonMessage({ message: inputValue });
     setInputValue('');
   };
@@ -57,7 +62,7 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
           {receivedMessages.map((m, i) => (
             <ChatItem key={i}>
               <p>{m.message}</p>
-              <small style={{ color: 'gray' }}>By {m?.user?.name || 'Anonymous'}</small>
+              <small style={{ color: 'gray' }}>By {m.sender.name} at {new Date(m.timestamp).toLocaleString()}</small>
             </ChatItem>
           ))}
           <div ref={chatEndRef} />

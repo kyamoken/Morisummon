@@ -16,7 +16,11 @@ urlpatterns = [
 
     path('api/gacha/', views.gacha, name='gacha'),
 
+    path('api/chat/<str:group_name>/messages/', views.get_chat_messages, name='chat_messages'),
+    path('api/chat/groups/', views.manage_chat_groups, name='chat_groups'),
+
+]
     # ユーザー
     # path('api/users/', views.custom_user_list, name='custom_user_list'),
     # path('api/users/<int:pk>/', views.custom_user_detail, name='custom_user_detail'),
-]
+

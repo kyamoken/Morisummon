@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
@@ -70,3 +71,23 @@ class Deck(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Deck"
+
+
+######　以下はチャット関連の実装 ######
+class ChatGroup(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    created_at = models.DateTimeField(default=datetime.utcnow)
+
+    def __str__(self):
+        return self.name
+
+class ChatMessage(models.Model):
+    group = models.ForeignKey(ChatGroup, on_delete=models.CASCADE)
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    message = models.TextField()
+    timestamp = models.DateTimeField(default=datetime.utcnow)
+
+    def __str__(self):
+        return f'{self.sender.username} - {self.timestamp}'
+###### ここまで ######

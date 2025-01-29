@@ -4,15 +4,18 @@ from django.shortcuts import render
 from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from morisummon.serializers import UserSerializer
-from .models import Card, UserCard, Deck
+from .models import Card, UserCard, Deck, ChatMessage, ChatGroup
 from .serializers import CardSerializer, DeckSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist
+from .serializers import ChatMessageSerializer, ChatGroupSerializer
+
 
 # Custom User modelを取得
 User = get_user_model()
@@ -184,3 +187,26 @@ def get_deck(request):
     return Response({
         'deck_cards': deck_cards
     })
+
+
+@api_view(['GET'])
+def get_chat_messages(request, group_name):
+    # 特定のグループのメッセージ履歴を取得
+    messages = ChatMessage.objects.filter(group__name=group_name).order_by('timestamp')
+    serializer = ChatMessageSerializer(messages, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET', 'POST'])
+def manage_chat_groups(request):
+    if request.method == 'GET':
+        # 全てのチャットグループを取得
+        groups = ChatGroup.objects.all()
+        serializer = ChatGroupSerializer(groups, many=True)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        # 新しいチャットグループを作成
+        serializer = ChatGroupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)

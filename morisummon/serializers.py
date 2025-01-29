@@ -1,6 +1,7 @@
 from django.conf import settings
 from rest_framework import serializers
-from morisummon.models import Card, Deck, CustomUser
+from morisummon.models import Card, Deck, CustomUser, ChatMessage, ChatGroup
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,6 +61,21 @@ class DeckSerializer(serializers.ModelSerializer):
 
         return cards
 
+########## 以下はチャット関連の実装 ##########
+class ChatMessageSerializer(serializers.ModelSerializer):
+        sender = UserSerializer(read_only=True)
+
+        class Meta:
+            model = ChatMessage
+            fields = ['id', 'sender', 'message', 'timestamp']
+
+class ChatGroupSerializer(serializers.ModelSerializer):
+        members = UserSerializer(many=True, read_only=True)
+
+        class Meta:
+            model = ChatGroup
+            fields = ['id', 'name', 'members', 'created_at']
+########## 以上はチャット関連の実装 ##########
 
     # def create(self, validated_data):
     #     card_ids = validated_data.pop('card_ids')
