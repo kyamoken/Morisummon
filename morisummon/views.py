@@ -196,17 +196,20 @@ def get_chat_messages(request, group_name):
     serializer = ChatMessageSerializer(messages, many=True)
     return Response(serializer.data)
 
-@api_view(['GET', 'POST'])
-def manage_chat_groups(request):
-    if request.method == 'GET':
-        # 全てのチャットグループを取得
-        groups = ChatGroup.objects.all()
-        serializer = ChatGroupSerializer(groups, many=True)
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        # 新しいチャットグループを作成
+@api_view(['GET'])
+def get_chat_groups(request):
+    # 全てのチャットグループを取得
+    groups = ChatGroup.objects.all()
+    serializer = ChatGroupSerializer(groups, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+def create_chat_group(request):
+    try:
         serializer = ChatGroupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

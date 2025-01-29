@@ -70,11 +70,18 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             fields = ['id', 'sender', 'message', 'timestamp']
 
 class ChatGroupSerializer(serializers.ModelSerializer):
-        members = UserSerializer(many=True, read_only=True)
+    members = UserSerializer(many=True, read_only=True)
 
-        class Meta:
-            model = ChatGroup
-            fields = ['id', 'name', 'members', 'created_at']
+    class Meta:
+        model = ChatGroup
+        fields = ['id', 'name', 'members', 'created_at']
+
+    def create(self, validated_data):
+        chat_group = ChatGroup.objects.create(**validated_data)
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            chat_group.members.add(request.user)
+        return chat_group
 ########## 以上はチャット関連の実装 ##########
 
     # def create(self, validated_data):

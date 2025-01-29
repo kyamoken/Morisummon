@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import useWebSocket from 'react-use-websocket';
+import { ky } from '@/utils/api';
 
 interface Message {
   message: string;
@@ -16,13 +17,19 @@ interface ChatProps {
   onClose: () => void;
 }
 
+interface ChatGroup {
+  id: number;
+  name: string;
+}
+
 const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
-  const groupName = 'test';
+  const [groupName, setGroupName] = useState<string | null>(null);
   const { sendJsonMessage, lastJsonMessage } = useWebSocket<Message>(
     groupName ? `ws://localhost:8000/ws/chat/${groupName}/` : null
   );
   const [receivedMessages, setReceivedMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [chatGroups, setChatGroups] = useState<ChatGroup[]>([]);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -37,6 +44,19 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
     }
   }, [receivedMessages]);
 
+  useEffect(() => {
+    fetchChatGroups();
+  }, []);
+
+  const fetchChatGroups = async () => {
+    try {
+      const data = await ky.get('/api/chat/groups/').json<ChatGroup[]>();
+      setChatGroups(data);
+    } catch (error) {
+      console.error('Error fetching chat groups:', error);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue || !groupName) return;
@@ -44,11 +64,45 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
     setInputValue('');
   };
 
+  const handleGroupChange = (group: string) => {
+    setGroupName(group);
+    setReceivedMessages([]);
+  };
+
+  const handleCreateGroup = async () => {
+  const newGroupName = prompt('新しいグループ名を入力してください:');
+  if (newGroupName) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('認証トークンが見つかりません');
+      }
+      const data = await ky.post('/api/chat/groups/create/', {
+        json: { name: newGroupName },
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).json<ChatGroup>();
+      setChatGroups([...chatGroups, data]);
+    } catch (error) {
+      console.error('Error creating chat group:', error);
+    }
+  }
+};
+
   if (!isModalOpen) return null;
 
   return (
     <Modal>
       <ModalContent>
+        <GroupButtons>
+          {chatGroups.map(group => (
+            <button key={group.id} onClick={() => handleGroupChange(group.name)}>
+              {group.name}
+            </button>
+          ))}
+          <button onClick={handleCreateGroup}>グループ作成</button>
+        </GroupButtons>
         <ChatForm onSubmit={handleSubmit}>
           <input
             type="text"
@@ -109,12 +163,32 @@ const ModalContent = styled.div`
   background-color: var(--modal-content-background);
   padding: 20px;
   border-radius: 10px;
-  width: 80%;
-  max-width: 500px;
+  width: 90%;
+  max-width: 800px;
   display: flex;
   flex-direction: column;
   align-items: center;
   animation: ${slideUp} 0.5s ease-out;
+`;
+
+const GroupButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  button {
+    padding: 8px 16px;
+    background-color: #2a2b2e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    &:hover {
+      background-color: #3a3b3e;
+    }
+    &:focus {
+      outline: solid 3px rgba(68, 155, 222, 0.4);
+    }
+  }
 `;
 
 const ChatForm = styled.form`
@@ -153,8 +227,8 @@ const ChatItems = styled.div`
   padding: 10px;
   gap: 10px;
   width: 100%;
-  max-height: 150px; /* チャット3個分の高さに固定 */
-  overflow-y: auto; /* スクロールを許可 */
+  max-height: 400px;
+  overflow-y: auto;
 `;
 
 const ChatItem = styled.div`
