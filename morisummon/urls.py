@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/chat/<str:group_name>/messages/', views.get_chat_messages, name='chat_messages'),
     path('api/chat/groups/', views.get_chat_groups, name='get_chat_groups'),
     path('api/chat/groups/create/', views.create_chat_group, name='create_chat_group'),
+    path('api/chat/groups/<str:group_name>/add-user/', views.add_user_to_group, name='add_user_to_group'),
 
 ]
     # ユーザー

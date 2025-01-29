@@ -20,10 +20,12 @@ interface ChatProps {
 interface ChatGroup {
   id: number;
   name: string;
+  members: { id: number; name: string }[];
 }
 
 const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
   const [groupName, setGroupName] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const { sendJsonMessage, lastJsonMessage } = useWebSocket<Message>(
     groupName ? `ws://localhost:8000/ws/chat/${groupName}/` : null
   );
@@ -64,31 +66,68 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
     setInputValue('');
   };
 
-  const handleGroupChange = (group: string) => {
-    setGroupName(group);
-    setReceivedMessages([]);
+  const handleGroupChange = (group: ChatGroup) => {
+    if (selectedGroupId === group.id) {
+      // 同じグループを再度クリックした場合、チャットを閉じる
+      setGroupName(null);
+      setSelectedGroupId(null);
+      setReceivedMessages([]);
+    } else {
+      // 新しいグループを選択した場合
+      setGroupName(group.name);
+      setSelectedGroupId(group.id);
+      setReceivedMessages([]);
+    }
   };
 
   const handleCreateGroup = async () => {
-  const newGroupName = prompt('新しいグループ名を入力してください:');
-  if (newGroupName) {
+    const newGroupName = prompt('新しいグループ名を入力してください:');
+    if (newGroupName) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('認証トークンが見つかりません');
+        }
+        const data = await ky.post('/api/chat/groups/create/', {
+          json: { name: newGroupName },
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }).json<ChatGroup>();
+        setChatGroups([...chatGroups, data]);
+      } catch (error) {
+        console.error('Error creating chat group:', error);
+      }
+    }
+  };
+
+  const handleAddUserToGroup = async (groupName: string, username: string) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('認証トークンが見つかりません');
       }
-      const data = await ky.post('/api/chat/groups/create/', {
-        json: { name: newGroupName },
+      await ky.post(`/api/chat/groups/${groupName}/add-user/`, {
+        json: { username: username },
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      }).json<ChatGroup>();
-      setChatGroups([...chatGroups, data]);
+      });
+      alert('ユーザーがグループに追加されました');
     } catch (error) {
-      console.error('Error creating chat group:', error);
+      console.error('Error adding user to group:', error);
+      alert('ユーザーの追加に失敗しました');
     }
-  }
-};
+  };
+
+  const handleAddUser = () => {
+    const username = prompt('追加するユーザー名を入力してください:');
+    if (!username || !groupName) {
+      alert('無効なユーザー名またはグループ名です');
+      return;
+    }
+    handleAddUserToGroup(groupName, username);
+  };
 
   if (!isModalOpen) return null;
 
@@ -97,11 +136,19 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
       <ModalContent>
         <GroupButtons>
           {chatGroups.map(group => (
-            <button key={group.id} onClick={() => handleGroupChange(group.name)}>
+            <button
+              key={group.id}
+              onClick={() => handleGroupChange(group)}
+              style={{
+                backgroundColor: selectedGroupId === group.id ? '#4a4b4e' : '#2a2b2e',
+                color: 'white',
+              }}
+            >
               {group.name}
             </button>
           ))}
           <button onClick={handleCreateGroup}>グループ作成</button>
+          <button onClick={handleAddUser}>ユーザー追加</button>
         </GroupButtons>
         <ChatForm onSubmit={handleSubmit}>
           <input

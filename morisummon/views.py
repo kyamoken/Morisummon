@@ -190,20 +190,27 @@ def get_deck(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_chat_messages(request, group_name):
+    # ユーザーが所属しているグループでない場合はエラー
+    if not ChatGroup.objects.filter(name=group_name, members=request.user).exists():
+        return Response({'error': 'Unauthorized'}, status=401)
+
     # 特定のグループのメッセージ履歴を取得
     messages = ChatMessage.objects.filter(group__name=group_name).order_by('timestamp')
     serializer = ChatMessageSerializer(messages, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_chat_groups(request):
-    # 全てのチャットグループを取得
-    groups = ChatGroup.objects.all()
+    # ユーザーが所属しているチャットグループを全て取得
+    groups = ChatGroup.objects.filter(members=request.user)
     serializer = ChatGroupSerializer(groups, many=True)
     return Response(serializer.data)
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_chat_group(request):
     try:
         serializer = ChatGroupSerializer(data=request.data)
@@ -211,5 +218,26 @@ def create_chat_group(request):
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_user_to_group(request, group_name):
+    try:
+        group = ChatGroup.objects.get(name=group_name)
+        username = request.data.get('username')
+        user = get_user_model().objects.get(username=username)
+
+        if user not in group.members.all():
+            group.members.add(user)
+            return Response({'message': 'ユーザーがグループに追加されました'}, status=200)
+        else:
+            return Response({'error': 'ユーザーは既にグループに存在します'}, status=400)
+    except ChatGroup.DoesNotExist:
+        return Response({'error': 'グループが見つかりません'}, status=404)
+    except get_user_model().DoesNotExist:
+        return Response({'error': 'ユーザーが見つかりません'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
