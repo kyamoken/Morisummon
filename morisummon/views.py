@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from morisummon.serializers import UserSerializer
-from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest
+from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification
 from .serializers import CardSerializer, DeckSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -284,3 +284,35 @@ def remove_friend(request, friend_id):
         return Response({'message': 'Friend removed.'})
     except User.DoesNotExist:
         return Response({'error': 'Friend not found.'}, status=404)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    notification_list = [
+        {
+            'id': notification.id,
+            'message': notification.message,
+            'is_read': notification.is_read,
+            'created_at': notification.created_at,
+        }
+        for notification in notifications
+    ]
+    return Response({'notifications': notification_list})
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def mark_notification_as_read(request, notification_id):
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return Response({'message': 'Notification marked as read.'})
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found.'}, status=404)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_unread_notification_count(request):
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return Response({'unread_count': unread_count})

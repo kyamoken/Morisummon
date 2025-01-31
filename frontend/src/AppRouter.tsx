@@ -14,6 +14,7 @@ import CardCollection from "@/pages/CardCollection.tsx";
 import Demo from './pages/Demo';
 import Friends from './pages/friend';
 
+
 const handleContextMenu = (e: MouseEvent) => {
   e.preventDefault();
 };

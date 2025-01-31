@@ -19,6 +19,7 @@
   --privacy-service-text-color: white;
   --friend-delete-modal-background: grey;
   --friend-delete-modal-text-color: white;
+  --modal-background-default: #b0c4de;
 }
 
 .light-theme {
@@ -37,6 +38,8 @@
   --privacy-service-text-color: black;
   --friend-delete-modal-background: #cbcbcb;
   --friend-delete-modal-text-color: #171717;
+  --modal-background-default: #d3d3d3;
+
 }
 
 body {

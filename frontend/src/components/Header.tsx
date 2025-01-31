@@ -1,19 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
 import useAuth from '@/hooks/useAuth.tsx';
 import Chat from './Chat.tsx';
+import NotificationModal from './NotificationModal';
+import { ky } from '@/utils/api';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [selectedNotification, setSelectedNotification] = useState<any | null>(null);
 
   const handleLogoClick = () => {
     navigate('/');
   };
 
   const gachaStones = user?.magic_stones || 0;
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await ky.get('/api/notifications/unread_count/', {
+          headers: { Authorization: `Token ${localStorage.getItem('token')}` },
+        }).json();
+        setUnreadCount(response.unread_count);
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+  }, []);
+
+  const handleNotificationClick = async () => {
+    try {
+      const response = await ky.get('/api/notifications/', {
+        headers: { Authorization: `Token ${localStorage.getItem('token')}` },
+      }).json();
+      setNotifications(response.notifications);
+      setSelectedNotification(response.notifications[0]); // 最初の通知を選択
+      setIsNotificationModalOpen(true);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: number) => {
+    try {
+      await ky.put(`/api/notifications/${notificationId}/`, {
+        headers: { Authorization: `Token ${localStorage.getItem('token')}` },
+      });
+      setNotifications(notifications.map(notification =>
+        notification.id === notificationId ? { ...notification, is_read: true } : notification
+      ));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
 
   return (
     <HeaderContainer>
@@ -26,11 +73,21 @@ const Header: React.FC = () => {
         style={{ cursor: 'pointer' }}
       />
       <UserInfo>
-        <ChatButton onClick={() => setIsModalOpen(true)}>チャット</ChatButton>
+        <ChatButton onClick={() => setIsChatModalOpen(true)}>チャット</ChatButton>
+        <NotificationButton onClick={handleNotificationClick}>
+          <i className="fas fa-envelope"></i>
+          {unreadCount > 0 && <Badge>{unreadCount}</Badge>}
+        </NotificationButton>
         <div>{user ? user.username + " さん" : 'ゲスト さん'}</div>
         <div>魔法石: {gachaStones}</div>
       </UserInfo>
-      <Chat isModalOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <Chat isModalOpen={isChatModalOpen} onClose={() => setIsChatModalOpen(false)} />
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        notifications={notifications}
+        onClose={() => setIsNotificationModalOpen(false)}
+        onMarkAsRead={handleMarkAsRead}
+      />
     </HeaderContainer>
   );
 };
@@ -80,6 +137,26 @@ const ChatButton = styled.button`
   &:hover {
     background-color: #3a3b3e;
   }
+`;
+
+const NotificationButton = styled(ChatButton)`
+  position: relative;
+  font-size: 24px;
+
+  & > i {
+    margin-right: 8px;
+  }
+`;
+
+const Badge = styled.span`
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 5px 10px;
+  font-size: 12px;
 `;
 
 export default Header;

@@ -27,6 +27,10 @@ urlpatterns = [
     path('api/friends/requests/<int:request_id>/', views.handle_friend_request, name='handle_friend_request'),
     path('api/friends/<int:friend_id>/', views.remove_friend, name='remove_friend'),
 
+    path('api/notifications/', views.get_notifications, name='get_notifications'),
+    path('api/notifications/<int:notification_id>/', views.mark_notification_as_read, name='mark_notification_as_read'),
+    path('api/notifications/unread_count/', views.get_unread_notification_count, name='get_unread_notification_count'),
+
 ]
     # ユーザー
     # path('api/users/', views.custom_user_list, name='custom_user_list'),
