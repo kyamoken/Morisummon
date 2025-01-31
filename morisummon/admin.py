@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from .models import Card, Deck, UserCard, ChatGroup, CustomUser, ChatMessage
+from .models import Card, Deck, UserCard, ChatGroup, CustomUser, ChatMessage, FriendRequest
 
 User = get_user_model()
 
@@ -26,6 +26,7 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'email', 'magic_stones')
     fields = ('username', 'email', 'magic_stones')
 
+
 @admin.register(ChatGroup)
 class ChatGroupAdmin(admin.ModelAdmin):
     pass
@@ -33,3 +34,9 @@ class ChatGroupAdmin(admin.ModelAdmin):
 @admin.register(ChatMessage)
 class ChatMessageAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(FriendRequest)
+class FriendRequestAdmin(admin.ModelAdmin):
+    pass
+

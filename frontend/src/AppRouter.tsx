@@ -12,6 +12,7 @@ import Gacha from "./pages/gacha";
 import Cards from './pages/Cards';
 import CardCollection from "@/pages/CardCollection.tsx";
 import Demo from './pages/Demo';
+import Friends from './pages/friend';
 
 const handleContextMenu = (e: MouseEvent) => {
   e.preventDefault();
@@ -37,6 +38,7 @@ const AppRouter: React.FC = () => {
       <Route path="/gacha" element={<Gacha />} />
       <Route path="/card-collection" element={<CardCollection />} />
       <Route path="/battle" element={<Battle />} />
+      <Route path="/friends" element={<Friends />} />
       <Route path="/settings" element={<Setting />} />
       <Route path="/demo" element={<Demo />} />
       <Route path="*" element={<Page404 />} />

@@ -10,12 +10,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from morisummon.serializers import UserSerializer
-from .models import Card, UserCard, Deck, ChatMessage, ChatGroup
+from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest
 from .serializers import CardSerializer, DeckSerializer
 import random
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from .serializers import ChatMessageSerializer, ChatGroupSerializer
-
 
 # Custom User modelを取得
 User = get_user_model()
@@ -33,11 +32,9 @@ def login(request):
     if user is not None:
         auth_login(request, user)
 
-        # token = Token.objects.get_or_create(user=user)
         user = UserSerializer(user)
 
         return Response({
-            # 'token': str(token[0]),
             'user': user.data
         }, status=200)
     else:
@@ -63,8 +60,6 @@ def me(request):
 @api_view(['GET'])
 def csrf_token(request):
     token = get_token(request)
-    # setcookie
-    # return Response({'csrfToken': token}, status=200)
     return Response(status=204)
 
 @api_view(['POST'])
@@ -89,12 +84,10 @@ def gacha(request):
     user = request.user
     required_stones = 10  # 1回のガチャで必要なガチャ石の数
 
-    # ユーザーのガチャ石を確認
     if user.magic_stones < required_stones:
         return Response({'error': 'ガチャ石が足りません'}, status=400)
 
     try:
-        # ガチャ石を消費する
         user.magic_stones -= required_stones
         user.save()
 
@@ -117,7 +110,6 @@ def gacha(request):
     except Exception as e:
         return Response({'error': 'Internal Server Error'}, status=500)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_cards(request):
@@ -136,9 +128,8 @@ def save_deck(request):
     if len(deck_card_ids) != 5:
         return Response({'error': 'デッキは5枚で構成されている必要があります'}, status=400)
 
-    # 同一カードのバリデーション
     if len(deck_card_ids) != len(set(deck_card_ids)):
-        return Response({'error': 'duplicate_card', 'message': '同一カードを複数枚デッキに追加することはできません'},status=400)
+        return Response({'error': 'duplicate_card', 'message': '同一カードを複数枚デッキに追加することはできません'}, status=400)
 
     filtered_cards = []
     for card_id in deck_card_ids:
@@ -156,7 +147,6 @@ def save_deck(request):
         except UserCard.DoesNotExist:
             return Response({'error': '所有していないカードが含まれています'}, status=400)
 
-    # デッキ保存処理
     try:
         deck = Deck.objects.filter(user=user).first()
         if not deck:
@@ -168,8 +158,6 @@ def save_deck(request):
         return Response({"message": "デッキが正常に保存されました"})
     except Exception as e:
         return Response({'error': str(e)}, status=500)
-
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -188,15 +176,12 @@ def get_deck(request):
         'deck_cards': deck_cards
     })
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_chat_messages(request, group_name):
-    # ユーザーが所属しているグループでない場合はエラー
     if not ChatGroup.objects.filter(name=group_name, members=request.user).exists():
         return Response({'error': 'Unauthorized'}, status=401)
 
-    # 特定のグループのメッセージ履歴を取得
     messages = ChatMessage.objects.filter(group__name=group_name).order_by('timestamp')
     serializer = ChatMessageSerializer(messages, many=True)
     return Response(serializer.data)
@@ -204,7 +189,6 @@ def get_chat_messages(request, group_name):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_chat_groups(request):
-    # ユーザーが所属しているチャットグループを全て取得
     groups = ChatGroup.objects.filter(members=request.user)
     serializer = ChatGroupSerializer(groups, many=True)
     return Response(serializer.data)
@@ -220,7 +204,6 @@ def create_chat_group(request):
         return Response(serializer.errors, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -241,3 +224,63 @@ def add_user_to_group(request, group_name):
         return Response({'error': 'ユーザーが見つかりません'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_friends(request):
+    friends = request.user.get_friends()
+    friend_list = [{'id': friend.id, 'username': friend.username} for friend in friends]
+    return Response({'friends': friend_list})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_friend_request(request):
+    username = request.data.get('username')
+    if not username:
+        return Response({'error': 'username is required.'}, status=400)
+
+    try:
+        to_user = User.objects.get(username=username)
+        if FriendRequest.objects.filter(from_user=request.user, to_user=to_user).exists():
+            return Response({'error': '既にフレンドリクエストを送信しています。'}, status=400)
+        request.user.send_friend_request(to_user)
+        return Response({'message': 'Friend request sent.'})
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=404)
+    except ValidationError as e:
+        return Response({'error': str(e)}, status=400)
+    except Exception as e:
+        return Response({'error': 'Internal Server Error'}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_friend_requests(request):
+    requests = request.user.get_pending_requests()
+    request_list = [{'id': req.id, 'from_user': req.from_user.username} for req in requests]
+    return Response({'requests': request_list})
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def handle_friend_request(request, request_id):
+    action = request.data.get('action')
+    try:
+        friend_request = FriendRequest.objects.get(id=request_id)
+        if action == 'accept':
+            request.user.accept_friend_request(request_id)
+        elif action == 'reject':
+            request.user.reject_friend_request(request_id)
+        else:
+            return Response({'error': 'Invalid action.'}, status=400)
+        return Response({'message': f'Friend request {action}ed.'})
+    except FriendRequest.DoesNotExist:
+        return Response({'error': 'Friend request not found.'}, status=404)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_friend(request, friend_id):
+    try:
+        friend = User.objects.get(id=friend_id)
+        request.user.remove_friend(friend)
+        return Response({'message': 'Friend removed.'})
+    except User.DoesNotExist:
+        return Response({'error': 'Friend not found.'}, status=404)
