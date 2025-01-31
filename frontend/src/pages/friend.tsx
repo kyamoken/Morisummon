@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { ky } from '@/utils/api';
 import Header from '@/components/Header.tsx';
 import useAuth from '@/hooks/useAuth.tsx';
+import { toast } from 'react-hot-toast';
+import FriendDeleteModal from '@/components/FriendDeleteModal.tsx'; // モーダルコンポーネントをインポート
 
 interface Friend {
   id: number;
@@ -19,6 +21,8 @@ const Friends: React.FC = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [username, setUsername] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [friendToRemove, setFriendToRemove] = useState<number | null>(null);
 
   // フレンド一覧を取得
   const fetchFriends = async () => {
@@ -29,6 +33,7 @@ const Friends: React.FC = () => {
       setFriends(response.friends);
     } catch (error) {
       console.error('Failed to fetch friends:', error);
+      toast.error('Failed to fetch friends.');
     }
   };
 
@@ -41,6 +46,7 @@ const Friends: React.FC = () => {
       setRequests(response.requests);
     } catch (error) {
       console.error('Failed to fetch friend requests:', error);
+      toast.error('フレンド一覧の取得に失敗しました:(');
     }
   };
 
@@ -51,11 +57,11 @@ const Friends: React.FC = () => {
         json: { username: username }, // ユーザーネームを送信
         headers: { Authorization: `Token ${user?.token}` },
       });
-      alert('Friend request sent!');
+      toast.success('フレンドリクエストが正常に送信されました！');
       setUsername('');
     } catch (error) {
       console.error('Failed to send friend request:', error);
-      alert('Failed to send friend request.');
+      toast.error('フレンドリクエストの送信に失敗しました...');
     }
   };
 
@@ -66,27 +72,37 @@ const Friends: React.FC = () => {
         headers: { Authorization: `Token ${user?.token}` },
         json: { action },
       });
-      alert(`Friend request ${action}ed.`);
+      const actionText = action === 'accept' ? '承認' : '拒否';
+      toast.success(`フレンドリクエストを${actionText}しました。`);
       fetchFriendRequests(); // リクエスト一覧を再取得
       fetchFriends(); // フレンド一覧を再取得
     } catch (error) {
       console.error('Failed to handle friend request:', error);
-      alert('Failed to handle friend request.');
+      toast.error('フレンドリクエストの処理に失敗しました。');
     }
   };
 
   // フレンドを削除
-  const handleRemoveFriend = async (friendId: number) => {
+  const handleRemoveFriend = async () => {
+    if (friendToRemove === null) return;
     try {
-      await ky.delete(`/api/friends/${friendId}/`, {
+      await ky.delete(`/api/friends/${friendToRemove}/`, {
         headers: { Authorization: `Token ${user?.token}` },
       });
-      alert('Friend removed.');
+      toast.success('フレンドの削除を正常に完了しました！');
       fetchFriends(); // フレンド一覧を再取得
+      setIsModalOpen(false);
+      setFriendToRemove(null);
     } catch (error) {
       console.error('Failed to remove friend:', error);
-      alert('Failed to remove friend.');
+      toast.error('フレンドの削除に失敗しました！');
     }
+  };
+
+  // フレンド削除ボタンを押したときにモーダルを表示
+  const confirmRemoveFriend = (friendId: number) => {
+    setFriendToRemove(friendId);
+    setIsModalOpen(true);
   };
 
   // コンポーネントがマウントされたときにデータを取得
@@ -135,7 +151,7 @@ const Friends: React.FC = () => {
             friends.map((friend) => (
               <FriendItem key={friend.id}>
                 <span>{friend.username}</span>
-                <Button onClick={() => handleRemoveFriend(friend.id)}>削除</Button>
+                <Button onClick={() => confirmRemoveFriend(friend.id)}>削除</Button>
               </FriendItem>
             ))
           ) : (
@@ -143,6 +159,11 @@ const Friends: React.FC = () => {
           )}
         </Section>
       </Content>
+      <FriendDeleteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleRemoveFriend}
+      />
     </FriendsContainer>
   );
 };

@@ -68,6 +68,10 @@ class CustomUser(AbstractUser):
         Friendship.objects.filter(user1=self, user2=friend).delete()
         Friendship.objects.filter(user1=friend, user2=self).delete()
 
+        # 関連するフレンドリクエストを削除
+        FriendRequest.objects.filter(from_user=self, to_user=friend).delete()
+        FriendRequest.objects.filter(from_user=friend, to_user=self).delete()
+
 
 class Card(models.Model):
     name = models.CharField(max_length=255)  # 名前

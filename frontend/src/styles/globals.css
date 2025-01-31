@@ -16,7 +16,9 @@
   --modal-content-background: #3a3a3a;
   --developer-title-color: White;
   --setting-highlight-color: white;
-  --privacy-service-text-color: white
+  --privacy-service-text-color: white;
+  --friend-delete-modal-background: grey;
+  --friend-delete-modal-text-color: white;
 }
 
 .light-theme {
@@ -32,7 +34,9 @@
   --modal-content-background: white;
   --developer-title-color: Black;
   --setting-highlight-color: black;
-  --privacy-service-text-color: black
+  --privacy-service-text-color: black;
+  --friend-delete-modal-background: #cbcbcb;
+  --friend-delete-modal-text-color: #171717;
 }
 
 body {
