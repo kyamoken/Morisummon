@@ -57,6 +57,7 @@ const Header: React.FC = () => {
       setNotifications(notifications.map(notification =>
         notification.id === notificationId ? { ...notification, is_read: true } : notification
       ));
+      setUnreadCount(unreadCount - 1); // 非同期で通知数を更新
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }

@@ -1,5 +1,7 @@
-import React from 'react';
+// NotificationModal.tsx
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { ky } from '@/utils/api';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -9,6 +11,20 @@ interface NotificationModalProps {
 }
 
 const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, notifications, onClose, onMarkAsRead }) => {
+  const [unreadCount, setUnreadCount] = useState(notifications.filter(n => !n.is_read).length);
+
+  useEffect(() => {
+    setUnreadCount(notifications.filter(n => !n.is_read).length);
+  }, [notifications]);
+
+  const handleMarkAsRead = async (notificationId: number) => {
+    await ky.put(`/api/notifications/${notificationId}/`, {
+      json: { is_read: true },
+    });
+    onMarkAsRead(notificationId);
+    setUnreadCount(unreadCount - 1);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -18,10 +34,10 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, notificat
         <h2>通知</h2>
         <NotificationList>
           {notifications.map(notification => (
-            <NotificationItem key={notification.id} isRead={notification.is_read}>
+            <NotificationItem key={notification.id} $isRead={notification.is_read}>
               <p>{notification.message}</p>
               {!notification.is_read && (
-                <MarkAsReadButton onClick={() => onMarkAsRead(notification.id)}>
+                <MarkAsReadButton onClick={() => handleMarkAsRead(notification.id)}>
                   マークを既読にする
                 </MarkAsReadButton>
               )}
@@ -39,7 +55,7 @@ const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7); /* 背景を少し暗く */
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,7 +82,7 @@ const CloseButton = styled.button`
   top: 10px;
   right: 10px;
   cursor: pointer;
-  color: #333; /* 色を変更 */
+  color: #333;
 `;
 
 const NotificationList = styled.ul`
@@ -74,23 +90,23 @@ const NotificationList = styled.ul`
   padding: 0;
 `;
 
-const NotificationItem = styled.li<{ isRead: boolean }>`
-  background-color: ${({ isRead }) => (isRead ? '#f0f0f0' : '#fff')};
-  padding: 15px; /* パディングを増やす */
+const NotificationItem = styled.li<{ $isRead: boolean }>`
+  background-color: ${({ $isRead }) => ($isRead ? '#f0f0f0' : '#fff')};
+  padding: 15px;
   margin-bottom: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* シャドウを追加 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
 const MarkAsReadButton = styled.button`
   background-color: #007bff;
   color: white;
   border: none;
-  padding: 8px 12px; /* パディングを調整 */
+  padding: 8px 12px;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s; /* ホバー時のエフェクトを追加 */
+  transition: background-color 0.3s;
   &:hover {
     background-color: #0056b3;
   }
