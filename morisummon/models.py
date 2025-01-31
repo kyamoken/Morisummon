@@ -32,11 +32,11 @@ class CustomUser(AbstractUser):
 
     def get_friends(self):
         # ユーザーのフレンド一覧を取得
-        friendships1 = Friendship.objects.filter(user1=self)
-        friendships2 = Friendship.objects.filter(user2=self)
-        friends1 = [friendship.user2 for friendship in friendships1]
-        friends2 = [friendship.user1 for friendship in friendships2]
-        return friends1 + friends2
+        friendships1 = Friendship.objects.filter(user1=self).values_list('user2', flat=True)
+        friendships2 = Friendship.objects.filter(user2=self).values_list('user1', flat=True)
+        friends_ids = set(friendships1).union(set(friendships2))
+        friends = CustomUser.objects.filter(id__in=friends_ids)
+        return friends
 
     def get_pending_requests(self):
         # ユーザーに送信された未承認のフレンドリクエストを取得
