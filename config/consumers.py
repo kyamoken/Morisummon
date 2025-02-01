@@ -2,7 +2,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 from asgiref.sync import sync_to_async
 import json
-from morisummon.models import CustomUser, ChatGroup, ChatMessage
+from morisummon.models import CustomUser, ChatGroup, ChatMessage, CardExchange, Card
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     user: CustomUser | AnonymousUser = None
@@ -78,3 +79,55 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender': event['sender'],
             'timestamp': event['timestamp']
         }))
+
+
+# consumers.py
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.db import database_sync_to_async
+
+
+class ExchangeConsumer(AsyncJsonWebsocketConsumer):
+    async def connect(self):
+        self.exchange_id = self.scope['url_route']['kwargs']['exchange_id']
+        await self.accept()
+        await self.channel_layer.group_add(
+            f"exchange_{self.exchange_id}",
+            self.channel_name
+        )
+
+    async def receive_json(self, content):
+        action = content.get('action')
+        user = self.scope['user']
+
+        if action == 'select_card':
+            await self.handle_card_selection(user, content['card_id'])
+        elif action == 'confirm':
+            await self.handle_confirmation(user)
+        elif action == 'cancel':
+            await self.handle_cancellation(user)
+
+    @database_sync_to_async
+    def handle_card_selection(self, user, card_id):
+        exchange = CardExchange.objects.get(id=self.exchange_id)
+        card = Card.objects.get(id=card_id)
+
+        if user == exchange.initiator:
+            exchange.initiator_card = card
+        elif user == exchange.receiver:
+            exchange.receiver_card = card
+
+        exchange.save()
+        return exchange
+
+    async def notify_participants(self, exchange):
+        await self.channel_layer.group_send(
+            f"exchange_{self.exchange_id}",
+            {
+                'type': 'exchange.update',
+                'data': {
+                    'initiator_card': exchange.initiator_card.id if exchange.initiator_card else None,
+                    'receiver_card': exchange.receiver_card.id if exchange.receiver_card else None,
+                    'status': exchange.status
+                }
+            }
+        )

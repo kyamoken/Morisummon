@@ -4,7 +4,8 @@ import { ky } from '@/utils/api';
 import Header from '@/components/Header.tsx';
 import useAuth from '@/hooks/useAuth.tsx';
 import { toast } from 'react-hot-toast';
-import FriendDeleteModal from '@/components/FriendDeleteModal.tsx'; // モーダルコンポーネントをインポート
+import { useNavigate } from 'react-router';
+import FriendDeleteModal from '@/components/FriendDeleteModal.tsx';
 
 interface Friend {
   id: number;
@@ -18,18 +19,20 @@ interface FriendRequest {
 
 const Friends: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [username, setUsername] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [friendToRemove, setFriendToRemove] = useState<number | null>(null);
 
-  // フレンド一覧を取得
   const fetchFriends = async () => {
     try {
-      const response: { friends: Friend[] } = await ky.get('/api/friends/', {
-        headers: { Authorization: `Token ${user?.token}` },
-      }).json();
+      const response: { friends: Friend[] } = await ky
+        .get('/api/friends/', {
+          headers: { Authorization: `Token ${user?.token}` },
+        })
+        .json();
       setFriends(response.friends);
     } catch (error) {
       console.error('Failed to fetch friends:', error);
@@ -37,12 +40,13 @@ const Friends: React.FC = () => {
     }
   };
 
-  // フレンドリクエスト一覧を取得
   const fetchFriendRequests = async () => {
     try {
-      const response: { requests: FriendRequest[] } = await ky.get('/api/friends/requests/', {
-        headers: { Authorization: `Token ${user?.token}` },
-      }).json();
+      const response: { requests: FriendRequest[] } = await ky
+        .get('/api/friends/requests/', {
+          headers: { Authorization: `Token ${user?.token}` },
+        })
+        .json();
       setRequests(response.requests);
     } catch (error) {
       console.error('Failed to fetch friend requests:', error);
@@ -50,11 +54,10 @@ const Friends: React.FC = () => {
     }
   };
 
-  // フレンドリクエストを送信
   const handleSendRequest = async () => {
     try {
       await ky.post('/api/friends/request/', {
-        json: { username: username }, // ユーザーネームを送信
+        json: { username: username },
         headers: { Authorization: `Token ${user?.token}` },
       });
       toast.success('フレンドリクエストが正常に送信されました！');
@@ -65,7 +68,6 @@ const Friends: React.FC = () => {
     }
   };
 
-  // フレンドリクエストを承認または拒否
   const handleRequestAction = async (requestId: number, action: 'accept' | 'reject') => {
     try {
       await ky.put(`/api/friends/requests/${requestId}/`, {
@@ -74,15 +76,14 @@ const Friends: React.FC = () => {
       });
       const actionText = action === 'accept' ? '承認' : '拒否';
       toast.success(`フレンドリクエストを${actionText}しました。`);
-      fetchFriendRequests(); // リクエスト一覧を再取得
-      fetchFriends(); // フレンド一覧を再取得
+      fetchFriendRequests();
+      fetchFriends();
     } catch (error) {
       console.error('Failed to handle friend request:', error);
       toast.error('フレンドリクエストの処理に失敗しました。');
     }
   };
 
-  // フレンドを削除
   const handleRemoveFriend = async () => {
     if (friendToRemove === null) return;
     try {
@@ -90,7 +91,7 @@ const Friends: React.FC = () => {
         headers: { Authorization: `Token ${user?.token}` },
       });
       toast.success('フレンドの削除を正常に完了しました！');
-      fetchFriends(); // フレンド一覧を再取得
+      fetchFriends();
       setIsModalOpen(false);
       setFriendToRemove(null);
     } catch (error) {
@@ -99,13 +100,26 @@ const Friends: React.FC = () => {
     }
   };
 
-  // フレンド削除ボタンを押したときにモーダルを表示
+  const handleInitiateExchange = async (friendId: number) => {
+    try {
+      const response: { exchange_id: string } = await ky.post('/api/exchanges/', {
+        json: { receiver_id: friendId },
+        headers: { Authorization: `Token ${user?.token}` },
+      }).json();
+
+      navigate(`/exchange/${response.exchange_id}`);
+      toast.success('カード交換を開始しました！');
+    } catch (error) {
+      console.error('Failed to initiate exchange:', error);
+      toast.error('カード交換の開始に失敗しました');
+    }
+  };
+
   const confirmRemoveFriend = (friendId: number) => {
     setFriendToRemove(friendId);
     setIsModalOpen(true);
   };
 
-  // コンポーネントがマウントされたときにデータを取得
   useEffect(() => {
     fetchFriends();
     fetchFriendRequests();
@@ -117,7 +131,6 @@ const Friends: React.FC = () => {
       <Content>
         <h1>フレンド</h1>
 
-        {/* フレンドリクエスト送信フォーム */}
         <Form>
           <Input
             type="text"
@@ -128,7 +141,6 @@ const Friends: React.FC = () => {
           <Button onClick={handleSendRequest}>フレンドリクエストを送信</Button>
         </Form>
 
-        {/* フレンドリクエスト一覧 */}
         <Section>
           <h2>フレンドリクエスト</h2>
           {requests.length > 0 ? (
@@ -144,14 +156,20 @@ const Friends: React.FC = () => {
           )}
         </Section>
 
-        {/* フレンド一覧 */}
         <Section>
           <h2>フレンド一覧</h2>
           {friends.length > 0 ? (
             friends.map((friend) => (
               <FriendItem key={friend.id}>
                 <span>{friend.username}</span>
-                <Button onClick={() => confirmRemoveFriend(friend.id)}>削除</Button>
+                <ButtonGroup>
+                  <ExchangeButton onClick={() => handleInitiateExchange(friend.id)}>
+                    カード交換
+                  </ExchangeButton>
+                  <DeleteButton onClick={() => confirmRemoveFriend(friend.id)}>
+                    削除
+                  </DeleteButton>
+                </ButtonGroup>
               </FriendItem>
             ))
           ) : (
@@ -168,7 +186,6 @@ const Friends: React.FC = () => {
   );
 };
 
-// スタイル定義
 const FriendsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -231,6 +248,34 @@ const FriendItem = styled.div`
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #444;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const ExchangeButton = styled.button`
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: var(--button-hover);
+  }
+`;
+
+// DeleteButton コンポーネントを Button を継承して定義
+const DeleteButton = styled(Button)`
+  background-color: #e74c3c;
+
+  &:hover {
+    background-color: #c0392b;
+  }
 `;
 
 export default Friends;

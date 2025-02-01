@@ -13,6 +13,7 @@ import Cards from './pages/Cards';
 import CardCollection from "@/pages/CardCollection.tsx";
 import Demo from './pages/Demo';
 import Friends from './pages/friend';
+import ExchangePage from './pages/ExchangePage';
 
 
 const handleContextMenu = (e: MouseEvent) => {
@@ -38,6 +39,7 @@ const AppRouter: React.FC = () => {
       <Route path="/deck" element={<Deck />} />
       <Route path="/gacha" element={<Gacha />} />
       <Route path="/card-collection" element={<CardCollection />} />
+      <Route path="/exchange/:exchangeId" element={<ExchangePage />} />
       <Route path="/battle" element={<Battle />} />
       <Route path="/friends" element={<Friends />} />
       <Route path="/settings" element={<Setting />} />

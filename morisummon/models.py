@@ -169,3 +169,39 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'{self.user.username} - {self.message}'
+
+
+class CardExchange(models.Model):
+    STATUS_CHOICES = [
+        ('waiting', '待機中'),
+        ('selecting', 'カード選択中'),
+        ('confirmed', '確認済み'),
+        ('completed', '完了'),
+        ('canceled', 'キャンセル')
+    ]
+
+    initiator = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                  related_name='initiated_exchanges',
+                                  on_delete=models.CASCADE)
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                 related_name='received_exchanges',
+                                 on_delete=models.CASCADE)
+    status = models.CharField(max_length=10,
+                              choices=STATUS_CHOICES,
+                              default='waiting')
+    initiator_card = models.ForeignKey(Card,
+                                       on_delete=models.SET_NULL,
+                                       null=True,
+                                       related_name='initiator_exchanges')
+    receiver_card = models.ForeignKey(Card,
+                                      on_delete=models.SET_NULL,
+                                      null=True,
+                                      related_name='receiver_exchanges')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class ExchangeSession(models.Model):
+    exchange = models.OneToOneField(CardExchange,on_delete=models.CASCADE,related_name='session')
+    initiator_ready = models.BooleanField(default=False)
+    receiver_ready = models.BooleanField(default=False)

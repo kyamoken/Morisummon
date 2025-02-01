@@ -4,17 +4,19 @@ from django.shortcuts import render
 from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from morisummon.serializers import UserSerializer
-from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification
+from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification, CardExchange
 from .serializers import CardSerializer, DeckSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from .serializers import ChatMessageSerializer, ChatGroupSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import CardExchange, ExchangeSession
+from django.db import transaction
 
 # Custom User modelを取得
 User = get_user_model()
@@ -316,3 +318,97 @@ def mark_notification_as_read(request, notification_id):
 def get_unread_notification_count(request):
     unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
     return Response({'unread_count': unread_count})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_exchange(request):
+    receiver_id = request.data.get('receiver_id')
+    User = get_user_model()  # settings.AUTH_USER_MODEL をモデルクラスに変換
+    receiver = get_object_or_404(User, id=receiver_id)
+
+    with transaction.atomic():
+        exchange = CardExchange.objects.create(
+            initiator=request.user,
+            receiver=receiver,
+            status='waiting'
+        )
+        ExchangeSession.objects.create(exchange=exchange)
+
+    return Response({
+        'exchange_id': exchange.id,
+        'message': 'Exchange created successfully'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_exchange(request, exchange_id):
+    exchange = get_object_or_404(CardExchange, id=exchange_id)
+
+    if request.user not in [exchange.initiator, exchange.receiver]:
+        return Response({'error': 'Permission denied'}, status=403)
+
+    exchange.status = 'canceled'
+    exchange.save()
+
+    return Response({'message': 'Exchange canceled'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_exchange_details(request, exchange_id):
+    exchange = get_object_or_404(CardExchange, id=exchange_id)
+    return Response({
+        'id': exchange.id,
+        'initiator': exchange.initiator.username,
+        'receiver': exchange.receiver.username,
+        'status': exchange.status,
+        'initiator_card': exchange.initiator_card.id if exchange.initiator_card else None,
+        'receiver_card': exchange.receiver_card.id if exchange.receiver_card else None,
+    })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def select_card(request, exchange_id):
+    exchange = get_object_or_404(CardExchange, id=exchange_id)
+    card_id = request.data.get('card_id')
+
+    try:
+        card = Card.objects.get(id=card_id)
+    except Card.DoesNotExist:
+        return Response({'error': 'カードが見つかりません'}, status=404)
+
+    if request.user == exchange.initiator:
+        exchange.initiator_card = card
+    elif request.user == exchange.receiver:
+        exchange.receiver_card = card
+
+    exchange.status = 'selecting'
+    exchange.save()
+
+    return Response({'message': 'カードを選択しました'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirm_exchange(request, exchange_id):
+    exchange = get_object_or_404(CardExchange, id=exchange_id)
+
+    if not exchange.initiator_card or not exchange.receiver_card:
+        return Response({'error': '両者がカードを選択していません'}, status=400)
+
+    exchange.status = 'completed'
+    exchange.save()
+
+    return Response({'message': '交換が確定しました'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_card_details(request, card_id):
+    card = get_object_or_404(Card, id=card_id)
+    return Response({
+        'id': card.id,
+        'name': card.name,
+        'image': card.image.url,
+        'hp': card.hp,
+        'attack': card.attack,
+    })
