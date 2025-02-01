@@ -1,5 +1,6 @@
 import json
 from django.conf import settings
+from django.db.models import Q
 from django.shortcuts import render
 from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.middleware.csrf import get_token
@@ -412,3 +413,20 @@ def get_card_details(request, card_id):
         'hp': card.hp,
         'attack': card.attack,
     })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_active_exchange(request, user_id):
+    # 両ユーザー間のアクティブな交換セッションを検索
+    active_exchange = CardExchange.objects.filter(
+        Q(initiator=request.user, receiver_id=user_id) |
+        Q(initiator_id=user_id, receiver=request.user),
+        status__in=['waiting', 'selecting']
+    ).first()
+
+    if active_exchange:
+        return Response({
+            'exists': True,
+            'exchange_id': active_exchange.id
+        })
+    return Response({'exists': False})

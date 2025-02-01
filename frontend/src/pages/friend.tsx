@@ -100,20 +100,30 @@ const Friends: React.FC = () => {
     }
   };
 
-  const handleInitiateExchange = async (friendId: number) => {
-    try {
-      const response: { exchange_id: string } = await ky.post('/api/exchanges/', {
-        json: { receiver_id: friendId },
-        headers: { Authorization: `Token ${user?.token}` },
-      }).json();
+const handleInitiateExchange = async (friendId: number) => {
+  try {
+    // 既存のセッションをチェック
+    const checkResponse = await ky.get(`/api/check_exchange/${friendId}/`, {
+      headers: { Authorization: `Token ${user?.token}` }
+    }).json();
 
-      navigate(`/exchange/${response.exchange_id}`);
-      toast.success('カード交換を開始しました！');
-    } catch (error) {
-      console.error('Failed to initiate exchange:', error);
-      toast.error('カード交換の開始に失敗しました');
+    if (checkResponse.exists) {
+      navigate(`/exchange/${checkResponse.exchange_id}`);
+      return;
     }
-  };
+
+    // 新しいセッションを作成
+    const createResponse = await ky.post('/api/exchanges/', {
+      json: { receiver_id: friendId },
+      headers: { Authorization: `Token ${user?.token}` }
+    }).json();
+
+    navigate(`/exchange/${createResponse.exchange_id}`);
+  } catch (error) {
+    console.error('Failed to initiate exchange:', error);
+    toast.error('交換の開始に失敗しました');
+  }
+};
 
   const confirmRemoveFriend = (friendId: number) => {
     setFriendToRemove(friendId);

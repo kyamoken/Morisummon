@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/exchanges/<int:exchange_id>/select_card/', views.select_card, name='select_card'),
     path('api/exchanges/<int:exchange_id>/confirm/', views.confirm_exchange, name='confirm_exchange'),
     path('api/cards/<int:card_id>/', views.get_card_details, name='get_card_details'),
+    path('api/check_exchange/<int:user_id>/', views.check_active_exchange, name='check_active_exchange'),
 
 ]
     # ユーザー
