@@ -17,22 +17,58 @@ const ExchangePage: React.FC = () => {
   const [opponentCard, setOpponentCard] = useState<number | null>(null);
   const [status, setStatus] = useState<'waiting' | 'selecting' | 'confirmed' | 'completed'>('waiting');
   const [isLoading, setIsLoading] = useState(true);
+  const [websocket, setWebsocket] = useState<WebSocket | null>(null);
 
-  const fetchExchangeDetails = async () => {
-    try {
-      const response: any = await ky.get(`/api/exchanges/${exchangeId}/`, {
-        headers: { Authorization: `Token ${localStorage.getItem('token')}` },
-      }).json();
-      setExchange(response);
-      setStatus(response.status);
-      setSelectedCard(response.initiator_card);
-      setOpponentCard(response.receiver_card);
-    } catch (error: any) {
-      toast.error('交換情報の取得に失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    // WebSocket接続を確立
+    const ws = new WebSocket(`ws://localhost:8000/ws/exchange/${exchangeId}/`);
+    setWebsocket(ws);
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'exchange.update') {
+        const { initiator_card, receiver_card, status } = data.data;
+        setSelectedCard(initiator_card);
+        setOpponentCard(receiver_card);
+        setStatus(status);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [exchangeId]);
+
+const fetchExchangeDetails = async () => {
+  try {
+    const response: any = await ky.get(`/api/exchanges/${exchangeId}/`, {
+      headers: { Authorization: `Token ${localStorage.getItem('token')}` },
+    }).json();
+
+    // initiator と receiver を participants としてまとめる
+    const updatedExchange = {
+      ...response,
+      participants: [response.initiator, response.receiver],
+    };
+
+    setExchange(updatedExchange);
+    setStatus(response.status);
+    setSelectedCard(response.initiator_card);
+    setOpponentCard(response.receiver_card);
+  } catch (error: any) {
+    toast.error('交換情報の取得に失敗しました');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const fetchUserCards = async () => {
     try {
@@ -51,7 +87,8 @@ const ExchangePage: React.FC = () => {
   }, [exchangeId]);
 
   useEffect(() => {
-    if (exchange && exchange.participants && exchange.participants.length === 2 && status === 'waiting') {
+    // exchange.participants ではなく、initiator と receiver の存在で判定する
+    if (exchange && exchange.initiator && exchange.receiver && status === 'waiting') {
       setStatus('selecting');
     }
   }, [exchange]);

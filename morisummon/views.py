@@ -366,6 +366,7 @@ def get_exchange_details(request, exchange_id):
         'status': exchange.status,
         'initiator_card': exchange.initiator_card.id if exchange.initiator_card else None,
         'receiver_card': exchange.receiver_card.id if exchange.receiver_card else None,
+        'participants': [exchange.initiator.username, exchange.receiver.username],
     })
 
 @api_view(['POST'])
