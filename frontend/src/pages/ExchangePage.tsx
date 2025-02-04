@@ -124,7 +124,7 @@ const fetchExchangeDetails = async () => {
     <ExchangeContainer>
       <h1>カード交換</h1>
       {status === 'waiting' && <p>相手の参加を待っています...</p>}
-      {status === 'selecting' && (userCards?.length ?? 0) > 0 && (
+      {status === 'selecting' } (
         <CardSelection>
           <h2>交換するカードを選択</h2>
           <CardGrid>
