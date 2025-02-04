@@ -16,7 +16,6 @@ Battle
 
 .key   # public    双方に公開
 ._key  # protected 本人しか確認できない
-.__key # private   バックエンドでのみ処理する非公開
 
 {
     status: 'waiting',
@@ -28,9 +27,9 @@ Battle
         status: {
             battle_card: Card,
             bench_cards: Card[],
-            _hand_cards: Card[], # protected
-            hand_cards_count: 5, # public
-            __yamafuda: Card[],
+            _hand_cards: Card[],
+            hand_cards_count: 5,
+            _deck: Card[],
         }
     },
 }

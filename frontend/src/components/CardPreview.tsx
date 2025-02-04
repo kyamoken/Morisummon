@@ -12,6 +12,10 @@ interface Card {
   attack: number;
 }
 
+const isCard = (arg: any): arg is Card => {
+  return arg.id !== undefined && arg.name !== undefined;
+};
+
 interface CardPreviewProps {
   cardId: number;
 }
@@ -50,7 +54,11 @@ const CardPreview: React.FC<CardPreviewProps> = ({ cardId }) => {
         const response = await ky.get(`/api/cards/${cardId}/`, {
           headers: { Authorization: `Token ${localStorage.getItem('token')}` },
         }).json();
-        setCard(response);
+        if (isCard(response)) {
+          setCard(response);
+        } else {
+          console.error('Invalid card data:', response);
+        }
       } catch (error) {
         console.error('Failed to fetch card details:', error);
       } finally {

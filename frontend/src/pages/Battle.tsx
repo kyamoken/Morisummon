@@ -18,7 +18,7 @@ type PlayerStatus = {
 }
 
 type BattleDetails = {
-  status: "playing" | "waiting";
+  status: "progress" | "waiting";
   turn: number;
   you: { info: PlayerInfo, status: PlayerStatus };
   opponent?: { info: PlayerInfo, status: PlayerStatus };
@@ -38,11 +38,22 @@ type WebSocketMessage = {
   message: string;
 };
 
+const handleWindowUnload = (e: BeforeUnloadEvent) => {
+  e.preventDefault();
+};
 
 const Battle: React.FC = () => {
-  const [socketUrl, setSocketUrl] = useState('/ws/battle/room/main/');
+  const [socketUrl] = useState('/ws/battle/room/main/');
   const { sendJsonMessage, lastJsonMessage, readyState, getWebSocket } = useWebSocket<WebSocketMessage>(socketUrl);
   const [battleDetails, setBattleDetails] = useState<BattleDetails | null>(null);
+
+  useEffect(() => {
+    window.addEventListener('beforeunload', handleWindowUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleWindowUnload);
+    };
+  }, []);
 
   useEffect(() => {
     if (lastJsonMessage?.type === 'battle.update') {

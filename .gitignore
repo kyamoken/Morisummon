@@ -1,3 +1,7 @@
+# DB設計が安定するまではマイグレーションファイルを無視
+/**/migrations/*
+!/**/migrations/__init__.py
+
 # Environment
 .env
 *.env*.local

@@ -140,9 +140,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "static"
+    BASE_DIR / 'static'
 ]
-# STATIC_ROOT = BASE_DIR / "staticfiles"
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -150,23 +150,31 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DJANGO_VITE = {
-    "default": {
-        "manifest_path": BASE_DIR / "static/build/manifest.json",
-        "static_url_prefix": "build",
-        "dev_mode": VITE_DEV,
+    'default': {
+        'manifest_path': BASE_DIR / 'static/build/manifest.json',
+        'static_url_prefix': 'build',
+        'dev_mode': VITE_DEV,
     }
 }
 
 ASGI_APPLICATION = 'config.asgi.application'
 
-CHANNEL_LAYERS = {
-    'default': {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        # 'CONFIG': {
-        #     "hosts": [('127.0.0.1', 6379)],
-        # },
+channel_layer_defaults = {
+    'memory': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
     },
+    'redis': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [{
+                'address': env.str('CHANNEL_LAYER_REDIS_URL', 'redis://127.0.0.1:6379'),
+            }],
+        },
+    },
+}
+
+CHANNEL_LAYERS = {
+    'default': channel_layer_defaults[env.str('CHANNEL_LAYER', 'memory')],
 }
 
 MORISUMMON_DECK_SIZE = 5 # デッキのサイズ
@@ -175,44 +183,44 @@ AUTH_USER_MODEL = 'morisummon.CustomUser'
 
 # Logging
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {message}",
-            "style": "{",
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
         },
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
         },
     },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
         },
-        # "file": {
-        #     "level": "DEBUG",
-        #     "class": "logging.FileHandler",
-        #     "filename": os.path.join(BASE_DIR, "logs", "django.log"),
-        #     "formatter": "verbose",
+        # 'file': {
+        #     'level': 'DEBUG',
+        #     'class': 'logging.FileHandler',
+        #     'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+        #     'formatter': 'verbose',
         # },
     },
-    "root": {
-        "handlers": ["console"],
-        "level": "WARNING",
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
     },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
         },
-        "battle": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
+        'battle': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }
@@ -220,10 +228,10 @@ LOGGING = {
 # MongoEngine
 import mongoengine
 
-MONGO_HOST = "mongodb://" + env.str("MONGO_HOST", "localhost") + ":" + env.str("MONGO_PORT", "27017")
-MONGO_DATABASE = env.str("MONGO_DATABASE", "morisummon")
-MONGO_USERNAME = env.str("MONGO_USERNAME", "")
-MONGO_PASSWORD = env.str("MONGO_PASSWORD", "")
+MONGO_HOST = 'mongodb://' + env.str('MONGO_HOST', 'localhost') + ':' + env.str('MONGO_PORT', '27017')
+MONGO_DATABASE = env.str('MONGO_DATABASE', 'morisummon')
+MONGO_USERNAME = env.str('MONGO_USERNAME', '')
+MONGO_PASSWORD = env.str('MONGO_PASSWORD', '')
 
 mongoengine.connect(
     db=MONGO_DATABASE,

@@ -1,4 +1,5 @@
 import datetime
+from enum import Enum
 from django.db import models
 from mongoengine import *
 
@@ -49,18 +50,29 @@ class PlayerSet(EmbeddedDocument):
     info = EmbeddedDocumentField(BattlePlayerInfo)
     status = EmbeddedDocumentField(BattlePlayerStatus)
 
-class BattleRoom(Document):
+class BattleRoomType(Enum):
+    PUBLIC = 'public'
+    PROTECTED = 'protected'
+    PRIVATE = 'private'
 
+class BattleRoomStatus(Enum):
+    WAITING = 'waiting'
+    IN_PROGRESS = 'progress'
+    FINISHED = 'finished'
+
+class BattleRoom(Document):
     id = StringField(primary_key=True)
-    keyphrase = StringField(null=True)
-    # name = StringField()
-    status = StringField(default="waiting")
+    type = EnumField(BattleRoomType, default=BattleRoomType.PUBLIC)
+    slug = StringField(null=True)
     password = StringField(null=True)
+
+    status = EnumField(BattleRoomStatus, default=BattleRoomStatus.WAITING)
 
     player1 = EmbeddedDocumentField(PlayerSet)
     player2 = EmbeddedDocumentField(PlayerSet, null=True)
 
     turn = IntField(default=1)
+    player_turn = IntField(default=1, min_value=1, max_value=2)
     winner = StringField(null=True)
 
     created_at = DateTimeField(default=datetime.datetime.now)
