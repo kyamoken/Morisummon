@@ -334,7 +334,6 @@ def create_exchange(request):
             receiver=receiver,
             status='waiting'
         )
-        ExchangeSession.objects.create(exchange=exchange)
 
     return Response({
         'exchange_id': exchange.id,
