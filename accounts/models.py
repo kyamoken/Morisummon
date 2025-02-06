@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from morisummon.models import Friendship, FriendRequest
 
 # Create your models here.
 class User(AbstractUser):

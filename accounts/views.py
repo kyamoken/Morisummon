@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login as auth_login, logout
+from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.decorators import api_view
@@ -8,6 +8,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes
 from .serializers import UserSerializer
 from .permissions import IsAnonymousUser
+
+User = get_user_model()
 
 # Create your views here.
 @api_view(['POST'])
