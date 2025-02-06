@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import logging
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
-from morisummon.models import CustomUser
+from accounts.models import User
 from battle.models import BattleRoom
 from .mixins import *
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin, BattleHelpersMixin):
     room_id: str
     room_slug: str
-    user: CustomUser | AnonymousUser = None
+    user: User | AnonymousUser = None
 
     # Websocket 接続時の処理
     async def connect(self):

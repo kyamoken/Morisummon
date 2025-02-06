@@ -24,60 +24,6 @@ def index(request):
     template_name = 'dev.html' if settings.VITE_DEV else 'index.html'
     return render(request, template_name)
 
-@api_view(['POST'])
-def login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-
-    user = authenticate(username=username, password=password)
-    if user is not None:
-        auth_login(request, user)
-
-        user = UserSerializer(user)
-
-        return Response({
-            'user': user.data
-        }, status=200)
-    else:
-        return Response({'error': 'Invalid credentials'}, status=400)
-
-@api_view(['POST'])
-def logout_view(request):
-    if request.user.is_authenticated:
-        logout(request)
-
-    return Response(status=204)
-
-@api_view(['GET'])
-def me(request):
-    user = request.user
-    if user.is_authenticated:
-        serializer = UserSerializer(user)
-        return Response({'user': serializer.data}, status=200)
-    else:
-        return Response({'user': None}, status=200)
-
-@ensure_csrf_cookie
-@api_view(['GET'])
-def csrf_token(request):
-    token = get_token(request)
-    return Response(status=204)
-
-@api_view(['POST'])
-def register(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-
-    if not username or not password:
-        return Response({'error': 'Username and password are required'}, status=400)
-
-    if User.objects.filter(username=username).exists():
-        return Response({'error': 'Username already exists'}, status=400)
-
-    user = User.objects.create_user(username=username, password=password)
-    token = Token.objects.create(user=user)
-
-    return Response({'token': str(token)}, status=201)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

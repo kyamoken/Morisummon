@@ -3,11 +3,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer, AsyncJsonWebsocke
 from django.contrib.auth.models import AnonymousUser
 from asgiref.sync import sync_to_async
 import json
-from morisummon.models import CustomUser, ChatGroup, ChatMessage, Card
-
+from morisummon.models import ChatGroup, ChatMessage, Card
+from accounts.models import User
 
 class ChatConsumer(AsyncWebsocketConsumer):
-    user: CustomUser | AnonymousUser = None
+    user: User | AnonymousUser = None
     group_name = None
 
     async def connect(self):

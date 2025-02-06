@@ -46,8 +46,9 @@ INSTALLED_APPS = [
     'django_vite',
     'rest_framework.authtoken',
 
-    'morisummon.apps.MorisummonConfig',
-    'battle.apps.BattleConfig',
+    'morisummon',
+    'accounts',
+    'battle',
 ]
 
 MIDDLEWARE = [
@@ -179,7 +180,7 @@ CHANNEL_LAYERS = {
 
 MORISUMMON_DECK_SIZE = 5 # デッキのサイズ
 
-AUTH_USER_MODEL = 'morisummon.CustomUser'
+AUTH_USER_MODEL = 'accounts.User'
 
 # Logging
 LOGGING = {

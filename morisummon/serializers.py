@@ -1,13 +1,7 @@
 from django.conf import settings
 from rest_framework import serializers
-from morisummon.models import Card, Deck, CustomUser, ChatMessage, ChatGroup, UserCard
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser  # カスタムユーザーモデルを指定
-        exclude = ['password']
-
+from morisummon.models import Card, Deck, ChatMessage, ChatGroup, UserCard
+from accounts.serializers import UserSerializer
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,8 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
-from .models import Card, Deck, UserCard, ChatGroup, CustomUser, ChatMessage, FriendRequest, Friendship
-
-User = get_user_model()
+from .models import Card, Deck, UserCard, ChatGroup, ChatMessage, FriendRequest, Friendship
 
 class UserCardInline(admin.TabularInline):
     model = UserCard
@@ -26,17 +23,6 @@ class DeckAdmin(admin.ModelAdmin):
     list_display = ('user', 'card_ids')
     search_fields = ('user__username',)
     list_filter = ('user',)
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'magic_stones')
-    search_fields = ('username', 'email')
-    list_filter = ('magic_stones',)
-    fieldsets = (
-        (None, {
-            'fields': ('username', 'email', 'magic_stones')
-        }),
-    )
 
 @admin.register(ChatGroup)
 class ChatGroupAdmin(admin.ModelAdmin):
