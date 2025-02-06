@@ -20,8 +20,8 @@ interface FriendRequest {
 
 interface ExchangeSession {
   exists: boolean;
-  exchange_id: number;
-  proposer_id: number; // 提案を行った側のユーザーID
+  exchange_ulid: string;
+  proposer_id: number;
 }
 
 const Friends: React.FC = () => {
@@ -32,9 +32,9 @@ const Friends: React.FC = () => {
   const [username, setUsername] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [friendToRemove, setFriendToRemove] = useState<number | null>(null);
-  // 交換セッションが存在する場合の状態（自分が提案中の場合のみ使用）
+  // 交換セッションの状態（存在する場合）
   const [exchangeSession, setExchangeSession] = useState<ExchangeSession | null>(null);
-  // モーダル表示用：自分が提案中の場合のキャンセル確認
+  // 交換提案に関するモーダルの表示状態
   const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
 
   const fetchFriends = async () => {
@@ -112,11 +112,13 @@ const Friends: React.FC = () => {
   };
 
   /**
-   * カード交換を開始／確認する処理
-   * ・既に交換セッションが存在する場合は、提案側か受信側かで挙動を変える
-   * 　- 自分が提案側ならモーダルを表示して「提案中です！」かつキャンセル可能にする
-   * 　- 自分が受信側なら交換画面へ遷移し、相手の提案カード等を確認できるようにする
-   * ・存在しなければ新規に交換セッションを作成し、交換画面へ遷移する
+   * 交換開始／確認処理
+   *
+   * 1. まず /api/check_exchange/{friendId}/ で既存の交換セッションを確認
+   * 2. 既に存在していれば、その交換セッションの情報を state に保存し、モーダルを表示
+   *    - 提案側なら「既に提案中」モーダル（キャンセル可能）
+   *    - 受信側なら「相手が提案中」モーダル（確認できる）
+   * 3. 交換セッションが存在しなければ、新規作成してカード選択画面に遷移
    */
   const handleInitiateExchange = async (friendId: number) => {
     try {
@@ -124,24 +126,28 @@ const Friends: React.FC = () => {
         exists: boolean;
         exchange_ulid?: string;
         proposer_id?: number;
-      } = await ky.get(`/api/check_exchange/${friendId}/`, {
-        headers: { Authorization: `Token ${user?.token}` },
-      }).json();
+      } = await ky
+        .get(`/api/check_exchange/${friendId}/`, {
+          headers: { Authorization: `Token ${user?.token}` },
+        })
+        .json();
 
       if (checkResponse.exists) {
-        if (checkResponse.proposer_id === user?.id) {
-          setExchangeSession(checkResponse);
-          setIsExchangeModalOpen(true);
-        } else {
-          // 受信側の場合は交換画面へ遷移
-          navigate(`/exchange/${checkResponse.exchange_ulid}`);
-        }
+        // 既存の交換セッションがある場合は常にモーダルを表示して、キャンセルまたは確認を促す
+        setExchangeSession({
+          exists: true,
+          exchange_ulid: checkResponse.exchange_ulid!,
+          proposer_id: checkResponse.proposer_id!,
+        });
+        setIsExchangeModalOpen(true);
       } else {
-        // 新規作成
+        // 新規作成の場合のみ、新しい交換セッションを作成してカード選択画面へ遷移
         const createResponse: { exchange_ulid: string } = await ky.post('/api/exchanges/', {
           json: { receiver_id: friendId },
           headers: { Authorization: `Token ${user?.token}` },
         }).json();
+        // 画面遷移前に exchangeSession はクリアする（新規セッションとして扱う）
+        setExchangeSession(null);
         navigate(`/exchange/${createResponse.exchange_ulid}`);
       }
     } catch (error) {
@@ -150,19 +156,38 @@ const Friends: React.FC = () => {
     }
   };
 
-  // 交換提案をキャンセルする処理（提案側のみ）
+  // 提案側の場合：既存の交換セッションをキャンセルする処理
   const handleCancelExchange = async () => {
     if (!exchangeSession) return;
     try {
-      await ky.post(`/api/exchanges/${exchangeSession.exchange_id}/cancel/`, {
+      await ky.post(`/api/exchanges/${exchangeSession.exchange_ulid}/cancel/`, {
         headers: { Authorization: `Token ${user?.token}` },
       });
       toast.success('提案をキャンセルしました。');
+      // キャンセル完了後は state をクリアして再度新規提案が可能にする
       setExchangeSession(null);
       setIsExchangeModalOpen(false);
     } catch (error) {
       console.error('Failed to cancel exchange:', error);
       toast.error('提案のキャンセルに失敗しました。');
+    }
+  };
+
+  // 受信側の場合：相手の提案を確認して交換成立させる処理
+  const handleConfirmExchange = async () => {
+    if (!exchangeSession) return;
+    try {
+      await ky.post(`/api/exchanges/${exchangeSession.exchange_ulid}/confirm/`, {
+        headers: { Authorization: `Token ${user?.token}` },
+      });
+      toast.success('交換が成立しました！');
+      // 交換成立後は state をクリアする
+      setExchangeSession(null);
+      setIsExchangeModalOpen(false);
+      navigate('/friends');
+    } catch (error) {
+      console.error('Failed to confirm exchange:', error);
+      toast.error('交換成立に失敗しました。');
     }
   };
 
@@ -238,22 +263,41 @@ const Friends: React.FC = () => {
         onConfirm={handleRemoveFriend}
       />
 
-      {/* 提案中の場合のモーダル：提案側はキャンセルできる */}
+      {/* 交換セッションが存在する場合は、常にモーダルで操作させる */}
       {isExchangeModalOpen && exchangeSession && (
         <ExchangeModalOverlay>
           <ExchangeModalContent>
-            <ModalTitle>カード交換の提案中です！</ModalTitle>
-            <ModalMessage>
-              現在あなたの提案は保留状態です。相手が応答するまでお待ちください。
-            </ModalMessage>
-            <ButtonGroup>
-              <CancelExchangeButton onClick={handleCancelExchange}>
-                提案をキャンセルする
-              </CancelExchangeButton>
-              <CloseModalButton onClick={() => setIsExchangeModalOpen(false)}>
-                閉じる
-              </CloseModalButton>
-            </ButtonGroup>
+            {exchangeSession.proposer_id === user?.id ? (
+              <>
+                <ModalTitle>あなたは既にカード交換を提案中です！</ModalTitle>
+                <ModalMessage>
+                  現在提案中です。相手の返答を待つか、提案をキャンセルしてください。
+                </ModalMessage>
+                <ButtonGroup>
+                  <CancelExchangeButton onClick={handleCancelExchange}>
+                    提案をキャンセルする
+                  </CancelExchangeButton>
+                  <CloseModalButton onClick={() => setIsExchangeModalOpen(false)}>
+                    閉じる
+                  </CloseModalButton>
+                </ButtonGroup>
+              </>
+            ) : (
+              <>
+                <ModalTitle>相手がカード交換を提案しています！</ModalTitle>
+                <ModalMessage>
+                  相手の提案を確認してください。内容に問題なければ「交換成立」ボタンを押してください。
+                </ModalMessage>
+                <ButtonGroup>
+                  <ConfirmExchangeButton onClick={handleConfirmExchange}>
+                    交換成立
+                  </ConfirmExchangeButton>
+                  <CloseModalButton onClick={() => setIsExchangeModalOpen(false)}>
+                    閉じる
+                  </CloseModalButton>
+                </ButtonGroup>
+              </>
+            )}
           </ExchangeModalContent>
         </ExchangeModalOverlay>
       )}
@@ -388,6 +432,14 @@ const CancelExchangeButton = styled(Button)`
 
   &:hover {
     background-color: #c0392b;
+  }
+`;
+
+const ConfirmExchangeButton = styled(Button)`
+  background-color: #27ae60;
+
+  &:hover {
+    background-color: #1e8e50;
   }
 `;
 

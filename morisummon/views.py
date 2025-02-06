@@ -399,7 +399,6 @@ def propose_exchange(request, exchange_ulid):
     ユーザーがカードを選択して交換提案を完了するエンドポイント
     リクエスト例：
         { "card_id": 123 }
-    ※ 必要に応じて、交換セッションにカード情報を紐付ける処理を追加してください。
     """
     card_id = request.data.get('card_id')
     if not card_id:
@@ -413,9 +412,30 @@ def propose_exchange(request, exchange_ulid):
     if exchange.proposer != request.user:
         return Response({'error': 'Only the proposer can propose an exchange'}, status=403)
 
-    # ※ 必要ならば、exchange に提案カード情報を保存する処理を追加
-    # ここではシンプルに交換提案完了として status を変更（実際のロジックに合わせてください）
+    # 選択したカードのIDを保存する
+    exchange.proposed_card_id = card_id
+    exchange.save()
+
+    # 状態を「completed」に変更するなど、必要な処理を追加
+    # ※ ロジックに合わせて適宜変更してください
     exchange.status = 'completed'
     exchange.save()
 
     return Response({'message': 'Exchange proposed successfully'})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_exchange(request, exchange_ulid):
+    try:
+        exchange = ExchangeSession.objects.get(ulid=exchange_ulid)
+    except ExchangeSession.DoesNotExist:
+        return Response({'error': 'Exchange session not found'}, status=404)
+
+    return Response({
+        'ulid': exchange.ulid,
+        'status': exchange.status,
+        'proposer_id': exchange.proposer.id,
+        'receiver_id': exchange.receiver.id,
+        'proposed_card_id': exchange.proposed_card_id,  # 追加したフィールド
+    })

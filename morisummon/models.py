@@ -180,7 +180,6 @@ class ExchangeSession(models.Model):
         unique=True,
         default=generate_ulid
     )
-
     STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('cancelled', 'Cancelled'),
@@ -191,5 +190,9 @@ class ExchangeSession(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ここで交換提案されたカード情報を保存するフィールドを追加（null=True としておく）
+    proposed_card_id = models.IntegerField(null=True, blank=True)
+
     def __str__(self):
         return f'{self.proposer.username} -> {self.receiver.username} ({self.status})'
+

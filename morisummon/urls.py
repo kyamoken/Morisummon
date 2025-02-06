@@ -35,6 +35,7 @@ urlpatterns = [
     path('api/exchanges/', views.create_exchange, name='create_exchange'),
     path('api/exchanges/<str:exchange_ulid>/cancel/', views.cancel_exchange, name='cancel_exchange'),
     path('api/exchanges/<str:exchange_ulid>/propose/', views.propose_exchange, name='propose_exchange'),
+    path('api/exchanges/<str:exchange_ulid>/', views.get_exchange, name='get_exchange'),
 
 
 ]
