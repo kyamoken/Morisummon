@@ -39,10 +39,10 @@ const AppRouter: React.FC = () => {
       <Route path="/deck" element={<Deck />} />
       <Route path="/gacha" element={<Gacha />} />
       <Route path="/card-collection" element={<CardCollection />} />
-      <Route path="/exchange/:exchangeId" element={<ExchangePage />} />
       <Route path="/battle" element={<Battle />} />
       <Route path="/friends" element={<Friends />} />
       <Route path="/settings" element={<Setting />} />
+      <Route path="/exchange/:exchange_ulid" element={<ExchangePage />} />
       <Route path="/demo" element={<Demo />} />
       <Route path="*" element={<Page404 />} />
     </Routes>

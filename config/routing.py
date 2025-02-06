@@ -9,9 +9,6 @@ websocket_urlpatterns = [
     # チャット用のルーティング
     re_path(r'ws/chat/(?P<group_name>\w+)/$', consumers.ChatConsumer.as_asgi()),
 
-    # 交換用のルーティング
-    re_path(r"ws/exchange/(?P<exchange_id>\w+)/$",consumers.ExchangeConsumer.as_asgi()),
-
     # バトル用のルーティング
     *battle_websocket_urlpatterns,
 ]

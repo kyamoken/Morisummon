@@ -31,14 +31,10 @@ urlpatterns = [
     path('api/notifications/<int:notification_id>/', views.mark_notification_as_read, name='mark_notification_as_read'),
     path('api/notifications/unread_count/', views.get_unread_notification_count, name='get_unread_notification_count'),
 
+    path('api/check_exchange/<int:friend_id>/', views.check_exchange, name='check_exchange'),
     path('api/exchanges/', views.create_exchange, name='create_exchange'),
-    path('api/exchanges/<int:exchange_id>/cancel/', views.cancel_exchange, name='cancel_exchange'),
-    path('api/exchanges/<int:exchange_id>/', views.get_exchange_details, name='get_exchange_details'),
-    path('api/exchanges/<int:exchange_id>/select_card/', views.select_card, name='select_card'),
-    path('api/exchanges/<int:exchange_id>/confirm/', views.confirm_exchange, name='confirm_exchange'),
-    path('api/cards/<int:card_id>/', views.get_card_details, name='get_card_details'),
-    path('api/check_exchange/<int:user_id>/', views.check_active_exchange, name='check_active_exchange'),
-
+    path('api/exchanges/<str:exchange_ulid>/cancel/', views.cancel_exchange, name='cancel_exchange'),
+    path('api/exchanges/<str:exchange_ulid>/propose/', views.propose_exchange, name='propose_exchange'),
 ]
     # ユーザー
     # path('api/users/', views.custom_user_list, name='custom_user_list'),

@@ -1,3 +1,4 @@
+// friend.tsx
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ky } from '@/utils/api';
@@ -17,6 +18,12 @@ interface FriendRequest {
   from_user: string;
 }
 
+interface ExchangeSession {
+  exists: boolean;
+  exchange_id: number;
+  proposer_id: number; // 提案を行った側のユーザーID
+}
+
 const Friends: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +32,10 @@ const Friends: React.FC = () => {
   const [username, setUsername] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [friendToRemove, setFriendToRemove] = useState<number | null>(null);
+  // 交換セッションが存在する場合の状態（自分が提案中の場合のみ使用）
+  const [exchangeSession, setExchangeSession] = useState<ExchangeSession | null>(null);
+  // モーダル表示用：自分が提案中の場合のキャンセル確認
+  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
 
   const fetchFriends = async () => {
     try {
@@ -36,7 +47,7 @@ const Friends: React.FC = () => {
       setFriends(response.friends);
     } catch (error) {
       console.error('Failed to fetch friends:', error);
-      toast.error('Failed to fetch friends.');
+      toast.error('フレンド一覧の取得に失敗しました。');
     }
   };
 
@@ -50,7 +61,7 @@ const Friends: React.FC = () => {
       setRequests(response.requests);
     } catch (error) {
       console.error('Failed to fetch friend requests:', error);
-      toast.error('フレンド一覧の取得に失敗しました:(');
+      toast.error('フレンドリクエストの取得に失敗しました。');
     }
   };
 
@@ -64,7 +75,7 @@ const Friends: React.FC = () => {
       setUsername('');
     } catch (error) {
       console.error('Failed to send friend request:', error);
-      toast.error('フレンドリクエストの送信に失敗しました...');
+      toast.error('フレンドリクエストの送信に失敗しました。');
     }
   };
 
@@ -90,40 +101,70 @@ const Friends: React.FC = () => {
       await ky.delete(`/api/friends/${friendToRemove}/`, {
         headers: { Authorization: `Token ${user?.token}` },
       });
-      toast.success('フレンドの削除を正常に完了しました！');
+      toast.success('フレンドの削除が完了しました！');
       fetchFriends();
       setIsModalOpen(false);
       setFriendToRemove(null);
     } catch (error) {
       console.error('Failed to remove friend:', error);
-      toast.error('フレンドの削除に失敗しました！');
+      toast.error('フレンドの削除に失敗しました。');
     }
   };
 
-const handleInitiateExchange = async (friendId: number) => {
-  try {
-    // 既存のセッションをチェック
-    const checkResponse = await ky.get(`/api/check_exchange/${friendId}/`, {
-      headers: { Authorization: `Token ${user?.token}` }
-    }).json();
+  /**
+   * カード交換を開始／確認する処理
+   * ・既に交換セッションが存在する場合は、提案側か受信側かで挙動を変える
+   * 　- 自分が提案側ならモーダルを表示して「提案中です！」かつキャンセル可能にする
+   * 　- 自分が受信側なら交換画面へ遷移し、相手の提案カード等を確認できるようにする
+   * ・存在しなければ新規に交換セッションを作成し、交換画面へ遷移する
+   */
+  const handleInitiateExchange = async (friendId: number) => {
+    try {
+      const checkResponse: {
+        exists: boolean;
+        exchange_ulid?: string;
+        proposer_id?: number;
+      } = await ky.get(`/api/check_exchange/${friendId}/`, {
+        headers: { Authorization: `Token ${user?.token}` },
+      }).json();
 
-    if (checkResponse.exists) {
-      navigate(`/exchange/${checkResponse.exchange_id}`);
-      return;
+      if (checkResponse.exists) {
+        if (checkResponse.proposer_id === user?.id) {
+          setExchangeSession(checkResponse);
+          setIsExchangeModalOpen(true);
+        } else {
+          // 受信側の場合は交換画面へ遷移
+          navigate(`/exchange/${checkResponse.exchange_ulid}`);
+        }
+      } else {
+        // 新規作成
+        const createResponse: { exchange_ulid: string } = await ky.post('/api/exchanges/', {
+          json: { receiver_id: friendId },
+          headers: { Authorization: `Token ${user?.token}` },
+        }).json();
+        navigate(`/exchange/${createResponse.exchange_ulid}`);
+      }
+    } catch (error) {
+      console.error('Failed to initiate exchange:', error);
+      toast.error('カード交換の開始に失敗しました。');
     }
+  };
 
-    // 新しいセッションを作成
-    const createResponse = await ky.post('/api/exchanges/', {
-      json: { receiver_id: friendId },
-      headers: { Authorization: `Token ${user?.token}` }
-    }).json();
-
-    navigate(`/exchange/${createResponse.exchange_id}`);
-  } catch (error) {
-    console.error('Failed to initiate exchange:', error);
-    toast.error('交換の開始に失敗しました');
-  }
-};
+  // 交換提案をキャンセルする処理（提案側のみ）
+  const handleCancelExchange = async () => {
+    if (!exchangeSession) return;
+    try {
+      await ky.post(`/api/exchanges/${exchangeSession.exchange_id}/cancel/`, {
+        headers: { Authorization: `Token ${user?.token}` },
+      });
+      toast.success('提案をキャンセルしました。');
+      setExchangeSession(null);
+      setIsExchangeModalOpen(false);
+    } catch (error) {
+      console.error('Failed to cancel exchange:', error);
+      toast.error('提案のキャンセルに失敗しました。');
+    }
+  };
 
   const confirmRemoveFriend = (friendId: number) => {
     setFriendToRemove(friendId);
@@ -157,8 +198,12 @@ const handleInitiateExchange = async (friendId: number) => {
             requests.map((request) => (
               <RequestItem key={request.id}>
                 <span>{request.from_user} からのリクエスト</span>
-                <Button onClick={() => handleRequestAction(request.id, 'accept')}>承認</Button>
-                <Button onClick={() => handleRequestAction(request.id, 'reject')}>拒否</Button>
+                <Button onClick={() => handleRequestAction(request.id, 'accept')}>
+                  承認
+                </Button>
+                <Button onClick={() => handleRequestAction(request.id, 'reject')}>
+                  拒否
+                </Button>
               </RequestItem>
             ))
           ) : (
@@ -192,6 +237,26 @@ const handleInitiateExchange = async (friendId: number) => {
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleRemoveFriend}
       />
+
+      {/* 提案中の場合のモーダル：提案側はキャンセルできる */}
+      {isExchangeModalOpen && exchangeSession && (
+        <ExchangeModalOverlay>
+          <ExchangeModalContent>
+            <ModalTitle>カード交換の提案中です！</ModalTitle>
+            <ModalMessage>
+              現在あなたの提案は保留状態です。相手が応答するまでお待ちください。
+            </ModalMessage>
+            <ButtonGroup>
+              <CancelExchangeButton onClick={handleCancelExchange}>
+                提案をキャンセルする
+              </CancelExchangeButton>
+              <CloseModalButton onClick={() => setIsExchangeModalOpen(false)}>
+                閉じる
+              </CloseModalButton>
+            </ButtonGroup>
+          </ExchangeModalContent>
+        </ExchangeModalOverlay>
+      )}
     </FriendsContainer>
   );
 };
@@ -279,13 +344,55 @@ const ExchangeButton = styled.button`
   }
 `;
 
-// DeleteButton コンポーネントを Button を継承して定義
 const DeleteButton = styled(Button)`
   background-color: #e74c3c;
 
   &:hover {
     background-color: #c0392b;
   }
+`;
+
+/* 交換提案用モーダル */
+const ExchangeModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+`;
+
+const ExchangeModalContent = styled.div`
+  background-color: var(--modal-background-default);
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  color: #2d2d67;
+  text-align: center;
+`;
+
+const ModalTitle = styled.h2`
+  margin-bottom: 15px;
+`;
+
+const ModalMessage = styled.p`
+  margin-bottom: 20px;
+`;
+
+const CancelExchangeButton = styled(Button)`
+  background-color: #e74c3c;
+
+  &:hover {
+    background-color: #c0392b;
+  }
+`;
+
+const CloseModalButton = styled(Button)`
+  background-color: var(--primary-color);
 `;
 
 export default Friends;

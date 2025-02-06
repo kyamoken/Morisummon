@@ -4,6 +4,10 @@ from django.db import models
 from django.forms import ValidationError
 from django.contrib.auth.models import AbstractUser
 from mongoengine import Document, fields
+import ulid
+
+def generate_ulid():
+    return str(ulid.ULID())
 
 class PlayerStats(Document):
     user = fields.ReferenceField(settings.AUTH_USER_MODEL)
@@ -170,38 +174,22 @@ class Notification(models.Model):
     def __str__(self):
         return f'{self.user.username} - {self.message}'
 
-
-class CardExchange(models.Model):
-    STATUS_CHOICES = [
-        ('waiting', '待機中'),
-        ('selecting', 'カード選択中'),
-        ('confirmed', '確認済み'),
-        ('completed', '完了'),
-        ('canceled', 'キャンセル')
-    ]
-
-    initiator = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                  related_name='initiated_exchanges',
-                                  on_delete=models.CASCADE)
-    receiver = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                 related_name='received_exchanges',
-                                 on_delete=models.CASCADE)
-    status = models.CharField(max_length=10,
-                              choices=STATUS_CHOICES,
-                              default='waiting')
-    initiator_card = models.ForeignKey(Card,
-                                       on_delete=models.SET_NULL,
-                                       null=True,
-                                       related_name='initiator_exchanges')
-    receiver_card = models.ForeignKey(Card,
-                                      on_delete=models.SET_NULL,
-                                      null=True,
-                                      related_name='receiver_exchanges')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
 class ExchangeSession(models.Model):
-    exchange = models.OneToOneField(CardExchange,on_delete=models.CASCADE,related_name='session')
-    initiator_ready = models.BooleanField(default=False)
-    receiver_ready = models.BooleanField(default=False)
+    ulid = models.CharField(
+        max_length=26,
+        unique=True,
+        default=generate_ulid
+    )
+
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('cancelled', 'Cancelled'),
+        ('completed', 'Completed'),
+    )
+    proposer = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='proposed_exchanges', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='received_exchanges', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.proposer.username} -> {self.receiver.username} ({self.status})'

@@ -7,7 +7,7 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.authtoken.models import Token
 from morisummon.serializers import UserSerializer
-from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification, CardExchange
+from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification, ExchangeSession
 from .serializers import CardSerializer, DeckSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -15,9 +15,7 @@ from .serializers import ChatMessageSerializer, ChatGroupSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-from .models import CardExchange, ExchangeSession
-from django.db import transaction
+
 
 # Custom User modelを取得
 User = get_user_model()
@@ -321,112 +319,103 @@ def get_unread_notification_count(request):
     return Response({'unread_count': unread_count})
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_exchange(request, friend_id):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    try:
+        friend = User.objects.get(id=friend_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Friend not found'}, status=404)
+
+    try:
+        exchange = ExchangeSession.objects.get(
+            Q(proposer=request.user, receiver=friend) | Q(proposer=friend, receiver=request.user),
+            status='pending'
+        )
+        return Response({
+            'exists': True,
+            'exchange_ulid': exchange.ulid,  # ULID を返す
+            'proposer_id': exchange.proposer.id
+        })
+    except ExchangeSession.DoesNotExist:
+        return Response({'exists': False})
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_exchange(request):
     receiver_id = request.data.get('receiver_id')
-    User = get_user_model()  # settings.AUTH_USER_MODEL をモデルクラスに変換
-    receiver = get_object_or_404(User, id=receiver_id)
+    if not receiver_id:
+        return Response({'error': 'receiver_id is required'}, status=400)
 
-    with transaction.atomic():
-        exchange = CardExchange.objects.create(
-            initiator=request.user,
-            receiver=receiver,
-            status='waiting'
-        )
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    try:
+        receiver = User.objects.get(id=receiver_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Receiver not found'}, status=404)
 
-    return Response({
-        'exchange_id': exchange.id,
-        'message': 'Exchange created successfully'
-    })
+    # 既に pending の交換セッションが存在していないかチェック（オプション）
+    qs = ExchangeSession.objects.filter(
+        Q(proposer=request.user, receiver=receiver) | Q(proposer=receiver, receiver=request.user),
+        status='pending'
+    )
+    if qs.exists():
+        exchange = qs.first()
+        return Response({'exchange_ulid': exchange.ulid})
+
+    exchange = ExchangeSession.objects.create(
+        proposer=request.user,
+        receiver=receiver,
+        status='pending'
+        # ※ ulid はモデルの default で自動生成する想定
+    )
+    return Response({'exchange_ulid': exchange.ulid})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def cancel_exchange(request, exchange_id):
-    exchange = get_object_or_404(CardExchange, id=exchange_id)
+def cancel_exchange(request, exchange_ulid):
+    try:
+        exchange = ExchangeSession.objects.get(ulid=exchange_ulid, status='pending')
+    except ExchangeSession.DoesNotExist:
+        return Response({'error': 'Exchange session not found or cannot be cancelled'}, status=404)
 
-    if request.user not in [exchange.initiator, exchange.receiver]:
-        return Response({'error': 'Permission denied'}, status=403)
+    # キャンセルは提案者のみ可能
+    if exchange.proposer != request.user:
+        return Response({'error': 'Only the proposer can cancel the exchange'}, status=403)
 
-    exchange.status = 'canceled'
+    exchange.status = 'cancelled'
     exchange.save()
+    return Response({'message': 'Exchange cancelled successfully'})
 
-    return Response({'message': 'Exchange canceled'})
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_exchange_details(request, exchange_id):
-    exchange = get_object_or_404(CardExchange, id=exchange_id)
-    return Response({
-        'id': exchange.id,
-        'initiator': exchange.initiator.username,
-        'receiver': exchange.receiver.username,
-        'status': exchange.status,
-        'initiator_card': exchange.initiator_card.id if exchange.initiator_card else None,
-        'receiver_card': exchange.receiver_card.id if exchange.receiver_card else None,
-        'participants': [exchange.initiator.username, exchange.receiver.username],
-    })
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def select_card(request, exchange_id):
-    exchange = get_object_or_404(CardExchange, id=exchange_id)
+def propose_exchange(request, exchange_ulid):
+    """
+    ユーザーがカードを選択して交換提案を完了するエンドポイント
+    リクエスト例：
+        { "card_id": 123 }
+    ※ 必要に応じて、交換セッションにカード情報を紐付ける処理を追加してください。
+    """
     card_id = request.data.get('card_id')
+    if not card_id:
+        return Response({'error': 'card_id is required'}, status=400)
 
     try:
-        card = Card.objects.get(id=card_id)
-    except Card.DoesNotExist:
-        return Response({'error': 'カードが見つかりません'}, status=404)
+        exchange = ExchangeSession.objects.get(ulid=exchange_ulid, status='pending')
+    except ExchangeSession.DoesNotExist:
+        return Response({'error': 'Exchange session not found'}, status=404)
 
-    if request.user == exchange.initiator:
-        exchange.initiator_card = card
-    elif request.user == exchange.receiver:
-        exchange.receiver_card = card
+    if exchange.proposer != request.user:
+        return Response({'error': 'Only the proposer can propose an exchange'}, status=403)
 
-    exchange.status = 'selecting'
-    exchange.save()
-
-    return Response({'message': 'カードを選択しました'})
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def confirm_exchange(request, exchange_id):
-    exchange = get_object_or_404(CardExchange, id=exchange_id)
-
-    if not exchange.initiator_card or not exchange.receiver_card:
-        return Response({'error': '両者がカードを選択していません'}, status=400)
-
+    # ※ 必要ならば、exchange に提案カード情報を保存する処理を追加
+    # ここではシンプルに交換提案完了として status を変更（実際のロジックに合わせてください）
     exchange.status = 'completed'
     exchange.save()
 
-    return Response({'message': '交換が確定しました'})
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_card_details(request, card_id):
-    card = get_object_or_404(Card, id=card_id)
-    return Response({
-        'id': card.id,
-        'name': card.name,
-        'image': card.image.url,
-        'hp': card.hp,
-        'attack': card.attack,
-    })
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def check_active_exchange(request, user_id):
-    # 両ユーザー間のアクティブな交換セッションを検索
-    active_exchange = CardExchange.objects.filter(
-        Q(initiator=request.user, receiver_id=user_id) |
-        Q(initiator_id=user_id, receiver=request.user),
-        status__in=['waiting', 'selecting']
-    ).first()
-
-    if active_exchange:
-        return Response({
-            'exists': True,
-            'exchange_id': active_exchange.id
-        })
-    return Response({'exists': False})
+    return Response({'message': 'Exchange proposed successfully'})

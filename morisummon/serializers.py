@@ -1,6 +1,6 @@
 from django.conf import settings
 from rest_framework import serializers
-from morisummon.models import Card, Deck, CustomUser, ChatMessage, ChatGroup
+from morisummon.models import Card, Deck, CustomUser, ChatMessage, ChatGroup, UserCard
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,6 +37,13 @@ class CardListField(serializers.Field):
                 card_ids[i] = card.pk
 
         return card_ids
+
+class UserCardSerializer(serializers.ModelSerializer):
+    card = CardSerializer(read_only=True)  # カード情報をネストして返す
+
+    class Meta:
+        model = UserCard
+        fields = ['card', 'amount']
 
 
 class DeckSerializer(serializers.ModelSerializer):

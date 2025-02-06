@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from .models import Card, Deck, UserCard, ChatGroup, CustomUser, ChatMessage, FriendRequest, Friendship, ExchangeSession
+from .models import Card, Deck, UserCard, ChatGroup, CustomUser, ChatMessage, FriendRequest, Friendship
 
 User = get_user_model()
 
@@ -62,9 +62,4 @@ class FriendshipAdmin(admin.ModelAdmin):
     search_fields = ('user1__username', 'user2__username')
     list_filter = ('created_at',)
 
-class ExchangeSessionAdmin(admin.ModelAdmin):
-    list_display = ('exchange', 'initiator_ready', 'receiver_ready')
-    search_fields = ('exchange__id',)
-
-admin.site.register(ExchangeSession, ExchangeSessionAdmin)
 
