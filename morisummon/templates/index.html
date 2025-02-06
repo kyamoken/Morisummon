@@ -1,0 +1,17 @@
+{% load django_vite %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>{% block title %}Morisummon{% endblock %}</title>
+    {% block vite %}{% vite_asset 'frontend/src/main.tsx' %}{% endblock  %}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c" rel="stylesheet" />
+
+    {% csrf_token %}
+</head>
+<body>
+<div id="root"></div>
+</body>
+</html>

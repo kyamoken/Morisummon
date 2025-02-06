@@ -1,0 +1,8 @@
+{% extends "index.html" %}
+{% load django_vite %}
+{% block title %}Morisummon (dev){% endblock %}
+{% block vite %}
+    {% vite_hmr_client %}
+    {% vite_react_refresh %}
+    {% vite_asset 'frontend/src/main.tsx' %}
+{% endblock %}
