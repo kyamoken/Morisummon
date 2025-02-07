@@ -387,6 +387,11 @@ def propose_exchange(request, exchange_ulid):
     exchange.status = 'proposed'
     exchange.save()
 
+    Notification.objects.create(
+        user=exchange.receiver,
+        message=f"{exchange.proposer.username}さんが交換を提案しています。"
+    )
+
     return Response({'message': 'Exchange proposed successfully'})
 
 
@@ -427,5 +432,10 @@ def confirm_exchange(request, exchange_ulid):
 
     exchange.status = 'completed'
     exchange.save()
+
+    Notification.objects.create(
+        user=exchange.proposer,
+        message=f"{request.user.username}さんへのカード交換提案が承認され、交換が成立しました。"
+    )
 
     return Response({'message': 'Exchange confirmed successfully'})

@@ -107,8 +107,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // 受信側が提案された交換内容を確認して交換成立させる処理
-  // ※ バックエンド側では、confirm_exchange 時に受信者の UserCard.amount を１増やす処理を実施する前提
+
   const handleConfirmExchange = async () => {
     if (!exchange_ulid) return;
     try {
@@ -165,7 +164,6 @@ const ExchangePage: React.FC = () => {
             <>
               <Title>交換するカードを選択してください</Title>
               <CardGrid>
-                {/* 交換候補は所持枚数が2枚以上のカードのみ表示 */}
                 {cards
                   .filter((cardData) => cardData.amount > 1)
                   .map((cardData) => (
