@@ -28,7 +28,7 @@ interface CardData {
 const ExchangePage: React.FC = () => {
   const { exchange_ulid } = useParams<{ exchange_ulid: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth(); // 認証情報取得
+  const { user } = useAuth(); // useAuth で認証情報を取得
   const [cards, setCards] = useState<CardData[]>([]);
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,7 +36,7 @@ const ExchangePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [proposedCard, setProposedCard] = useState<CardData | null>(null);
 
-  // 交換セッション情報の取得
+  // 交換セッション情報を取得
   const fetchExchangeData = async () => {
     if (!exchange_ulid) return;
     try {
@@ -54,7 +54,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // ユーザーのカード一覧の取得
+  // ユーザーのカード一覧を取得
   const fetchUserCards = async () => {
     try {
       const response: CardData[] = await ky
@@ -69,7 +69,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // 提案されたカード情報をカード一覧から探す
+  // 提案されたカードの詳細を取得（ユーザーのカード一覧から探す場合）
   const findProposedCard = (cardId: number) => {
     return cards.find((cardData) => cardData.card.id === cardId) || null;
   };
@@ -79,6 +79,7 @@ const ExchangePage: React.FC = () => {
     fetchUserCards();
   }, [exchange_ulid]);
 
+  // 交換セッション情報とカード一覧が両方取得できたら、提案されたカードを探す
   useEffect(() => {
     if (exchangeData && exchangeData.proposed_card_id && cards.length > 0) {
       const card = findProposedCard(exchangeData.proposed_card_id);
@@ -88,9 +89,11 @@ const ExchangePage: React.FC = () => {
     }
   }, [exchangeData, cards]);
 
-  // 提案側がカードを選択して交換提案を完了する処理（バックエンドで提案時にカード所持数を１減らす）
+  // 提案側または受信側がカードを選択して交換提案を完了する処理
+  // ※ バックエンド側では、propose_exchange 時に提案者の UserCard.amount を１減らす処理を実施する前提
   const handleProposeExchange = async () => {
     if (!selectedCard || !exchange_ulid) return;
+    // （ここでは、selectedCard.amount >= 2 であるはずなので、追加チェックも可能）
     try {
       await ky.post(`/api/exchanges/${exchange_ulid}/propose/`, {
         json: { card_id: selectedCard.card.id },
@@ -104,7 +107,8 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // 受信側が提案された交換内容を確認して交換成立させる処理（バックエンドで受信者のカード所持数を１増やす）
+  // 受信側が提案された交換内容を確認して交換成立させる処理
+  // ※ バックエンド側では、confirm_exchange 時に受信者の UserCard.amount を１増やす処理を実施する前提
   const handleConfirmExchange = async () => {
     if (!exchange_ulid) return;
     try {
@@ -119,7 +123,8 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // 提案側がキャンセルボタンを押したときの処理（バックエンドでカード所持数を元に戻す）
+  // 提案側がキャンセルボタンを押したときの処理
+  // ※ バックエンド側では、cancel_exchange 時に提案者の UserCard.amount を戻す処理を実施する前提
   const handleCancelExchange = async () => {
     if (!exchange_ulid) return;
     try {
@@ -134,15 +139,20 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // カードクリック時の処理
+  // カードをクリックしたときの処理
   const handleCardClick = (card: CardData) => {
+    // 1枚しかもっていないカードは交換に出せないので、念のためチェック
+    if (card.amount < 2) {
+      toast.error('このカードは所持枚数が足りないため交換に出せません。');
+      return;
+    }
     setSelectedCard(card);
     setIsModalOpen(true);
   };
 
   if (loading) return <div>Loading...</div>;
 
-  // 現在のユーザーID
+  // 現在のユーザーIDを useAuth から取得
   const currentUserId = user?.id;
 
   return (
@@ -150,17 +160,20 @@ const ExchangePage: React.FC = () => {
       <Header />
       <Content>
         {exchangeData && (exchangeData.status === 'pending' || exchangeData.status === 'proposed') ? (
-          // まだカードが提案されていない場合はカード選択画面
+          // まだカードが提案されていない場合：カード選択画面
           exchangeData.proposed_card_id === null ? (
             <>
               <Title>交換するカードを選択してください</Title>
               <CardGrid>
-                {cards.map((cardData) => (
-                  <CardItem key={cardData.card.id} onClick={() => handleCardClick(cardData)}>
-                    <CardImage src={cardData.card.image} alt={cardData.card.name} />
-                    <CardName>{cardData.card.name}</CardName>
-                  </CardItem>
-                ))}
+                {/* 交換候補は所持枚数が2枚以上のカードのみ表示 */}
+                {cards
+                  .filter((cardData) => cardData.amount > 1)
+                  .map((cardData) => (
+                    <CardItem key={cardData.card.id} onClick={() => handleCardClick(cardData)}>
+                      <CardImage src={cardData.card.image} alt={cardData.card.name} />
+                      <CardName>{cardData.card.name}</CardName>
+                    </CardItem>
+                  ))}
               </CardGrid>
             </>
           ) :
@@ -201,7 +214,7 @@ const ExchangePage: React.FC = () => {
           <Title>有効な交換セッションがありません</Title>
         )}
       </Content>
-      {/* カード選択確認用モーダル */}
+      {/* カード選択の確認モーダル */}
       {isModalOpen && selectedCard && (
         <ExchangeSuperModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
           <ModalContent>
@@ -269,7 +282,7 @@ const CardName = styled.p`
   font-size: 14px;
 `;
 
-// 提案されたカード表示の領域（幅固定）
+// 提案されたカード表示領域（幅固定）
 const ProposedCardContainer = styled.div`
   display: inline-block;
   margin-bottom: 20px;
