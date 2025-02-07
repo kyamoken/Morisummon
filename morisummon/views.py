@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model, authenticate, login as auth_logi
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.authtoken.models import Token
-from morisummon.serializers import UserSerializer
+from morisummon.serializers import UserSerializer, ExchangeSessionSerializer
 from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification, ExchangeSession
 from .serializers import CardSerializer, DeckSerializer
 import random
@@ -278,7 +278,7 @@ def check_exchange(request, friend_id):
     try:
         exchange = ExchangeSession.objects.get(
             Q(proposer=request.user, receiver=friend) | Q(proposer=friend, receiver=request.user),
-            status='pending'
+            status__in=['pending', 'proposed']  # 両ステータスをチェック
         )
         return Response({
             'exists': True,
@@ -324,17 +324,32 @@ def create_exchange(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_exchange(request, exchange_ulid):
+    """
+    交換キャンセルエンドポイント
+    - 状態が pending または proposed の場合、提案者のみキャンセル可能
+    - すでに proposed 状態なら提案者のカード所持数を１戻す
+    """
     try:
-        exchange = ExchangeSession.objects.get(ulid=exchange_ulid, status='pending')
+        exchange = ExchangeSession.objects.get(ulid=exchange_ulid, status__in=['pending', 'proposed'])
     except ExchangeSession.DoesNotExist:
         return Response({'error': 'Exchange session not found or cannot be cancelled'}, status=404)
 
-    # キャンセルは提案者のみ可能
     if exchange.proposer != request.user:
         return Response({'error': 'Only the proposer can cancel the exchange'}, status=403)
 
+    if exchange.status == 'proposed' and exchange.proposed_card_id is not None:
+        # 提案済みの場合は、提案者にカードを返す（所持数を１増やす）
+        try:
+            user_card = UserCard.objects.get(user=request.user, card_id=exchange.proposed_card_id)
+            user_card.amount += 1
+            user_card.save()
+        except UserCard.DoesNotExist:
+            # 存在しない場合は新たに作成
+            UserCard.objects.create(user=request.user, card_id=exchange.proposed_card_id, amount=1)
+
     exchange.status = 'cancelled'
     exchange.save()
+
     return Response({'message': 'Exchange cancelled successfully'})
 
 
@@ -343,8 +358,8 @@ def cancel_exchange(request, exchange_ulid):
 def propose_exchange(request, exchange_ulid):
     """
     ユーザーがカードを選択して交換提案を完了するエンドポイント
-    リクエスト例：
-        { "card_id": 123 }
+    リクエスト例： { "card_id": 123 }
+    提案時、提案者の UserCard.amount を１減らす
     """
     card_id = request.data.get('card_id')
     if not card_id:
@@ -358,13 +373,18 @@ def propose_exchange(request, exchange_ulid):
     if exchange.proposer != request.user:
         return Response({'error': 'Only the proposer can propose an exchange'}, status=403)
 
-    # 選択したカードのIDを保存する
-    exchange.proposed_card_id = card_id
-    exchange.save()
+    # 提案者のカード所持数を１減らす
+    try:
+        user_card = UserCard.objects.get(user=request.user, card_id=card_id)
+        if user_card.amount <= 0:
+            return Response({'error': 'Insufficient card amount'}, status=400)
+        user_card.amount -= 1
+        user_card.save()
+    except UserCard.DoesNotExist:
+        return Response({'error': 'User does not have the card'}, status=404)
 
-    # 状態を「completed」に変更するなど、必要な処理を追加
-    # ※ ロジックに合わせて適宜変更してください
-    exchange.status = 'completed'
+    exchange.proposed_card_id = card_id
+    exchange.status = 'proposed'
     exchange.save()
 
     return Response({'message': 'Exchange proposed successfully'})
@@ -375,13 +395,37 @@ def propose_exchange(request, exchange_ulid):
 def get_exchange(request, exchange_ulid):
     try:
         exchange = ExchangeSession.objects.get(ulid=exchange_ulid)
+        serializer = ExchangeSessionSerializer(exchange)
+        return Response(serializer.data)
     except ExchangeSession.DoesNotExist:
         return Response({'error': 'Exchange session not found'}, status=404)
 
-    return Response({
-        'ulid': exchange.ulid,
-        'status': exchange.status,
-        'proposer_id': exchange.proposer.id,
-        'receiver_id': exchange.receiver.id,
-        'proposed_card_id': exchange.proposed_card_id,  # 追加したフィールド
-    })
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirm_exchange(request, exchange_ulid):
+    """
+    受信側が提案された交換内容を確認し、交換成立させるエンドポイント
+    受信者の UserCard.amount を１増やす
+    """
+    try:
+        exchange = ExchangeSession.objects.get(ulid=exchange_ulid, status='proposed')
+    except ExchangeSession.DoesNotExist:
+        return Response({'error': 'Exchange session not found or cannot be confirmed'}, status=404)
+
+    if exchange.receiver != request.user:
+        return Response({'error': 'Only the receiver can confirm the exchange'}, status=403)
+
+    card_id = exchange.proposed_card_id
+    if card_id is not None:
+        receiver_card, created = UserCard.objects.get_or_create(
+            user=request.user,
+            card_id=card_id,
+            defaults={'amount': 0}
+        )
+        receiver_card.amount += 1
+        receiver_card.save()
+
+    exchange.status = 'completed'
+    exchange.save()
+
+    return Response({'message': 'Exchange confirmed successfully'})

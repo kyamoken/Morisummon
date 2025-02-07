@@ -114,16 +114,17 @@ const Friends: React.FC = () => {
   /**
    * 交換開始／確認処理
    *
-   * 1. まず /api/check_exchange/{friendId}/ で既存の交換セッションを確認
-   * 2. 既に存在していれば、その交換セッションの情報を state に保存し、モーダルを表示
-   *    - 提案側なら「既に提案中」モーダル（キャンセル可能）
-   *    - 受信側なら「相手が提案中」モーダル（確認できる）
+   * 1. /api/check_exchange/{friendId}/ にて既存の交換セッションを確認
+   * 2. 既に存在していれば、レスポンスの status によって処理を分岐
+   *    - status が 'proposed' の場合は、モーダルを表示してキャンセルまたは確認を促す
+   *    - それ以外の場合は、直接交換画面へ遷移
    * 3. 交換セッションが存在しなければ、新規作成してカード選択画面に遷移
    */
   const handleInitiateExchange = async (friendId: number) => {
     try {
       const checkResponse: {
         exists: boolean;
+        status?: string;
         exchange_ulid?: string;
         proposer_id?: number;
       } = await ky
@@ -133,20 +134,26 @@ const Friends: React.FC = () => {
         .json();
 
       if (checkResponse.exists) {
-        // 既存の交換セッションがある場合は常にモーダルを表示して、キャンセルまたは確認を促す
-        setExchangeSession({
-          exists: true,
-          exchange_ulid: checkResponse.exchange_ulid!,
-          proposer_id: checkResponse.proposer_id!,
-        });
-        setIsExchangeModalOpen(true);
+        if (checkResponse.status === 'proposed') {
+          // 既に「提案済み」の場合はモーダルでユーザーに対応を促す
+          setExchangeSession({
+            exists: true,
+            exchange_ulid: checkResponse.exchange_ulid!,
+            proposer_id: checkResponse.proposer_id!,
+          });
+          setIsExchangeModalOpen(true);
+        } else {
+          // 例: 既に交換が成立している場合などは直接その画面へ遷移
+          navigate(`/exchange/${checkResponse.exchange_ulid}`);
+        }
       } else {
-        // 新規作成の場合のみ、新しい交換セッションを作成してカード選択画面へ遷移
-        const createResponse: { exchange_ulid: string } = await ky.post('/api/exchanges/', {
-          json: { receiver_id: friendId },
-          headers: { Authorization: `Token ${user?.token}` },
-        }).json();
-        // 画面遷移前に exchangeSession はクリアする（新規セッションとして扱う）
+        // 新規作成の場合：新しい交換セッションを作成してカード選択画面へ遷移
+        const createResponse: { exchange_ulid: string } = await ky
+          .post('/api/exchanges/', {
+            json: { receiver_id: friendId },
+            headers: { Authorization: `Token ${user?.token}` },
+          })
+          .json();
         setExchangeSession(null);
         navigate(`/exchange/${createResponse.exchange_ulid}`);
       }
@@ -164,7 +171,6 @@ const Friends: React.FC = () => {
         headers: { Authorization: `Token ${user?.token}` },
       });
       toast.success('提案をキャンセルしました。');
-      // キャンセル完了後は state をクリアして再度新規提案が可能にする
       setExchangeSession(null);
       setIsExchangeModalOpen(false);
     } catch (error) {
@@ -181,7 +187,6 @@ const Friends: React.FC = () => {
         headers: { Authorization: `Token ${user?.token}` },
       });
       toast.success('交換が成立しました！');
-      // 交換成立後は state をクリアする
       setExchangeSession(null);
       setIsExchangeModalOpen(false);
       navigate('/friends');
@@ -263,7 +268,7 @@ const Friends: React.FC = () => {
         onConfirm={handleRemoveFriend}
       />
 
-      {/* 交換セッションが存在する場合は、常にモーダルで操作させる */}
+      {/* 交換セッションが存在する場合は、モーダルで操作させる */}
       {isExchangeModalOpen && exchangeSession && (
         <ExchangeModalOverlay>
           <ExchangeModalContent>

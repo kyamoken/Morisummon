@@ -132,9 +132,10 @@ class ExchangeSession(models.Model):
         default=generate_ulid
     )
     STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('cancelled', 'Cancelled'),
-        ('completed', 'Completed'),
+        ('pending', 'Pending'),     # 交換作成済み（未提案）
+        ('proposed', 'Proposed'),    # カード提案済み
+        ('completed', 'Completed'),  # 交換完了
+        ('cancelled', 'Cancelled'), # キャンセル済み
     )
     proposer = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='proposed_exchanges', on_delete=models.CASCADE)
     receiver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='received_exchanges', on_delete=models.CASCADE)

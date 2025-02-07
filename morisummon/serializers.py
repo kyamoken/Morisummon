@@ -1,6 +1,6 @@
 from django.conf import settings
 from rest_framework import serializers
-from morisummon.models import Card, Deck, ChatMessage, ChatGroup, UserCard
+from morisummon.models import Card, Deck, ChatMessage, ChatGroup, UserCard, ExchangeSession
 from accounts.serializers import UserSerializer
 
 class CardSerializer(serializers.ModelSerializer):
@@ -83,6 +83,11 @@ class ChatGroupSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user'):
             chat_group.members.add(request.user)
         return chat_group
+
+class ExchangeSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExchangeSession
+        fields = ['ulid', 'status', 'proposer_id', 'receiver_id', 'proposed_card_id']
 ########## 以上はチャット関連の実装 ##########
 
     # def create(self, validated_data):
