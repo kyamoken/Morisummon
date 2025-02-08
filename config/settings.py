@@ -227,6 +227,7 @@ LOGGING = {
 }
 
 # MongoEngine
+
 import mongoengine
 
 MONGO_HOST = 'mongodb://' + env.str('MONGO_HOST', 'localhost') + ':' + env.str('MONGO_PORT', '27017')

@@ -15,6 +15,9 @@ function App() {
   const [isTermsOfServiceOpen, setTermsOfServiceOpen] = useState(false);
 
   const BUTTON_CLICK_SE_URL = '/static/sounds/Click_button.mp3';
+
+  // const BUTTON_CLICK_SE_URL = '/static/sounds/Click_button_js.mp3'; クリック音声 = ジャスティス
+
   const playSoundEffect = useSoundEffect();
   const handleCardClick = (url: string) => {
     playSoundEffect(BUTTON_CLICK_SE_URL);
@@ -23,9 +26,7 @@ function App() {
 
   return (
     <AppContainer>
-      <Header /> {/* ヘッダー */}
-
-      {/* Main Content */}
+      <Header />
       <Main>
         <ButtonsContainer>
           {isLoading ? (

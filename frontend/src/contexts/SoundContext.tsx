@@ -7,6 +7,7 @@ export interface Sound {
   is_bgm: boolean;
   file_url: string;
 }
+
 // 再生関連の状態を管理するための型
 interface SoundState {
   currentTrack: Sound | null; // BGM用。常時再生する音楽を管理

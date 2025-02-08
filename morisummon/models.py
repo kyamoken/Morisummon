@@ -74,7 +74,7 @@ class Deck(models.Model):
 class ChatGroup(models.Model):
     name = models.CharField(max_length=255, unique=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL)
-    created_at = models.DateTimeField(default=datetime.utcnow)
+    created_at = models.DateTimeField(default=datetime.now)
 
     def __str__(self):
         return self.name
@@ -83,7 +83,7 @@ class ChatMessage(models.Model):
     group = models.ForeignKey(ChatGroup, on_delete=models.CASCADE)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     message = models.TextField()
-    timestamp = models.DateTimeField(default=datetime.utcnow)
+    timestamp = models.DateTimeField(default=datetime.now)
 
     def __str__(self):
         return f'{self.sender.username} - {self.timestamp}'
@@ -97,7 +97,7 @@ class FriendRequest(models.Model):
         choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')],
         default='pending'
     )
-    created_at = models.DateTimeField(default=datetime.utcnow)
+    created_at = models.DateTimeField(default=datetime.now)
 
     class Meta:
         unique_together = ('from_user', 'to_user')
@@ -108,7 +108,7 @@ class FriendRequest(models.Model):
 class Friendship(models.Model):
     user1 = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='friendships1', on_delete=models.CASCADE)
     user2 = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='friendships2', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=datetime.utcnow)
+    created_at = models.DateTimeField(default=datetime.now)
 
     class Meta:
         unique_together = ('user1', 'user2')
@@ -120,7 +120,7 @@ class Notification(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='notifications', on_delete=models.CASCADE)
     message = models.CharField(max_length=255)
     is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=datetime.utcnow)
+    created_at = models.DateTimeField(default=datetime.now)
 
     def __str__(self):
         return f'{self.user.username} - {self.message}'
@@ -148,6 +148,7 @@ class ExchangeSession(models.Model):
     def __str__(self):
         return f'{self.proposer.username} -> {self.receiver.username} ({self.status})'
 
+# 音源追加クラス
 class Sound(models.Model):
     name = models.CharField(max_length=100)
     is_bgm = models.BooleanField(default=False)  # TrueならBGM、FalseならSEにしておく
@@ -155,3 +156,4 @@ class Sound(models.Model):
 
     def __str__(self):
         return self.name
+
