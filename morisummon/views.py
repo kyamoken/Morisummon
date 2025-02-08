@@ -6,14 +6,14 @@ from django.contrib.auth import get_user_model, authenticate, login as auth_logi
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.authtoken.models import Token
-from morisummon.serializers import UserSerializer, ExchangeSessionSerializer
-from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification, ExchangeSession
+from morisummon.serializers import UserSerializer, ExchangeSessionSerializer, SoundSerializer
+from .models import Card, UserCard, Deck, ChatMessage, ChatGroup, FriendRequest, Notification, ExchangeSession, Sound
 from .serializers import CardSerializer, DeckSerializer
 import random
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from .serializers import ChatMessageSerializer, ChatGroupSerializer
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 
@@ -439,3 +439,15 @@ def confirm_exchange(request, exchange_ulid):
     )
 
     return Response({'message': 'Exchange confirmed successfully'})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # 認証不要の場合
+def sound_list(request):
+    """
+    音源情報（曲名、種別、ファイルの URL など）を全件返すエンドポイント
+    """
+    sounds = Sound.objects.all()
+    # シリアライザで context に request を渡すことで、絶対パスの URL を生成できます
+    serializer = SoundSerializer(sounds, many=True, context={'request': request})
+    return Response(serializer.data)

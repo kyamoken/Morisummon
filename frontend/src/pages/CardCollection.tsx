@@ -4,15 +4,21 @@ import Header from '@/components/Header';
 import useCardManager from '@/hooks/useCardManager';
 import type { Card } from '@/types/models';
 
-const CardCollection: React.FC = () => {
-  const { cards } = useCardManager(); // 所持カードを取得
+// type CardCollectionProps = {}; # propsを使うときがあるかもしれない
+
+type CardItem = {
+  card: Card;
+};
+
+const CardCollection: React.FC /*<CardCollectionProps>*/ = () => {
+  const { cards } = useCardManager();
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
-  const handleCardClick = (card: Card) => {
+  const handleCardClick = (card: Card): void => {
     setSelectedCard(card);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = (): void => {
     setSelectedCard(null);
   };
 
@@ -23,7 +29,7 @@ const CardCollection: React.FC = () => {
         <h1>カード図鑑</h1>
         <CardGrid>
           {cards?.length ? (
-            cards.map(({ card }) => (
+            cards.map(({ card }: CardItem) => (
               <CardSlot key={card.id} onClick={() => handleCardClick(card)}>
                 {card.image ? (
                   <CardImage src={card.image} alt={card.name} />

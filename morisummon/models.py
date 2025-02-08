@@ -148,3 +148,10 @@ class ExchangeSession(models.Model):
     def __str__(self):
         return f'{self.proposer.username} -> {self.receiver.username} ({self.status})'
 
+class Sound(models.Model):
+    name = models.CharField(max_length=100)
+    is_bgm = models.BooleanField(default=False)  # TrueならBGM、FalseならSEにしておく
+    file = models.FileField(upload_to='sounds/')
+
+    def __str__(self):
+        return self.name

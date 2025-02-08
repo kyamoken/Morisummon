@@ -32,6 +32,8 @@ urlpatterns = [
     path('api/exchanges/<str:exchange_ulid>/', views.get_exchange, name='get_exchange'),
     path('api/exchanges/<str:exchange_ulid>/confirm/', views.confirm_exchange, name='confirm_exchange'),
 
+    path('api/sounds/', views.sound_list, name='sound-list'),
+
 
 
 ]

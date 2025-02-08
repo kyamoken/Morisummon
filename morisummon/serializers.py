@@ -1,6 +1,6 @@
 from django.conf import settings
 from rest_framework import serializers
-from morisummon.models import Card, Deck, ChatMessage, ChatGroup, UserCard, ExchangeSession
+from morisummon.models import Card, Deck, ChatMessage, ChatGroup, UserCard, ExchangeSession, Sound
 from accounts.serializers import UserSerializer
 
 class CardSerializer(serializers.ModelSerializer):
@@ -88,6 +88,19 @@ class ExchangeSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExchangeSession
         fields = ['ulid', 'status', 'proposer_id', 'receiver_id', 'proposed_card_id']
+
+class SoundSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Sound
+        fields = ['id', 'name', 'is_bgm', 'file_url']
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.file.url)
+
+
 ########## 以上はチャット関連の実装 ##########
 
     # def create(self, validated_data):
