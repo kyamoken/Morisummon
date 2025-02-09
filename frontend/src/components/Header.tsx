@@ -13,7 +13,6 @@ const Header: React.FC = () => {
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [selectedNotification, setSelectedNotification] = useState<any | null>(null);
 
   const handleLogoClick = () => {
     navigate('/');
@@ -24,7 +23,7 @@ const Header: React.FC = () => {
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
-        const response = await ky.get('/api/notifications/unread_count/', {
+        const response: any = await ky.get('/api/notifications/unread_count/', {
           headers: { Authorization: `Token ${localStorage.getItem('token')}` },
         }).json();
         setUnreadCount(response.unread_count);
@@ -38,11 +37,10 @@ const Header: React.FC = () => {
 
   const handleNotificationClick = async () => {
     try {
-      const response = await ky.get('/api/notifications/', {
+      const response: any = await ky.get('/api/notifications/', {
         headers: { Authorization: `Token ${localStorage.getItem('token')}` },
       }).json();
       setNotifications(response.notifications);
-      setSelectedNotification(response.notifications[0]); // 最初の通知を選択
       setIsNotificationModalOpen(true);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -57,7 +55,7 @@ const Header: React.FC = () => {
       setNotifications(notifications.map(notification =>
         notification.id === notificationId ? { ...notification, is_read: true } : notification
       ));
-      setUnreadCount(unreadCount - 1); // 非同期で通知数を更新
+      setUnreadCount(unreadCount - 1);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -74,15 +72,31 @@ const Header: React.FC = () => {
         style={{ cursor: 'pointer' }}
       />
       <UserInfo>
-        <ChatButton onClick={() => setIsChatModalOpen(true)}>チャット</ChatButton>
+        <ChatButton onClick={() => setIsChatModalOpen(true)}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chat-fill"
+               viewBox="0 0 16 16">
+            <path
+              d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9 9 0 0 0 8 15"/>
+          </svg>
+        </ChatButton>
         <NotificationButton onClick={handleNotificationClick}>
-          <i className="fas fa-envelope"></i>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-bell-fill"
+               viewBox="0 0 16 16">
+            <path
+              d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/>
+          </svg>
           {unreadCount > 0 && <Badge>{unreadCount}</Badge>}
         </NotificationButton>
+
         <div>{user ? user.username + " さん" : 'ゲスト さん'}</div>
-        <div>魔法石: {gachaStones}</div>
+        <MagicStoneContainer>
+          <MagicStoneImage src="/static/images/Magic_Stone.png" alt="Magic Stone"/>
+          <div>{gachaStones}</div>
+        </MagicStoneContainer>
+
+
       </UserInfo>
-      <Chat isModalOpen={isChatModalOpen} onClose={() => setIsChatModalOpen(false)} />
+      <Chat isModalOpen={isChatModalOpen} onClose={() => setIsChatModalOpen(false)}/>
       <NotificationModal
         isOpen={isNotificationModalOpen}
         notifications={notifications}
@@ -135,6 +149,8 @@ const ChatButton = styled.button`
   padding: 8px 16px;
   cursor: pointer;
   margin-right: 20px;
+  display: flex;
+  align-items: center;
   &:hover {
     background-color: #3a3b3e;
   }
@@ -143,9 +159,11 @@ const ChatButton = styled.button`
 const NotificationButton = styled(ChatButton)`
   position: relative;
   font-size: 24px;
+  display: flex;
+  align-items: center;
 
   & > i {
-    margin-right: 8px;
+    margin: 0;
   }
 `;
 
@@ -158,6 +176,18 @@ const Badge = styled.span`
   border-radius: 50%;
   padding: 5px 10px;
   font-size: 12px;
+`;
+
+const MagicStoneContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const MagicStoneImage = styled.img`
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
 `;
 
 export default Header;
