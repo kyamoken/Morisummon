@@ -120,3 +120,22 @@ input {
   color: var(--text-color);
   opacity: 0.8;
 }
+
+
+  /* Webkit（Chrome, Safari, Edge）用 */
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #333;  /* トラックの色 */
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6f6fa8, #383875);
+    border-radius: 10px;
+    border: 3px solid #333;  /* オプション：トラックと同じ背景で境界線をつける */
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #383875, #6f6fa8);
+  }
+

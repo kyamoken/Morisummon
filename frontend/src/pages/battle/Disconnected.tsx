@@ -21,7 +21,6 @@ const Disconnected: React.FC<Props> = ({ message }) => {
           ホームに戻る
         </FloatingButton>
       </Center>
-
     </DisconnectedContainer>
   );
 };

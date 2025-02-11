@@ -1,7 +1,9 @@
+// home.tsx
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router';
-import Header from '@/components/Header.tsx'; // ヘッダーコンポーネントをインポート
+import Header from '@/components/Header.tsx';
+import { FloatingButton, FloatingDangerButton } from '@/components/FloatingButton'; // FloatingButtonとFloatingDangerButtonをインポート
 import useAuth from '@/hooks/useAuth.tsx';
 
 const Home: React.FC = () => {
@@ -17,14 +19,29 @@ const Home: React.FC = () => {
       <Content>
         <h1>エッジワースカードへようこそ！</h1>
         <ButtonContainer>
-          <Button as={Link} to="/battle">マッチング</Button>
-          <Button as={Link} to="/deck">デッキ</Button>
-          <Button as={Link} to="/gacha">ガチャ</Button>
-          <Button as={Link} to="/card-collection">図鑑</Button> {/* 図鑑ページへのリンクを追加 */}
-          <Button as={Link} to="/friends">フレンド</Button>
-          <Button as={Link} to="/settings">設定</Button>
+          <FloatingButton as={Link} to="/battle" style={{ width: '200px' }}>
+            マッチング
+          </FloatingButton>
+          <FloatingButton as={Link} to="/deck" style={{ width: '200px' }}>
+            デッキ
+          </FloatingButton>
+          <FloatingButton as={Link} to="/gacha" style={{ width: '200px' }}>
+            ガチャ
+          </FloatingButton>
+          <FloatingButton as={Link} to="/card-collection" style={{ width: '200px' }}>
+            図鑑
+          </FloatingButton>
+          <FloatingButton as={Link} to="/friends" style={{ width: '200px' }}>
+            フレンド
+          </FloatingButton>
+          <FloatingButton as={Link} to="/settings" style={{ width: '200px' }}>
+            設定
+          </FloatingButton>
         </ButtonContainer>
-        <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>
+        {/* ログアウトボタンはFloatingDangerButtonを利用して、色は赤のままに */}
+        <FloatingDangerButton onClick={handleLogout} style={{ width: '200px' }}>
+          ログアウト
+        </FloatingDangerButton>
       </Content>
     </HomeContainer>
   );
@@ -50,35 +67,9 @@ const Content = styled.div`
 const ButtonContainer = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center; /* 追加 */
+  align-items: center;
   gap: 20px;
   margin: 20px 0;
-`;
-
-const Button = styled.button`
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 12px 30px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  width: 200px;
-
-  &:hover {
-    background-color: var(--button-hover);
-    transform: scale(1.05);
-  }
-`;
-
-const LogoutButton = styled(Button)`
-  background-color: red;
-  margin-top: 20px;
-
-  &:hover {
-    background-color: darkred;
-  }
 `;
 
 export default Home;
