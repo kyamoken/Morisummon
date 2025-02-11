@@ -32,6 +32,7 @@ const ModalOverlay = styled.div`
   justify-content: center;
   opacity: 0;
   animation: fadeIn 0.3s ease-in-out forwards;
+  z-index: 1002; /* z-indexを1002に変更 */
 
   @keyframes fadeIn {
     to {

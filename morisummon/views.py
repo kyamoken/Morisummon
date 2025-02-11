@@ -442,7 +442,7 @@ def confirm_exchange(request, exchange_ulid):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])  # 認証不要の場合
+@permission_classes([AllowAny])
 def sound_list(request):
     """
     音源情報（曲名、種別、ファイルの URL など）を全件返すエンドポイント

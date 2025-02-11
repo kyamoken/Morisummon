@@ -7,8 +7,11 @@
   --primary-color: #2d2d67;
   --background-color: #1a1a23;
   --text-color: #333;
-  --card-background: #7a7a7a;
-  --button-hover: #005bb5;
+  --card-background: #4d4d7c;
+  --developer-card-backcolor: #35356b;
+  --developer-card-textcolor: white;
+  --developer-shadow-color: #606060;
+  --button-hover: #1b1b42;
   --input-border: #8a8a8a;
   --input-focus-border: #0078d4;
   --border-radius: 8px;
@@ -20,6 +23,9 @@
   --friend-delete-modal-background: grey;
   --friend-delete-modal-text-color: white;
   --modal-background-default: #b0c4de;
+  --footer-color: #f8f9fa;
+  --toppage-title-textcolor: white;
+  --toppage-subtitle-textcolor: #b1b1ff;
 }
 
 .light-theme {
