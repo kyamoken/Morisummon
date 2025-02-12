@@ -13,11 +13,50 @@ const StyledFloatingButton = styled.button`
   padding: 12px 30px;
   font-size: 18px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 
   &:hover {
     background-color: var(--button-hover);
-    transform: scale(1.05);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* シェイン（光の走査）エフェクト */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    transform: skewX(-25deg);
+  }
+
+  &:hover::after {
+    animation: shine 0.8s;
+  }
+
+  @keyframes shine {
+    from {
+      left: -100%;
+    }
+    to {
+      left: 100%;
+    }
   }
 `;
 
@@ -34,8 +73,6 @@ const StyledFloatingDangerButton = styled(StyledFloatingButton)`
  * ポリモーフィックな FloatingButtonProps 型
  * T はレンダリングする要素の型（デフォルトは "button"）
  */
-
-
 export type FloatingButtonProps<T extends React.ElementType = "button"> = {
   soundUrl?: string;
   children: React.ReactNode;

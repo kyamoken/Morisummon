@@ -1,5 +1,6 @@
+// header.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router'; // Link を追加
 import styled from 'styled-components';
 import useAuth from '@/hooks/useAuth.tsx';
 import Chat from './Chat.tsx';
@@ -73,28 +74,31 @@ const Header: React.FC = () => {
       />
       <UserInfo>
         <ChatButton onClick={() => setIsChatModalOpen(true)}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chat-fill"
-               viewBox="0 0 16 16">
-            <path
-              d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9 9 0 0 0 8 15"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+               className="bi bi-chat-fill" viewBox="0 0 16 16">
+            <path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9 9 0 0 0 8 15"/>
           </svg>
         </ChatButton>
         <NotificationButton onClick={handleNotificationClick}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-bell-fill"
-               viewBox="0 0 16 16">
-            <path
-              d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+               className="bi bi-bell-fill" viewBox="0 0 16 16">
+            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/>
           </svg>
           {unreadCount > 0 && <Badge>{unreadCount}</Badge>}
         </NotificationButton>
-
+        {/* 新たに設定ページへ遷移するボタンを追加 */}
+        <SettingsButton as={Link} to="/settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-gear-fill"
+               viewBox="0 0 16 16">
+            <path
+              d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+          </svg>
+        </SettingsButton>
         <div>{user ? user.username + " さん" : 'ゲスト さん'}</div>
         <MagicStoneContainer>
           <MagicStoneImage src="/static/images/Magic_Stone.png" alt="Magic Stone"/>
           <div>{gachaStones}</div>
         </MagicStoneContainer>
-
-
       </UserInfo>
       <Chat isModalOpen={isChatModalOpen} onClose={() => setIsChatModalOpen(false)}/>
       <NotificationModal
@@ -106,6 +110,12 @@ const Header: React.FC = () => {
     </HeaderContainer>
   );
 };
+
+export default Header;
+
+/* ----------------------- */
+/* Styled Components       */
+/* ----------------------- */
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -151,6 +161,7 @@ const ChatButton = styled.button`
   margin-right: 20px;
   display: flex;
   align-items: center;
+
   &:hover {
     background-color: #3a3b3e;
   }
@@ -159,12 +170,10 @@ const ChatButton = styled.button`
 const NotificationButton = styled(ChatButton)`
   position: relative;
   font-size: 24px;
-  display: flex;
-  align-items: center;
+`;
 
-  & > i {
-    margin: 0;
-  }
+const SettingsButton = styled(ChatButton)`
+  /* 必要に応じて色やサイズなどを調整 */
 `;
 
 const Badge = styled.span`
@@ -189,5 +198,3 @@ const MagicStoneImage = styled.img`
   height: 20px;
   object-fit: cover;
 `;
-
-export default Header;

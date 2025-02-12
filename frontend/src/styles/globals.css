@@ -46,6 +46,9 @@
   --friend-delete-modal-text-color: #171717;
   --modal-background-default: #d3d3d3;
 
+  /* チャット部分 */
+  --chat-modal-background: #303065;
+
 }
 
 body {

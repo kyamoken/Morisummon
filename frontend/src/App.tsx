@@ -1,26 +1,20 @@
+// App.tsx
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import styled, { keyframes } from 'styled-components';
-import Header from './components/Header.tsx';
-import useAuth from './hooks/useAuth.tsx';
+import Header from './components/Header';
+import useAuth from './hooks/useAuth';
 import PrivacyPolicyModal from './components/PrivacyPolicyModal';
 import TermsOfServiceModal from './components/TermsOfServiceModal';
-import useSoundEffect from './hooks/useSoundEffect';
+import { FloatingButton } from './components/FloatingButton'; // FloatingButton をインポート
+// import BouncingTitle from './components/BouncingTitle';
 
 function App() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const [isPrivacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
   const [isTermsOfServiceOpen, setTermsOfServiceOpen] = useState(false);
-  const BUTTON_CLICK_SE_URL = '/static/sounds/Click_button.mp3';
-  const playSoundEffect = useSoundEffect();
 
-  const handleCardClick = (url: string) => {
-    playSoundEffect(BUTTON_CLICK_SE_URL);
-    window.open(url, '_blank');
-  };
-
-  // バブルの設定（ランダムな位置・大きさ・開始遅延）
   const bubbles = useMemo(() => {
     const arr = [];
     for (let i = 0; i < 20; i++) {
@@ -47,44 +41,35 @@ function App() {
       <Main>
         {/* タイトルとサブタイトル */}
         <TitleSection>
-          <TatsuyaImageLeft src="/static/images/jus_hover.png" alt="Tatsuya Left" />
-          <Title>Morisummon</Title>
+          <TatsuyaImageLeft src="/static/images/Ball_green.png" alt="Tatsuya Left" />
+          <AnimatedTitle text="Morisummon" />
+          {/* <BouncingTitle text="Morisummon" /> */}
           <Subtitle>パクリじゃないです。オマージュです。</Subtitle>
-          <TatsuyaImageRight src="/static/images/title_tatsuya.png" alt="Tatsuya Right" />
+          <TatsuyaImageRight src="/static/images/Ball_green.png" alt="Tatsuya Right" />
         </TitleSection>
 
         <ButtonsContainer>
           {isLoading ? (
             <p>ロード中...</p>
           ) : user ? (
-            <RippleButton
-              onClick={() => {
-                playSoundEffect(BUTTON_CLICK_SE_URL);
-                navigate('/home');
-              }}
-            >
+            <FloatingButton onClick={() => navigate('/home')}>
               ホーム
-            </RippleButton>
+            </FloatingButton>
           ) : (
-            <RippleButton
-              onClick={() => {
-                playSoundEffect(BUTTON_CLICK_SE_URL);
-                navigate('/login');
-              }}
-            >
+            <FloatingButton onClick={() => navigate('/login')}>
               ログイン
-            </RippleButton>
+            </FloatingButton>
           )}
         </ButtonsContainer>
 
         <DevelopersSection>
           <h2>デベロッパー</h2>
           <DeveloperCards>
-            <DeveloperCard onClick={() => handleCardClick('https://github.com/kyamoken')}>
+            <DeveloperCard onClick={() => window.open('https://github.com/kyamoken', '_blank')}>
               <img src="/static/images/kyamokenICON.png" width="125" height="125" alt="icon" />
               <DeveloperName>Kyamoken</DeveloperName>
             </DeveloperCard>
-            <DeveloperCard onClick={() => handleCardClick('https://github.com/kp63')}>
+            <DeveloperCard onClick={() => window.open('https://github.com/kp63', '_blank')}>
               <img src="/static/images/sawakiLOGO.png" alt="GitHub" width="125" height="125" />
               <DeveloperName>kp63</DeveloperName>
             </DeveloperCard>
@@ -174,7 +159,7 @@ const Main = styled.main`
   justify-content: flex-start;
   padding: 20px;
   position: relative;
-  z-index: 1; /* バブルより上に表示 */
+  z-index: 1;
 `;
 
 const TitleSection = styled.div`
@@ -184,16 +169,56 @@ const TitleSection = styled.div`
   margin-bottom: 20px;
 `;
 
+/* タイトルの基本スタイル */
 const Title = styled.h1`
   font-size: 2rem;
   margin: 0;
   color: var(--toppage-title-textcolor, #fff);
 `;
 
+/* 各文字のアニメーション */
+const letterAnimation = keyframes`
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  90% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+`;
+
+const Letter = styled.span<{ delay: number }>`
+  display: inline-block;
+  animation: ${letterAnimation} 12s ease-in-out infinite;
+  animation-delay: ${({ delay }) => delay}s;
+`;
+
+/* タイトルテキストを1文字ずつ表示するコンポーネント */
+const AnimatedTitle: React.FC<{ text: string }> = ({ text }) => {
+  return (
+    <Title>
+      {text.split('').map((char, index) => (
+        <Letter key={index} delay={index * 0.2}>
+          {char}
+        </Letter>
+      ))}
+    </Title>
+  );
+};
+
 const Subtitle = styled.p`
   font-size: 1rem;
   color: var(--toppage-subtitle-textcolor, #ddd);
-  margin: 10px 0 40px;
+  margin: 40px 0 40px;
 `;
 
 const floatAnimation = keyframes`
@@ -210,16 +235,16 @@ const floatAnimation = keyframes`
 
 const TatsuyaImageRight = styled.img`
   position: absolute;
-  top: 0;
+  top: 5px;
   right: 0;
   width: 40px;
   height: auto;
-  animation: ${floatAnimation} 5s ease-in-out infinite;
+  animation: ${floatAnimation} 4s ease-in-out infinite;
 `;
 
 const TatsuyaImageLeft = styled.img`
   position: absolute;
-  top: 0;
+  top: 5px;
   left: 0;
   width: 40px;
   height: auto;
@@ -232,88 +257,13 @@ const ButtonsContainer = styled.div`
   margin-top: 20px;
 `;
 
-const BaseButton = styled.button`
-  padding: 15px 40px;
-  font-size: 20px;
-  border: none;
-  border-radius: var(--border-radius);
-  background-color: var(--primary-color);
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  position: relative;
-  overflow: hidden;
-
-  &:hover {
-    background-color: var(--button-hover);
-    transform: scale(1.1);
-  }
-
-  @keyframes ripple {
-    to {
-      transform: scale(4);
-      opacity: 0;
-    }
-  }
-`;
-
-const RippleButton: React.FC<{
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
-  children: React.ReactNode;
-}> = ({ onClick, children }) => {
-  const [ripples, setRipples] = useState<
-    { x: number; y: number; size: number; key: number }[]
-  >([]);
-
-  const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const button = event.currentTarget;
-    const rect = button.getBoundingClientRect();
-    const size = Math.max(button.clientWidth, button.clientHeight);
-    const x = event.clientX - rect.left - size / 2;
-    const y = event.clientY - rect.top - size / 2;
-    const newRipple = { x, y, size, key: Date.now() };
-    setRipples((prev) => [...prev, newRipple]);
-    setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.key !== newRipple.key));
-    }, 600);
-  };
-
-  return (
-    <BaseButton
-      onClick={(e) => {
-        createRipple(e);
-        onClick && onClick(e);
-      }}
-    >
-      {children}
-      {ripples.map((ripple) => (
-        <span
-          key={ripple.key}
-          style={{
-            position: 'absolute',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            width: ripple.size,
-            height: ripple.size,
-            top: ripple.y,
-            left: ripple.x,
-            pointerEvents: 'none',
-            transform: 'scale(0)',
-            animation: 'ripple 0.6s linear',
-          }}
-        />
-      ))}
-    </BaseButton>
-  );
-};
-
 const DevelopersSection = styled.section`
   margin-top: 50px;
   text-align: center;
   color: var(--developer-title-color);
   opacity: 0;
-  animation: fadeIn 2s forwards;
-  animation-delay: 1s;
+  animation: fadeIn 3s forwards;
+  animation-delay: 3s;
 
   @keyframes fadeIn {
     to {
@@ -340,6 +290,11 @@ const DeveloperCard = styled.div`
   gap: 10px;
   cursor: pointer;
   position: relative;
+  transition: transform 0.3s ease-in-out;
+
+  &:hover {
+    transform: scale(1.02);
+  }
 
   img {
     border-radius: var(--border-radius);
