@@ -20,7 +20,7 @@ const Home: React.FC = () => {
       <Header />
 
       <Content>
-        <h1>エッジワースカードへようこそ！</h1>
+        <h1>Morisummonへようこそ！</h1>
         <ButtonContainer>
           {/* 1行目（2カラム分を結合） */}
           <FloatingButton

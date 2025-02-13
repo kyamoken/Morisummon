@@ -7,7 +7,8 @@ import type { Card } from '@/types/models';
 import BubblesBackground from '@/components/BubblesBackground';
 
 const CardCollection: React.FC = () => {
-  const { cards } = useCardManager();
+  // isLoading を追加
+  const { cards, isLoading } = useCardManager();
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
   const handleCardClick = (card: Card): void => {
@@ -26,7 +27,11 @@ const CardCollection: React.FC = () => {
       <Content>
         <Title>カード図鑑</Title>
         <CardGrid>
-          {cards?.length ? (
+          {isLoading ? (
+            <LoadingWrapper>
+              <LoadingSpinner />
+            </LoadingWrapper>
+          ) : cards?.length ? (
             cards.map(({ card }) => (
               <CardSlot key={card.id} onClick={() => handleCardClick(card)}>
                 {card.image ? (
@@ -175,4 +180,27 @@ const CloseButton = styled.button`
   &:hover {
     background: #ff4b4b;
   }
+`;
+
+/* ローディング用のスタイル */
+const rotate = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+const LoadingWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 200px; /* 必要に応じて調整 */
+`;
+
+const LoadingSpinner = styled.div`
+  border: 8px solid rgba(255, 255, 255, 0.3);
+  border-top: 8px solid #fff;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: ${rotate} 1s linear infinite;
 `;

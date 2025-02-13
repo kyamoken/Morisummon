@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import { Route, Routes } from 'react-router';
 import App from './App';
 import Login from './pages/Login';
@@ -15,6 +15,8 @@ import Demo from './pages/Demo';
 import Friends from './pages/friend';
 import ExchangePage from './pages/ExchangePage';
 
+// 認証してないときにログインページに飛ぶ用のコンポーネントコンポーネント
+import PrivateRoute from '@/components/PrivateRoute';
 
 const handleContextMenu = (e: MouseEvent) => {
   e.preventDefault();
@@ -23,7 +25,6 @@ const handleContextMenu = (e: MouseEvent) => {
 const AppRouter: React.FC = () => {
   useEffect(() => {
     window.addEventListener('contextmenu', handleContextMenu);
-
     return () => {
       window.removeEventListener('contextmenu', handleContextMenu);
     };
@@ -34,15 +35,15 @@ const AppRouter: React.FC = () => {
       <Route path="/" element={<App />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/cards" element={<Cards />} />
-      <Route path="/deck" element={<Deck />} />
-      <Route path="/gacha" element={<Gacha />} />
-      <Route path="/card-collection" element={<CardCollection />} />
-      <Route path="/battle" element={<Battle />} />
-      <Route path="/friends" element={<Friends />} />
-      <Route path="/settings" element={<Setting />} />
-      <Route path="/exchange/:exchange_ulid" element={<ExchangePage />} />
+      <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+      <Route path="/cards" element={<PrivateRoute><Cards /></PrivateRoute>} />
+      <Route path="/deck" element={<PrivateRoute><Deck /></PrivateRoute>} />
+      <Route path="/gacha" element={<PrivateRoute><Gacha /></PrivateRoute>} />
+      <Route path="/card-collection" element={<PrivateRoute><CardCollection /></PrivateRoute>} />
+      <Route path="/battle" element={<PrivateRoute><Battle /></PrivateRoute>} />
+      <Route path="/friends" element={<PrivateRoute><Friends /></PrivateRoute>} />
+      <Route path="/settings" element={<PrivateRoute><Setting /></PrivateRoute>} />
+      <Route path="/exchange/:exchange_ulid" element={<PrivateRoute><ExchangePage /></PrivateRoute>} />
       <Route path="/demo" element={<Demo />} />
       <Route path="*" element={<Page404 />} />
     </Routes>

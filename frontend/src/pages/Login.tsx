@@ -20,7 +20,7 @@ const Login: React.FC = () => {
     }
 
     if (await login(username, password)) {
-      navigate('/');
+      navigate('/home');
     } else {
       alert('ログインに失敗しました');
     }
