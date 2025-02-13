@@ -35,7 +35,7 @@ const AppRouter: React.FC = () => {
       <Route path="/" element={<App />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+      <Route path="/home" element={<Home />} />
       <Route path="/cards" element={<PrivateRoute><Cards /></PrivateRoute>} />
       <Route path="/deck" element={<PrivateRoute><Deck /></PrivateRoute>} />
       <Route path="/gacha" element={<PrivateRoute><Gacha /></PrivateRoute>} />

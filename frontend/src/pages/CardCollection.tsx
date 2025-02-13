@@ -7,7 +7,6 @@ import type { Card } from '@/types/models';
 import BubblesBackground from '@/components/BubblesBackground';
 
 const CardCollection: React.FC = () => {
-  // isLoading を追加
   const { cards, isLoading } = useCardManager();
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 

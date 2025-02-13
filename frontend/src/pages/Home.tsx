@@ -11,7 +11,7 @@ const Home: React.FC = () => {
   const { logout } = useAuth();
 
   const handleLogout = () => {
-    logout();
+    logout('/'); // 明示的にトップページへリダイレクト
   };
 
   return (

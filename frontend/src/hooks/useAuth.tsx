@@ -16,7 +16,7 @@ export default function useAuth() {
 
     if (redirectTo) {
       navigate(redirectTo);
-      mutate('/api/auth/me/', null);
+      await mutate('/api/auth/me/', null);
     }
   }
 
