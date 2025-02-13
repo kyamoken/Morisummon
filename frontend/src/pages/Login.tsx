@@ -1,9 +1,11 @@
+// login.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Helmet } from "react-helmet-async";
+import { Helmet } from 'react-helmet-async';
 import styled from 'styled-components';
-import Header from '@/components/Header.tsx'; // インポート
+import Header from '@/components/Header.tsx';
 import useAuth from '@/hooks/useAuth';
+import BubblesBackground from '@/components/BubblesBackground';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -28,48 +30,68 @@ const Login: React.FC = () => {
 
   return (
     <Container>
-      <div className="global-style" /> {/* GlobalStyleの代わりにdivを追加 */}
-      <Helmet>
-        <title>ログイン</title>
-      </Helmet>
-      <Header /> {/* ヘッダーを追加 */}
-      <Form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label>ユーザーネーム:</Label>
-          <Input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </FormGroup>
-        <FormGroup>
-          <Label>パスワード:</Label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </FormGroup>
-        <Button type="submit">ログイン</Button>
-      </Form>
-      <RegisterLink>
-        <p>アカウントがありませんか？ <Link to="/register">登録はこちら</Link></p>
-      </RegisterLink>
+      {/* バブル背景は z-index: 0 で配置 */}
+      <BubblesBackground />
+      {/* コンテンツ部分は z-index: 1 を指定して背景より前面に表示 */}
+      <ContentWrapper>
+        <Helmet>
+          <title>ログイン</title>
+        </Helmet>
+        <Header />
+        <Form onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label>ユーザーネーム:</Label>
+            <Input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label>パスワード:</Label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </FormGroup>
+          <Button type="submit">ログイン</Button>
+        </Form>
+        <RegisterLink>
+          <p>
+            アカウントがありませんか？ <Link to="/register">登録はこちら</Link>
+          </p>
+        </RegisterLink>
+      </ContentWrapper>
     </Container>
   );
 };
 
 export default Login;
 
-// スタイルの定義（下に移動）
 const Container = styled.div`
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
+  background-size: 600% 600%; /* アニメーションのための背景サイズ */
+  padding-top: 70px; /* ヘッダー分の余白 */
+  margin-top: 70px;
+  animation: gradientAnimation 15s ease infinite;
+
+  @keyframes gradientAnimation {
+    0% { background-position: 0 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+`;
+
+const ContentWrapper = styled.div`
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #1a1a23;
-  padding-top: 70px; /* ヘッダーの高さ分の余白を追加 */
 `;
 
 const Form = styled.form`

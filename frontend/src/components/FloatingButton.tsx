@@ -44,6 +44,7 @@ const StyledFloatingButton = styled.button`
       transparent
     );
     transform: skewX(-25deg);
+    filter: blur(10px);
   }
 
   &:hover::after {
@@ -62,7 +63,6 @@ const StyledFloatingButton = styled.button`
 
 const StyledFloatingDangerButton = styled(StyledFloatingButton)`
   background-color: red;
-  margin-top: 20px;
 
   &:hover {
     background-color: darkred;

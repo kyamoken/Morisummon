@@ -20,7 +20,6 @@ const CardCollection: React.FC = () => {
 
   return (
     <CardCollectionContainer>
-      {/* 背景 */}
       <BubblesBackground />
       <Header />
       <Content>
@@ -62,16 +61,26 @@ const CardCollection: React.FC = () => {
 
 export default CardCollection;
 
+/* スタイル定義 */
 const CardCollectionContainer = styled.div`
   position: relative;
   min-height: 100vh;
   background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
+  background-size: 600% 600%;
   color: #fff;
   padding: 80px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow: hidden;
+
+  animation: gradientAnimation 15s ease infinite;
+
+  @keyframes gradientAnimation {
+    0% { background-position: 0 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
 `;
 
 const Content = styled.div`
@@ -122,6 +131,7 @@ const CardPlaceholder = styled.div`
   color: #bbb;
 `;
 
+/* シンプルなフェードインアニメーション */
 const fadeIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
@@ -141,17 +151,24 @@ const ModalOverlay = styled.div`
   animation: ${fadeIn} 0.3s ease;
 `;
 
-const scaleIn = keyframes`
-  from { transform: scale(0.8); }
-  to { transform: scale(1); }
-`;
-
+/* モーダルコンテンツ（黒いボーダーを追加、スクロールバー非表示） */
 const ModalContent = styled.div`
   position: relative;
-  background: #fff;
+  background: #c0c0c0;
+  border: 10px solid #646464;
   border-radius: 12px;
   padding: 20px;
-  animation: ${scaleIn} 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  /* スクロールバー非表示用 */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 `;
 
 const ExpandedCardImage = styled.img`
@@ -162,11 +179,12 @@ const ExpandedCardImage = styled.img`
   display: block;
 `;
 
+/* CloseButton の位置を内側に変更 */
 const CloseButton = styled.button`
   position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #ff6b6b;
+  top: 10px;
+  right: 10px;
+  background: #1d1631;
   border: none;
   color: #fff;
   font-size: 1.5rem;
@@ -174,14 +192,17 @@ const CloseButton = styled.button`
   height: 32px;
   border-radius: 50%;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.3s;
-
   &:hover {
-    background: #ff4b4b;
+    background: #190b2f;
   }
 `;
 
-/* ローディング用のスタイル */
+
+/* ローディング用スタイル */
 const rotate = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -192,7 +213,7 @@ const LoadingWrapper = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 200px; /* 必要に応じて調整 */
+  height: 200px;
 `;
 
 const LoadingSpinner = styled.div`

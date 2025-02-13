@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import Header from '@/components/Header';
 import { FloatingButton, FloatingDangerButton } from '@/components/FloatingButton';
 import useAuth from '@/hooks/useAuth';
-import BubblesBackground from '@/components/BubblesBackground'; // 新コンポーネントをインポート
+import BubblesBackground from '@/components/BubblesBackground';
 
 const Home: React.FC = () => {
   const { logout } = useAuth();
@@ -22,53 +22,52 @@ const Home: React.FC = () => {
       <Content>
         <h1>Morisummonへようこそ！</h1>
         <ButtonContainer>
-          {/* 1行目（2カラム分を結合） */}
-          <FloatingButton
-            as={Link}
-            to="/battle"
-            style={{ gridArea: 'matching', width: '100%' }}
-          >
-            マッチング
+          {/* マッチング：左上（3行分を縦に占有） */}
+          <FloatingButton as={Link} to="/battle" style={{ gridArea: 'matching' }}>
+            <ButtonInner>
+              <Icon src="/static/images/battle_icon.svg" alt="バトルアイコン" />
+              <span>マッチング</span>
+            </ButtonInner>
           </FloatingButton>
 
-          {/* 2行目 */}
-          <FloatingButton
-            as={Link}
-            to="/deck"
-            style={{ gridArea: 'deck', width: '100%' }}
-          >
-            デッキ
-          </FloatingButton>
-          <FloatingButton
-            as={Link}
-            to="/gacha"
-            style={{ gridArea: 'gacha', width: '100%' }}
-          >
-            ガチャ
+          {/* デッキ：1行目の右カラム */}
+          <FloatingButton as={Link} to="/deck" style={{ gridArea: 'deck' }}>
+            <ButtonInner>
+              <Icon src="/static/images/battle_icon.svg" alt="デッキアイコン" />
+              <span>デッキ</span>
+            </ButtonInner>
           </FloatingButton>
 
-          {/* 3行目 */}
-          <FloatingButton
-            as={Link}
-            to="/card-collection"
-            style={{ gridArea: 'zukan', width: '100%' }}
-          >
-            図鑑
-          </FloatingButton>
-          <FloatingButton
-            as={Link}
-            to="/friends"
-            style={{ gridArea: 'friend', width: '100%' }}
-          >
-            フレンド
+          {/* 図鑑：2行目の右カラム */}
+          <FloatingButton as={Link} to="/card-collection" style={{ gridArea: 'zukan' }}>
+            <ButtonInner>
+              <Icon src="/static/images/battle_icon.svg" alt="図鑑アイコン" />
+              <span>図鑑</span>
+            </ButtonInner>
           </FloatingButton>
 
-          {/* 4行目（2カラム分を結合） */}
-          <FloatingDangerButton
-            onClick={handleLogout}
-            style={{ gridArea: 'logout', width: '100%' }}
-          >
-            ログアウト
+          {/* フレンド：3行目の右カラム */}
+          <FloatingButton as={Link} to="/friends" style={{ gridArea: 'friend' }}>
+            <ButtonInner>
+              <Icon src="/static/images/battle_icon.svg" alt="フレンドアイコン" />
+              <span>フレンド</span>
+            </ButtonInner>
+          </FloatingButton>
+
+          {/* ガチャ：4行目の左カラム */}
+          <FloatingButton as={Link} to="/gacha" style={{ gridArea: 'gacha' }}>
+            <ButtonInner>
+              <Icon src="/static/images/battle_icon.svg" alt="ガチャアイコン" />
+              <span>ガチャ</span>
+            </ButtonInner>
+          </FloatingButton>
+
+          {/* ログアウト：4行目の右カラム */}
+          <FloatingDangerButton onClick={handleLogout} style={{ gridArea: 'logout' }}>
+            <ButtonInner>
+              <Icon src="/static/images/battle_icon.svg" alt="ログアウトアイコン" />
+              <span>ログアウト</span>
+            </ButtonInner>
           </FloatingDangerButton>
         </ButtonContainer>
       </Content>
@@ -91,9 +90,15 @@ const HomeContainer = styled.div`
   animation: gradientAnimation 15s ease infinite;
 
   @keyframes gradientAnimation {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
   }
 `;
 
@@ -101,19 +106,42 @@ const Content = styled.div`
   position: relative;
   z-index: 1;
   text-align: center;
-  margin-top: 90px; /* ヘッダーの高さ分だけ下にずらす */
+  margin-top: 130px; /* ヘッダーの高さ分だけ下にずらす */
 `;
 
+/**
+ * グリッドレイアウト：
+ *  1行目：左=matching、右=deck
+ *  2行目：左=matching、右=zukan
+ *  3行目：左=matching、右=friend
+ *  4行目：左=gacha、    右=logout
+ */
 const ButtonContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: auto auto auto auto;
+  /* 各列を1fr:1frで2分割 */
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, auto);
   grid-template-areas:
-    "matching matching"
-    "deck gacha"
-    "zukan friend"
-    "logout logout";
+    "matching deck"
+    "matching zukan"
+    "matching friend"
+    "gacha logout";
   gap: 20px;
-  max-width: 500px;
+  max-width: 600px;
   margin: 40px auto;
+
+  /* 各セルを左右いっぱいに伸ばす（＝ボタンの幅も揃う） */
+  justify-items: stretch;
+`;
+
+const ButtonInner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const Icon = styled.img`
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
 `;
