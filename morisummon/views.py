@@ -29,33 +29,34 @@ def index(request):
 @permission_classes([IsAuthenticated])
 def gacha(request):
     user = request.user
-    required_stones = 10  # 1回のガチャで必要なガチャ石の数
+    # パックが指定されているかチェック
+    pack = request.query_params.get('pack')
+    if not pack:
+        return Response(
+            {"error": "パックが指定されていません。パックを選択してください。"},
+            status=400
+        )
 
+    required_stones = 10
     if user.magic_stones < required_stones:
         return Response({'error': 'ガチャ石が足りません'}, status=400)
 
-    try:
-        user.magic_stones -= required_stones
-        user.save()
+    user.magic_stones -= required_stones
+    user.save()
 
-        cards = Card.objects.all()
-        if not cards.exists():
-            return Response({'error': 'No cards available'}, status=404)
+    cards = Card.objects.filter(pack=pack)
+    if not cards.exists():
+        return Response({'error': '選択されたパックにカードが存在しません'}, status=404)
 
-        drawn_cards = random.choices(list(cards), k=5)  # 5枚のカードをランダムに引く
-        for card in drawn_cards:
-            user_card, created = UserCard.objects.get_or_create(user=user, card=card)
-            user_card.amount += 1
-            user_card.save()
+    drawn_cards = random.choices(list(cards), k=5)
+    for card in drawn_cards:
+        user_card, created = UserCard.objects.get_or_create(user=user, card=card)
+        user_card.amount += 1
+        user_card.save()
 
-        serializer = CardSerializer(drawn_cards, many=True)
-        return Response({'cards': serializer.data})
-    except ObjectDoesNotExist:
-        return Response({'error': 'Cards not found'}, status=404)
-    except ValueError as e:
-        return Response({'error': str(e)}, status=400)
-    except Exception as e:
-        return Response({'error': 'Internal Server Error'}, status=500)
+    serializer = CardSerializer(drawn_cards, many=True)
+    return Response({'cards': serializer.data})
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

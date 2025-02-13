@@ -2,31 +2,64 @@ import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import useAuth from '@/hooks/useAuth';
 import Header from '@/components/Header.tsx';
+import BubblesBackground from '@/components/BubblesBackground';
+
+const availablePacks = ["MorisCardPack", "MonsterPack01"];
+
+const packIcons: { [key: string]: string } = {
+  "MorisCardPack": "../static/images/GachaBanner01.png",
+  "MonsterPack01": "../static/images/sawakiLOGO.png"
+};
 
 const Gacha: React.FC = () => {
   const { gacha } = useAuth();
   const [result, setResult] = useState<{ name: string; image?: string }[] | null>(null);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [selectedPack, setSelectedPack] = useState<string>(availablePacks[0]);
+
+  const handlePrevPack = () => {
+    const currentIndex = availablePacks.indexOf(selectedPack);
+    const prevIndex = (currentIndex - 1 + availablePacks.length) % availablePacks.length;
+    setSelectedPack(availablePacks[prevIndex]);
+  };
+
+  const handleNextPack = () => {
+    const currentIndex = availablePacks.indexOf(selectedPack);
+    const nextIndex = (currentIndex + 1) % availablePacks.length;
+    setSelectedPack(availablePacks[nextIndex]);
+  };
 
   const handleGacha = async () => {
+    if (!selectedPack) {
+      alert('引きたいパックを選択してください');
+      return;
+    }
     setIsAnimating(true);
-    const cards = await gacha();
+    const cards = await gacha({ pack: selectedPack });
     setResult(cards);
   };
 
   const handleClose = () => {
     setResult(null);
-    setIsAnimating(false); // モーダルを閉じる際にリセット
+    setIsAnimating(false);
   };
 
   return (
     <GachaContainer>
-      <Header />
+      {/* 背景バブル */}
+      <BubblesBackground />
       <Content>
+        <Header />
         <h1>ガチャページ</h1>
-        <Banner src="../static/images/kyamokenICON.png" alt="Banner" />
-        <Button onClick={handleGacha} disabled={isAnimating}>
-          {isAnimating ? 'ガチャ中...' : "ガチャを引く"}
+        {/* パック選択部分：左右の矢印で切り替え */}
+        <PackSelector>
+          <ArrowButton onClick={handlePrevPack}>◀</ArrowButton>
+          <PackIcon src={packIcons[selectedPack]} alt={selectedPack} />
+          <ArrowButton onClick={handleNextPack}>▶</ArrowButton>
+        </PackSelector>
+
+        <Button onClick={handleGacha} disabled={isAnimating || !selectedPack}>
+          {isAnimating ? 'ガチャ中...' : 'ガチャを引く'}
         </Button>
         {!!result && (
           <Modal>
@@ -50,18 +83,35 @@ const Gacha: React.FC = () => {
 };
 
 const GachaContainer = styled.div`
+  position: relative; /* BubblesBackgroundの絶対配置の基準 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: var(--background-color);
+  background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
+  background-size: 600% 600%;
+  animation: gradientAnimation 15s ease infinite;
   color: white;
   width: 100%;
   text-align: center;
+
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
 `;
 
 const Content = styled.div`
+  position: relative;
+  z-index: 1; /* 背景バブルより前面に表示 */
   text-align: center;
   margin: 0 auto;
   display: flex;
@@ -70,10 +120,30 @@ const Content = styled.div`
   justify-content: center;
 `;
 
-const Banner = styled.img`
-  width: 200px;
-  height: 200px;
-  margin: 20px 0;
+const PackSelector = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const ArrowButton = styled.button`
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s;
+  &:hover {
+    color: var(--button-hover);
+  }
+`;
+
+const PackIcon = styled.img`
+  width: 250px;  /* サイズを大きく */
+  height: 250px;
+  object-fit: contain;
+  border-radius: 10px;
 `;
 
 const Button = styled.button`
@@ -87,32 +157,15 @@ const Button = styled.button`
   transition: background-color 0.3s ease, transform 0.2s ease;
   width: 200px;
   margin-top: 20px;
-
   &:hover {
     background-color: var(--button-hover);
     transform: scale(1.05);
   }
-
   &:disabled {
     background-color: gray;
     cursor: not-allowed;
   }
 `;
-
-// const spin = keyframes`
-//   0% { transform: rotate(0deg); }
-//   100% { transform: rotate(360deg); }
-// `;
-//
-// // const Animation = styled.div`
-// //   margin-top: 20px;
-// //   width: 50px;
-// //   height: 50px;
-// //   border: 5px solid var(--primary-color);
-// //   border-top: 5px solid white;
-// //   border-radius: 50%;
-// //   animation: ${spin} 1s linear infinite;
-// // `;
 
 const Modal = styled.div`
   top: 50%;
@@ -145,6 +198,7 @@ const CardContainer = styled.div`
   gap: 10px;
   flex-wrap: wrap;
 `;
+
 const Card = styled.div<{ delay: number }>`
   width: 100px;
   height: 150px;
@@ -155,12 +209,10 @@ const Card = styled.div<{ delay: number }>`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  opacity: 0; /* 初期値として非表示に設定 */
+  opacity: 0;
   animation: ${fadeIn} 0.5s ease-in-out forwards;
   animation-delay: ${({ delay }) => delay}s;
 `;
-
-
 
 const CardImage = styled.img`
   width: 100%;
@@ -184,7 +236,6 @@ const CloseButton = styled.button`
   padding: 10px 20px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-
   &:hover {
     background-color: var(--button-hover);
   }

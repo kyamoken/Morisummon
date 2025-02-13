@@ -7,7 +7,7 @@ class UserCardInline(admin.TabularInline):
 
 @admin.register(Card)
 class CardAdmin(admin.ModelAdmin):
-    list_display = ('name', 'hp', 'attack', 'image')
+    list_display = ('name', 'hp', 'attack', 'image', 'retreat_cost', 'attack_cost', 'type', 'category','attack_name', 'pack', 'ability')
     search_fields = ('name',)
     list_filter = ('hp', 'attack')
     inlines = [UserCardInline]

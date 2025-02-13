@@ -42,6 +42,7 @@
     "react-howler": "^5.2.0",
     "react-use-websocket": "^4.11.1",
     "styled-components": "^6.1.14",
-    "swr": "^2.3.0"
+    "swr": "^2.3.0",
+    "wanakana": "^5.3.1"
   }
 }

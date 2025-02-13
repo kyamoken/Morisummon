@@ -6,7 +6,11 @@ from accounts.serializers import UserSerializer
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
-        fields = ['id', 'name', 'hp', 'attack', 'image']
+        fields = [
+            'id', 'name', 'hp', 'attack', 'image',
+            'retreat_cost', 'attack_cost', 'type', 'category',
+            'attack_name', 'pack', 'ability'
+        ]
 
 
 class CardListField(serializers.Field):

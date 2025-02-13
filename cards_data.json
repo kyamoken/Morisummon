@@ -3,61 +3,130 @@
     "name": "ジャスティス",
     "hp": 100,
     "attack": 50,
-    "image": "/static/images/cards/card01.png"
+    "image": "/static/images/cards/card01.png",
+    "retreat_cost": 2,
+    "attack_cost": 1,
+    "type": "light",
+    "category": "character",
+    "attack_name": "ジャッジメント",
+    "pack": "MorisCardPack",
+    "ability": "受けるダメージを10軽減"
   },
   {
     "name": "B.B",
     "hp": 60,
     "attack": 20,
-    "image": "/static/images/cards/card02.png"
+    "image": "/static/images/cards/card02.png",
+    "retreat_cost": 1,
+    "attack_cost": 2,
+    "type": "dark",
+    "category": "character",
+    "attack_name": "ブラッドブースト",
+    "pack": "MonsterPack01",
+    "ability": "攻撃後にHPを5回復"
   },
   {
     "name": "パンダリン",
     "hp": 70,
     "attack": 40,
-    "image": "/static/images/cards/card03.png"
+    "image": "/static/images/cards/card03.png",
+    "retreat_cost": 2,
+    "attack_cost": 1,
+    "type": "earth",
+    "category": "character",
+    "attack_name": "パンダパンチ",
+    "pack": "MonsterPack01",
+    "ability": "相手の攻撃力を10下げる"
   },
   {
     "name": "ピコトゲ",
     "hp": 40,
     "attack": 50,
-    "image": "/static/images/cards/card04.png"
+    "image": "/static/images/cards/card04.png",
+    "retreat_cost": 3,
+    "attack_cost": 2,
+    "type": "wind",
+    "category": "character",
+    "attack_name": "とげダメージ",
+    "pack": "MonsterPack01",
+    "ability": "相手の行動を1ターン封じる"
   },
   {
     "name": "C.C",
     "hp": 60,
     "attack": 30,
-    "image": "/static/images/cards/card05.png"
+    "image": "/static/images/cards/card05.png",
+    "retreat_cost": 1,
+    "attack_cost": 1,
+    "type": "fire",
+    "category": "character",
+    "attack_name": "フレイムショット",
+    "pack": "MonsterPack01",
+    "ability": "毎ターンHPを5回復"
   },
   {
     "name": "スレンダー",
     "hp": 90,
     "attack": 10,
-    "image": "/static/images/cards/card06.png"
+    "image": "/static/images/cards/card06.png",
+    "retreat_cost": 2,
+    "attack_cost": 0,
+    "type": "ice",
+    "category": "character",
+    "attack_name": "アイスブレス",
+    "pack": "MonsterPack01",
+    "ability": "相手の攻撃をスキップ"
   },
   {
     "name": "ニガーとまつり",
     "hp": 10,
     "attack": 40,
-    "image": "/static/images/cards/card07.png"
+    "image": "/static/images/cards/card07.png",
+    "retreat_cost": 1,
+    "attack_cost": 2,
+    "type": "thunder",
+    "category": "character",
+    "attack_name": "サンダーストーム",
+    "pack": "MonsterPack01",
+    "ability": "ランダムにダメージを与える"
   },
   {
     "name": "Card 8",
     "hp": 800,
     "attack": 400,
-    "image": "/static/images/cards/card01.png"
+    "image": "/static/images/cards/card01.png",
+    "retreat_cost": 5,
+    "attack_cost": 5,
+    "type": "water",
+    "category": "character",
+    "attack_name": "ウォーターブラスト",
+    "pack": "MonsterPack01",
+    "ability": "水属性の相手に追加ダメージ"
   },
   {
     "name": "Card 9",
     "hp": 900,
     "attack": 450,
-    "image": "/static/images/cards/card01.png"
+    "image": "/static/images/cards/card01.png",
+    "retreat_cost": 5,
+    "attack_cost": 5,
+    "type": "fire",
+    "category": "character",
+    "attack_name": "ファイアラッシュ",
+    "pack": "MonsterPack01",
+    "ability": "火属性の相手に追加ダメージ"
   },
   {
     "name": "Card 10",
     "hp": 1000,
     "attack": 500,
-    "image": "/static/images/cards/card01.png"
+    "image": "/static/images/cards/card01.png",
+    "retreat_cost": 5,
+    "attack_cost": 5,
+    "type": "light",
+    "category": "character",
+    "attack_name": "ライトニングストライク",
+    "pack": "MonsterPack01",
+    "ability": "一撃で相手を倒す可能性がある"
   }
-
 ]

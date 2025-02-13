@@ -74,9 +74,10 @@ export default function useAuth() {
     return true;
   }
 
-  async function gacha() {
+  async function gacha(params: { pack: string }) {
     try {
-      const response = await ky.get('/api/gacha/').json<{ cards: any[] }>();
+      // packパラメータをクエリストリングとして付加
+      const response = await ky.get(`/api/gacha/?pack=${params.pack}`).json<{ cards: any[] }>();
       mutate('/api/auth/me/');
       return response.cards;
     } catch (error) {

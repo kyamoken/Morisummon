@@ -1,14 +1,29 @@
-// CardCollection.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '@/components/Header';
 import useCardManager from '@/hooks/useCardManager';
 import type { Card } from '@/types/models';
 import BubblesBackground from '@/components/BubblesBackground';
+import { toHiragana } from 'wanakana';
+
+const attributeOptions = [
+  { value: "All", label: "全て" },
+  { value: "fire", label: "火" },
+  { value: "water", label: "水" },
+  { value: "thunder", label: "雷" },
+  { value: "wind", label: "風" },
+  { value: "earth", label: "土" },
+  { value: "ice", label: "氷" },
+  { value: "dark", label: "闇" },
+  { value: "light", label: "光" },
+];
 
 const CardCollection: React.FC = () => {
   const { cards, isLoading } = useCardManager();
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [selectedAttribute, setSelectedAttribute] = useState<string>("All");
+  const [selectedPackFilter, setSelectedPackFilter] = useState<string>("All");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const handleCardClick = (card: Card): void => {
     setSelectedCard(card);
@@ -18,19 +33,83 @@ const CardCollection: React.FC = () => {
     setSelectedCard(null);
   };
 
+  // ユニークなパックオプションを計算
+  const packOptions = useMemo(() => {
+    if (!cards) return [{ value: "All", label: "全て" }];
+    const uniquePacks = Array.from(
+      new Set(cards.map(({ card }) => card.pack).filter(Boolean))
+    );
+    return [
+      { value: "All", label: "全て" },
+      ...uniquePacks.map((pack) => ({ value: pack, label: pack })),
+    ];
+  }, [cards]);
+
+  // フィルタ処理
+  const filteredCards = useMemo(() => {
+    if (!cards) return [];
+    return cards.filter(({ card }) => {
+      const matchAttribute = selectedAttribute === "All" || card.type === selectedAttribute;
+      const matchPack = selectedPackFilter === "All" || card.pack === selectedPackFilter;
+      // ひらがなに変換して部分一致判定
+      const normalizedCardName = toHiragana(card.name);
+      const normalizedSearchTerm = toHiragana(searchTerm.trim());
+      const matchName =
+        normalizedSearchTerm === "" || normalizedCardName.includes(normalizedSearchTerm);
+      return matchAttribute && matchPack && matchName;
+    });
+  }, [cards, selectedAttribute, selectedPackFilter, searchTerm]);
+
   return (
     <CardCollectionContainer>
       <BubblesBackground />
       <Header />
       <Content>
         <Title>カード図鑑</Title>
+        <FilterContainer>
+          <FilterGroup>
+            <FilterLabel>属性で絞り込み:</FilterLabel>
+            <FilterSelect
+              value={selectedAttribute}
+              onChange={(e) => setSelectedAttribute(e.target.value)}
+            >
+              {attributeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </FilterSelect>
+          </FilterGroup>
+          <FilterGroup>
+            <FilterLabel>パックで絞り込み:</FilterLabel>
+            <FilterSelect
+              value={selectedPackFilter}
+              onChange={(e) => setSelectedPackFilter(e.target.value)}
+            >
+              {packOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </FilterSelect>
+          </FilterGroup>
+          <FilterGroup>
+            <FilterLabel>名前で検索:</FilterLabel>
+            <SearchInput
+              type="text"
+              placeholder="カード名を検索"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </FilterGroup>
+        </FilterContainer>
         <CardGrid>
           {isLoading ? (
             <LoadingWrapper>
               <LoadingSpinner />
             </LoadingWrapper>
-          ) : cards?.length ? (
-            cards.map(({ card }) => (
+          ) : filteredCards.length ? (
+            filteredCards.map(({ card }) => (
               <CardSlot key={card.id} onClick={() => handleCardClick(card)}>
                 {card.image ? (
                   <CardImage src={card.image} alt={card.name} />
@@ -40,7 +119,7 @@ const CardCollection: React.FC = () => {
               </CardSlot>
             ))
           ) : (
-            <p>カードがありません</p>
+            <NoCardsMessage>該当するカードが存在しません...</NoCardsMessage>
           )}
         </CardGrid>
       </Content>
@@ -73,19 +152,24 @@ const CardCollectionContainer = styled.div`
   flex-direction: column;
   align-items: center;
   overflow: hidden;
-
   animation: gradientAnimation 15s ease infinite;
 
   @keyframes gradientAnimation {
-    0% { background-position: 0 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0 50%; }
+    0% {
+      background-position: 0 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0 50%;
+    }
   }
 `;
 
 const Content = styled.div`
   position: relative;
-  z-index: 2; /* 背景より前面に表示 */
+  z-index: 2;
   width: 100%;
   max-width: 1200px;
   padding: 20px;
@@ -95,6 +179,42 @@ const Title = styled.h1`
   text-align: center;
   font-size: 2.5rem;
   margin-bottom: 40px;
+`;
+
+const FilterContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 40px;
+`;
+
+const FilterGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
+
+const FilterLabel = styled.label`
+  margin-bottom: 8px;
+  font-size: 1rem;
+`;
+
+const FilterSelect = styled.select`
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+`;
+
+const SearchInput = styled.input`
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 200px;
 `;
 
 const CardGrid = styled.div`
@@ -131,10 +251,20 @@ const CardPlaceholder = styled.div`
   color: #bbb;
 `;
 
-/* シンプルなフェードインアニメーション */
+const NoCardsMessage = styled.p`
+  text-align: center;
+  font-size: 1.2rem;
+  color: #fff;
+  grid-column: 1 / -1;
+`;
+
 const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 `;
 
 const ModalOverlay = styled.div`
@@ -151,7 +281,6 @@ const ModalOverlay = styled.div`
   animation: ${fadeIn} 0.3s ease;
 `;
 
-/* モーダルコンテンツ（黒いボーダーを追加、スクロールバー非表示） */
 const ModalContent = styled.div`
   position: relative;
   background: #c0c0c0;
@@ -162,12 +291,11 @@ const ModalContent = styled.div`
   max-width: 90%;
   max-height: 90%;
   overflow: auto;
-  /* スクロールバー非表示用 */
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 
   &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
   }
 `;
 
@@ -179,7 +307,6 @@ const ExpandedCardImage = styled.img`
   display: block;
 `;
 
-/* CloseButton の位置を内側に変更 */
 const CloseButton = styled.button`
   position: absolute;
   top: 10px;
@@ -196,16 +323,19 @@ const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: background 0.3s;
+
   &:hover {
     background: #190b2f;
   }
 `;
 
-
-/* ローディング用スタイル */
 const rotate = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 `;
 
 const LoadingWrapper = styled.div`

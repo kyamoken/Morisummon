@@ -15,7 +15,14 @@ def load_cards():
                 name=card_data['name'],
                 hp=card_data['hp'],
                 attack=card_data['attack'],
-                image=card_data['image']
+                image=card_data['image'],
+                retreat_cost=card_data.get('retreat_cost', 0),
+                attack_cost=card_data.get('attack_cost', 0),
+                type=card_data.get('type', 'fire'),
+                category=card_data.get('category', 'character'),
+                attack_name=card_data.get('attack_name', ''),
+                pack=card_data.get('pack', 'default'),
+                ability=card_data.get('ability', '')
             )
     print("カードデータの登録が完了しました。")
 

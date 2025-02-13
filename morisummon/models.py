@@ -30,9 +30,41 @@ class Battle(Document):
 
 class Card(models.Model):
     name = models.CharField(max_length=255)  # 名前
-    hp = models.IntegerField(default=0)  # 体力
-    attack = models.IntegerField(default=0)  # 攻撃力
+    hp = models.IntegerField(default=0)        # 体力
+    attack = models.IntegerField(default=0)      # 攻撃力
     image = models.ImageField(upload_to='images/')  # 画像
+
+    # 逃げエネ, 攻撃エネ（エネルギー必要数：0〜5）
+    retreat_cost = models.PositiveIntegerField(default=0)
+    attack_cost = models.PositiveIntegerField(default=0)
+
+    # 属性（8通り）
+    TYPE_CHOICES = [
+        ('fire', '火'),
+        ('water', '水'),
+        ('thunder', '雷'),
+        ('wind', '風'),
+        ('earth', '土'),
+        ('ice', '氷'),
+        ('dark', '闇'),
+        ('light', '光'),
+    ]
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES,  default='fire')
+
+    CATEGORY_CHOICES = [
+        ('character', 'キャラクターカード'),
+        ('support', 'サポートカード'),
+    ]
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES,default='character')
+
+    # 技名（攻撃時のログ表示用）
+    attack_name = models.CharField(max_length=255, blank=True, null=True)
+
+    # パック分類（どのガチャ／パックから出たか）
+    pack = models.CharField(max_length=50, blank=True, null=True)
+
+    # 特性（自由設定）
+    ability = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
