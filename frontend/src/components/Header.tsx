@@ -16,7 +16,7 @@ const Header: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
 
   const handleLogoClick = () => {
-    navigate('/');
+    navigate('/home');
   };
 
   const gachaStones = user?.magic_stones || 0;

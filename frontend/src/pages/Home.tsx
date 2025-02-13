@@ -1,10 +1,11 @@
 // home.tsx
-import React, { useMemo } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router';
 import Header from '@/components/Header';
 import { FloatingButton, FloatingDangerButton } from '@/components/FloatingButton';
 import useAuth from '@/hooks/useAuth';
+import BubblesBackground from '@/components/BubblesBackground'; // 新コンポーネントをインポート
 
 const Home: React.FC = () => {
   const { logout } = useAuth();
@@ -13,56 +14,63 @@ const Home: React.FC = () => {
     logout();
   };
 
-  // バブル生成
-  const bubbles = useMemo(() => {
-    const arr = [];
-    for (let i = 0; i < 20; i++) {
-      arr.push({
-        left: Math.random() * 100,
-        size: Math.random() * 40 + 10,
-        delay: Math.random() * 5,
-      });
-    }
-    return arr;
-  }, []);
-
   return (
     <HomeContainer>
-      <BubbleBackground>
-        {bubbles.map((bubble, index) => (
-          <Bubble
-            key={index}
-            left={bubble.left}
-            size={bubble.size}
-            delay={bubble.delay}
-          />
-        ))}
-      </BubbleBackground>
-
+      <BubblesBackground />
       <Header />
 
       <Content>
         <h1>エッジワースカードへようこそ！</h1>
         <ButtonContainer>
-          <FloatingButton as={Link} to="/battle" style={{ width: '200px' }}>
+          {/* 1行目（2カラム分を結合） */}
+          <FloatingButton
+            as={Link}
+            to="/battle"
+            style={{ gridArea: 'matching', width: '100%' }}
+          >
             マッチング
           </FloatingButton>
-          <FloatingButton as={Link} to="/deck" style={{ width: '200px' }}>
+
+          {/* 2行目 */}
+          <FloatingButton
+            as={Link}
+            to="/deck"
+            style={{ gridArea: 'deck', width: '100%' }}
+          >
             デッキ
           </FloatingButton>
-          <FloatingButton as={Link} to="/gacha" style={{ width: '200px' }}>
+          <FloatingButton
+            as={Link}
+            to="/gacha"
+            style={{ gridArea: 'gacha', width: '100%' }}
+          >
             ガチャ
           </FloatingButton>
-          <FloatingButton as={Link} to="/card-collection" style={{ width: '200px' }}>
+
+          {/* 3行目 */}
+          <FloatingButton
+            as={Link}
+            to="/card-collection"
+            style={{ gridArea: 'zukan', width: '100%' }}
+          >
             図鑑
           </FloatingButton>
-          <FloatingButton as={Link} to="/friends" style={{ width: '200px' }}>
+          <FloatingButton
+            as={Link}
+            to="/friends"
+            style={{ gridArea: 'friend', width: '100%' }}
+          >
             フレンド
           </FloatingButton>
+
+          {/* 4行目（2カラム分を結合） */}
+          <FloatingDangerButton
+            onClick={handleLogout}
+            style={{ gridArea: 'logout', width: '100%' }}
+          >
+            ログアウト
+          </FloatingDangerButton>
         </ButtonContainer>
-        <FloatingDangerButton onClick={handleLogout} style={{ width: '200px' }}>
-          ログアウト
-        </FloatingDangerButton>
       </Content>
     </HomeContainer>
   );
@@ -70,10 +78,7 @@ const Home: React.FC = () => {
 
 export default Home;
 
-/* ----------------------- */
-/* Styled Components       */
-/* ----------------------- */
-
+/* スタイル定義 */
 const HomeContainer = styled.div`
   position: relative;
   min-height: 100vh;
@@ -92,45 +97,23 @@ const HomeContainer = styled.div`
   }
 `;
 
-const BubbleBackground = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-`;
-
-const Bubble = styled.div<{ left: number; size: number; delay: number }>`
-  position: absolute;
-  bottom: -150px;
-  left: ${(props) => props.left}%;
-  width: ${(props) => props.size}px;
-  height: ${(props) => props.size}px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  animation: rise 10s linear infinite;
-  animation-delay: ${(props) => props.delay}s;
-
-  @keyframes rise {
-    0% { transform: translateY(0) scale(1); opacity: 1; }
-    100% { transform: translateY(-120vh) scale(0.5); opacity: 0; }
-  }
-`;
-
 const Content = styled.div`
   position: relative;
   z-index: 1;
   text-align: center;
-  margin-top: 90px;
+  margin-top: 90px; /* ヘッダーの高さ分だけ下にずらす */
 `;
 
 const ButtonContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto auto auto auto;
+  grid-template-areas:
+    "matching matching"
+    "deck gacha"
+    "zukan friend"
+    "logout logout";
   gap: 20px;
-  margin: 20px 0;
+  max-width: 500px;
+  margin: 40px auto;
 `;

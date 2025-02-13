@@ -1,13 +1,14 @@
 // App.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import styled, { keyframes } from 'styled-components';
 import Header from './components/Header';
 import useAuth from './hooks/useAuth';
 import PrivacyPolicyModal from './components/PrivacyPolicyModal';
 import TermsOfServiceModal from './components/TermsOfServiceModal';
-import { FloatingButton } from './components/FloatingButton'; // FloatingButton をインポート
-// import BouncingTitle from './components/BouncingTitle';
+import { FloatingButton } from './components/FloatingButton';
+import BubblesBackground from './components/BubblesBackground';
+import FloatingCardsBackground from './components/FloatingCardsBackground';
 
 function App() {
   const navigate = useNavigate();
@@ -15,26 +16,12 @@ function App() {
   const [isPrivacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
   const [isTermsOfServiceOpen, setTermsOfServiceOpen] = useState(false);
 
-  const bubbles = useMemo(() => {
-    const arr = [];
-    for (let i = 0; i < 20; i++) {
-      arr.push({
-        left: Math.random() * 100,
-        size: Math.random() * 40 + 10,
-        delay: Math.random() * 5,
-      });
-    }
-    return arr;
-  }, []);
-
   return (
     <AppContainer>
-      {/* 背景の泡アニメーション */}
-      <BubbleBackground>
-        {bubbles.map((bubble, index) => (
-          <Bubble key={index} left={bubble.left} size={bubble.size} delay={bubble.delay} />
-        ))}
-      </BubbleBackground>
+      {/* 背景のバブルアニメーション */}
+      <BubblesBackground />
+      {/* 背景のカードアニメーション（コンポーネント化） */}
+      <FloatingCardsBackground />
 
       <Header />
 
@@ -70,7 +57,7 @@ function App() {
               <DeveloperName>Kyamoken</DeveloperName>
             </DeveloperCard>
             <DeveloperCard onClick={() => window.open('https://github.com/kp63', '_blank')}>
-              <img src="/static/images/sawakiLOGO.png" alt="GitHub" width="125" height="125" />
+              <img src="/static/images/sawakiLOGO.png" width="125" height="125" alt="GitHub" />
               <DeveloperName>kp63</DeveloperName>
             </DeveloperCard>
           </DeveloperCards>
@@ -85,11 +72,19 @@ function App() {
         <p>© 2025 ボケモン. Developed by Kyamoken</p>
       </Footer>
 
-      <PrivacyPolicyModal isOpen={isPrivacyPolicyOpen} onClose={() => setPrivacyPolicyOpen(false)} />
-      <TermsOfServiceModal isOpen={isTermsOfServiceOpen} onClose={() => setTermsOfServiceOpen(false)} />
+      <PrivacyPolicyModal
+        isOpen={isPrivacyPolicyOpen}
+        onClose={() => setPrivacyPolicyOpen(false)}
+      />
+      <TermsOfServiceModal
+        isOpen={isTermsOfServiceOpen}
+        onClose={() => setTermsOfServiceOpen(false)}
+      />
     </AppContainer>
   );
 }
+
+export default App;
 
 const AppContainer = styled.div`
   display: flex;
@@ -103,50 +98,9 @@ const AppContainer = styled.div`
   margin: 0;
 
   @keyframes gradientAnimation {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-`;
-
-/* 背景の泡アニメーション */
-const BubbleBackground = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-`;
-
-const Bubble = styled.div<{ left: number; size: number; delay: number }>`
-  position: absolute;
-  bottom: -150px;
-  left: ${(props) => props.left}%;
-  width: ${(props) => props.size}px;
-  height: ${(props) => props.size}px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  animation: rise 10s linear infinite;
-  animation-delay: ${(props) => props.delay}s;
-
-  @keyframes rise {
-    0% {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(-120vh) scale(0.5);
-      opacity: 0;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 `;
 
@@ -169,31 +123,17 @@ const TitleSection = styled.div`
   margin-bottom: 20px;
 `;
 
-/* タイトルの基本スタイル */
 const Title = styled.h1`
   font-size: 2rem;
   margin: 0;
   color: var(--toppage-title-textcolor, #fff);
 `;
 
-/* 各文字のアニメーション */
 const letterAnimation = keyframes`
-  0% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  10% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  90% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
+  0% { transform: translateY(100%); opacity: 0; }
+  10% { transform: translateY(0); opacity: 1; }
+  90% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
 `;
 
 const Letter = styled.span<{ delay: number }>`
@@ -202,18 +142,15 @@ const Letter = styled.span<{ delay: number }>`
   animation-delay: ${({ delay }) => delay}s;
 `;
 
-/* タイトルテキストを1文字ずつ表示するコンポーネント */
-const AnimatedTitle: React.FC<{ text: string }> = ({ text }) => {
-  return (
-    <Title>
-      {text.split('').map((char, index) => (
-        <Letter key={index} delay={index * 0.2}>
-          {char}
-        </Letter>
-      ))}
-    </Title>
-  );
-};
+const AnimatedTitle: React.FC<{ text: string }> = ({ text }) => (
+  <Title>
+    {text.split('').map((char, index) => (
+      <Letter key={index} delay={index * 0.2}>
+        {char}
+      </Letter>
+    ))}
+  </Title>
+);
 
 const Subtitle = styled.p`
   font-size: 1rem;
@@ -222,15 +159,9 @@ const Subtitle = styled.p`
 `;
 
 const floatAnimation = keyframes`
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
-  }
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
 `;
 
 const TatsuyaImageRight = styled.img`
@@ -262,13 +193,10 @@ const DevelopersSection = styled.section`
   text-align: center;
   color: var(--developer-title-color);
   opacity: 0;
-  animation: fadeIn 3s forwards;
-  animation-delay: 3s;
+  animation: fadeIn 2s forwards;
 
   @keyframes fadeIn {
-    to {
-      opacity: 1;
-    }
+    to { opacity: 1; }
   }
 `;
 
@@ -289,7 +217,6 @@ const DeveloperCard = styled.div`
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  position: relative;
   transition: transform 0.3s ease-in-out;
 
   &:hover {
@@ -331,5 +258,3 @@ const Footer = styled.footer`
     transform: rotate(5deg);
   }
 `;
-
-export default App;

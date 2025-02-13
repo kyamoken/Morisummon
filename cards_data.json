@@ -36,10 +36,10 @@
     "image": "/static/images/cards/card06.png"
   },
   {
-    "name": "Card 7",
-    "hp": 700,
-    "attack": 350,
-    "image": "/static/images/cards/card01.png"
+    "name": "ニガーとまつり",
+    "hp": 10,
+    "attack": 40,
+    "image": "/static/images/cards/card07.png"
   },
   {
     "name": "Card 8",

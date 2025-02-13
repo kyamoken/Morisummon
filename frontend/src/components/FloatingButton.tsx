@@ -29,7 +29,7 @@ const StyledFloatingButton = styled.button`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
-  /* シェイン（光の走査）エフェクト */
+  // 光のエフェクト
   &::after {
     content: "";
     position: absolute;

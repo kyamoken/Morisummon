@@ -11,7 +11,8 @@ const Settings: React.FC = () => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
       setSelectedTheme(savedTheme);
-      document.documentElement.className = savedTheme === 'light' ? 'light-theme' : '';
+      document.documentElement.className =
+        savedTheme === 'light' ? 'light-theme' : '';
     }
   }, []);
 
@@ -19,12 +20,24 @@ const Settings: React.FC = () => {
     const newTheme = e.target.value;
     setSelectedTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.className = newTheme === 'light' ? 'light-theme' : '';
+    document.documentElement.className =
+      newTheme === 'light' ? 'light-theme' : '';
   };
 
   const handleSaveSettings = () => {
     console.log('テーマ:', selectedTheme);
-    navigate('/');
+    navigate('/home');
+  };
+
+  // 戻るボタンを押したときの処理
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      // 履歴があれば前のページに戻る
+      navigate(-1);
+    } else {
+      // 履歴がなければホームへ
+      navigate('/');
+    }
   };
 
   return (
@@ -40,12 +53,27 @@ const Settings: React.FC = () => {
               <option value="light">ライト</option>
             </Select>
           </FormGroup>
-          <Button type="button" onClick={handleSaveSettings}>設定を保存</Button>
+
+          {/* 設定を保存 */}
+          <Button type="button" onClick={handleSaveSettings}>
+            設定を保存
+          </Button>
+
+          {/* 戻るボタンを追加 */}
+          <Button type="button" onClick={handleGoBack}>
+            戻る
+          </Button>
         </Form>
       </Content>
     </SettingsContainer>
   );
 };
+
+export default Settings;
+
+/* ----------------------- */
+/* Styled Components       */
+/* ----------------------- */
 
 const SettingsContainer = styled.div`
   display: flex;
@@ -123,5 +151,3 @@ const Button = styled.button`
     transform: scale(1.05);
   }
 `;
-
-export default Settings;

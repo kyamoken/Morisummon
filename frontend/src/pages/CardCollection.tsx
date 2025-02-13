@@ -1,16 +1,12 @@
+// CardCollection.tsx
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import Header from '@/components/Header';
 import useCardManager from '@/hooks/useCardManager';
 import type { Card } from '@/types/models';
+import BubblesBackground from '@/components/BubblesBackground';
 
-// type CardCollectionProps = {}; # propsを使うときがあるかもしれない
-
-type CardItem = {
-  card: Card;
-};
-
-const CardCollection: React.FC /*<CardCollectionProps>*/ = () => {
+const CardCollection: React.FC = () => {
   const { cards } = useCardManager();
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
@@ -24,12 +20,14 @@ const CardCollection: React.FC /*<CardCollectionProps>*/ = () => {
 
   return (
     <CardCollectionContainer>
+      {/* 背景 */}
+      <BubblesBackground />
       <Header />
       <Content>
-        <h1>カード図鑑</h1>
+        <Title>カード図鑑</Title>
         <CardGrid>
           {cards?.length ? (
-            cards.map(({ card }: CardItem) => (
+            cards.map(({ card }) => (
               <CardSlot key={card.id} onClick={() => handleCardClick(card)}>
                 {card.image ? (
                   <CardImage src={card.image} alt={card.name} />
@@ -43,60 +41,66 @@ const CardCollection: React.FC /*<CardCollectionProps>*/ = () => {
           )}
         </CardGrid>
       </Content>
-
-      {!!selectedCard && (
-        <ModalCard onClick={handleCloseModal}>
-          <ExpandedCardImage
-            src={selectedCard.image || ''}
-            alt={selectedCard.name}
-          />
-        </ModalCard>
+      {selectedCard && (
+        <ModalOverlay onClick={handleCloseModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ExpandedCardImage
+              src={selectedCard.image || ''}
+              alt={selectedCard.name}
+            />
+            <CloseButton onClick={handleCloseModal}>×</CloseButton>
+          </ModalContent>
+        </ModalOverlay>
       )}
     </CardCollectionContainer>
   );
 };
 
+export default CardCollection;
+
 const CardCollectionContainer = styled.div`
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
+  color: #fff;
+  padding: 80px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background-color: var(--background-color);
-  color: white;
-  min-height: 100vh;
-  padding-top: 120px;
+  overflow: hidden;
 `;
 
 const Content = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 90%;
-`;
-
-const CardGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
+  position: relative;
+  z-index: 2; /* 背景より前面に表示 */
+  width: 100%;
+  max-width: 1200px;
   padding: 20px;
 `;
 
+const Title = styled.h1`
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+`;
+
+const CardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+`;
+
 const CardSlot = styled.div`
-  width: 120px;
-  height: 180px;
-  background-color: var(--card-background);
-  border: 1px solid var(--input-border);
-  border-radius: var(--border-radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
   cursor: pointer;
+  position: relative;
   transition: transform 0.3s, box-shadow 0.3s;
 
   &:hover {
-    transform: translateY(-5px) scale(1.05);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
   }
 `;
 
@@ -104,38 +108,71 @@ const CardImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: var(--border-radius);
+  display: block;
 `;
 
 const CardPlaceholder = styled.div`
-  font-size: 14px;
-  color: gray;
+  padding: 20px;
   text-align: center;
-  padding: 10px;
+  font-size: 1rem;
+  color: #bbb;
 `;
 
-const ModalCard = styled.div`
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const ModalOverlay = styled.div`
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  cursor: pointer;
+  animation: ${fadeIn} 0.3s ease;
+`;
+
+const scaleIn = keyframes`
+  from { transform: scale(0.8); }
+  to { transform: scale(1); }
+`;
+
+const ModalContent = styled.div`
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  animation: ${scaleIn} 0.3s ease;
 `;
 
 const ExpandedCardImage = styled.img`
   width: 300px;
   height: 450px;
   object-fit: cover;
-  border-radius: var(--border-radius);
-  transition: transform 0.3s;
-
-  &:hover {
-    transform: scale(1.05);
-  }
+  border-radius: 8px;
+  display: block;
 `;
 
-export default CardCollection;
+const CloseButton = styled.button`
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #ff6b6b;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+
+  &:hover {
+    background: #ff4b4b;
+  }
+`;
