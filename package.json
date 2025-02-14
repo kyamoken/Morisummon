@@ -13,6 +13,7 @@
     "lint": "tsc -b && eslint --cache --cache-location node_modules/.cache/eslint/ frontend/src",
     "fix": "tsc -b && eslint --cache --cache-location node_modules/.cache/eslint/ frontend/src --fix"
   },
+
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
@@ -37,11 +38,13 @@
     "vite-plugin-svgr": "^4.3.0"
   },
   "dependencies": {
-    "@mui/icons-material": "^6.3.1",
+    "@mui/icons-material": "^6.4.4",
+    "@mui/material": "^6.4.4",
+    "@mui/styled-engine-sc": "^6.4.3",
     "react-hot-toast": "^2.5.1",
     "react-howler": "^5.2.0",
     "react-use-websocket": "^4.11.1",
-    "styled-components": "^6.1.14",
+    "styled-components": "^6.1.15",
     "swr": "^2.3.0",
     "wanakana": "^5.3.1"
   }

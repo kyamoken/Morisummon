@@ -24,10 +24,10 @@ const Home: React.FC = () => {
         <ButtonContainer>
           {/* マッチング：左上（3行分を縦に占有） */}
           <FloatingButton as={Link} to="/battle" style={{ gridArea: 'matching' }}>
-            <ButtonInner>
-              <Icon src="/static/images/battle_icon.svg" alt="バトルアイコン" />
+            <MatchingButtonInner>
+              <MatchingIcon src="/static/images/battle_icon.svg" alt="マッチングアイコン" />
               <span>マッチング</span>
-            </ButtonInner>
+            </MatchingButtonInner>
           </FloatingButton>
 
           {/* デッキ：1行目の右カラム */}
@@ -118,7 +118,6 @@ const Content = styled.div`
  */
 const ButtonContainer = styled.div`
   display: grid;
-  /* 各列を1fr:1frで2分割 */
   grid-template-columns: 1fr 1fr;
   grid-template-rows: repeat(4, auto);
   grid-template-areas:
@@ -129,8 +128,6 @@ const ButtonContainer = styled.div`
   gap: 20px;
   max-width: 600px;
   margin: 40px auto;
-
-  /* 各セルを左右いっぱいに伸ばす（＝ボタンの幅も揃う） */
   justify-items: stretch;
 `;
 
@@ -144,4 +141,21 @@ const Icon = styled.img`
   width: 32px;
   height: 32px;
   margin-right: 8px;
+`;
+
+/* マッチングボタン専用の内側コンテナ（縦配置） */
+const MatchingButtonInner = styled(ButtonInner)`
+  flex-direction: column;
+  span {
+    margin-top: 8px;
+  }
+`;
+
+/* マッチングアイコン専用のスタイル（ボタン全体にフィット、白色に変換） */
+const MatchingIcon = styled(Icon)`
+  width: 100px;
+  height: auto;
+  margin: 0;
+  overflow: hidden;
+  filter: brightness(0) invert(1);
 `;

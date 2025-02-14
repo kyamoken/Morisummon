@@ -2,11 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ky } from '@/utils/api';
-import Header from '@/components/Header.tsx';
-import useAuth from '@/hooks/useAuth.tsx';
+import Header from '@/components/Header';
+import useAuth from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router';
-import FriendDeleteModal from '@/components/FriendDeleteModal.tsx';
+import FriendDeleteModal from '@/components/FriendDeleteModal';
+import BubblesBackground from '@/components/BubblesBackground';
+import { FloatingButton, FloatingDangerButton } from '@/components/FloatingButton';
 
 interface Friend {
   id: number;
@@ -32,9 +34,7 @@ const Friends: React.FC = () => {
   const [username, setUsername] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [friendToRemove, setFriendToRemove] = useState<number | null>(null);
-  // 交換セッションの状態（存在する場合）
   const [exchangeSession, setExchangeSession] = useState<ExchangeSession | null>(null);
-  // 交換提案に関するモーダルの表示状態
   const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
 
   const fetchFriends = async () => {
@@ -95,6 +95,11 @@ const Friends: React.FC = () => {
     }
   };
 
+  const confirmRemoveFriend = (friendId: number) => {
+    setFriendToRemove(friendId);
+    setIsModalOpen(true);
+  };
+
   const handleRemoveFriend = async () => {
     if (friendToRemove === null) return;
     try {
@@ -112,13 +117,7 @@ const Friends: React.FC = () => {
   };
 
   /**
-   * 交換開始／確認処理
-   *
-   * 1. /api/check_exchange/{friendId}/ にて既存の交換セッションを確認
-   * 2. 既に存在していれば、レスポンスの status によって処理を分岐
-   *    - status が 'proposed' の場合は、モーダルを表示してキャンセルまたは確認を促す
-   *    - それ以外の場合は、直接交換画面へ遷移
-   * 3. 交換セッションが存在しなければ、新規作成してカード選択画面に遷移
+   * カード交換開始／確認処理
    */
   const handleInitiateExchange = async (friendId: number) => {
     try {
@@ -135,7 +134,6 @@ const Friends: React.FC = () => {
 
       if (checkResponse.exists) {
         if (checkResponse.status === 'proposed') {
-          // 既に「提案済み」の場合はモーダルでユーザーに対応を促す
           setExchangeSession({
             exists: true,
             exchange_ulid: checkResponse.exchange_ulid!,
@@ -143,11 +141,9 @@ const Friends: React.FC = () => {
           });
           setIsExchangeModalOpen(true);
         } else {
-          // 例: 既に交換が成立している場合などは直接その画面へ遷移
           navigate(`/exchange/${checkResponse.exchange_ulid}`);
         }
       } else {
-        // 新規作成の場合：新しい交換セッションを作成してカード選択画面へ遷移
         const createResponse: { exchange_ulid: string } = await ky
           .post('/api/exchanges/', {
             json: { receiver_id: friendId },
@@ -163,7 +159,7 @@ const Friends: React.FC = () => {
     }
   };
 
-  // 提案側の場合：既存の交換セッションをキャンセルする処理
+  // 提案側がキャンセル
   const handleCancelExchange = async () => {
     if (!exchangeSession) return;
     try {
@@ -179,7 +175,7 @@ const Friends: React.FC = () => {
     }
   };
 
-  // 受信側の場合：相手の提案を確認して交換成立させる処理
+  // 受信側が確認
   const handleConfirmExchange = async () => {
     if (!exchangeSession) return;
     try {
@@ -196,11 +192,6 @@ const Friends: React.FC = () => {
     }
   };
 
-  const confirmRemoveFriend = (friendId: number) => {
-    setFriendToRemove(friendId);
-    setIsModalOpen(true);
-  };
-
   useEffect(() => {
     fetchFriends();
     fetchFriendRequests();
@@ -208,98 +199,124 @@ const Friends: React.FC = () => {
 
   return (
     <FriendsContainer>
-      <Header />
-      <Content>
-        <h1>フレンド</h1>
+      {/* 背面のバブル背景 */}
+      <BubblesBackground />
 
-        <Form>
-          <Input
-            type="text"
-            placeholder="ユーザー名を入力"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <Button onClick={handleSendRequest}>フレンドリクエストを送信</Button>
-        </Form>
+      {/* ヘッダー */}
+      <HeaderWrapper>
+        <Header />
+      </HeaderWrapper>
 
-        <Section>
-          <h2>フレンドリクエスト</h2>
-          {requests.length > 0 ? (
-            requests.map((request) => (
-              <RequestItem key={request.id}>
-                <span>{request.from_user} からのリクエスト</span>
-                <Button onClick={() => handleRequestAction(request.id, 'accept')}>
-                  承認
-                </Button>
-                <Button onClick={() => handleRequestAction(request.id, 'reject')}>
-                  拒否
-                </Button>
-              </RequestItem>
-            ))
-          ) : (
-            <p>フレンドリクエストはありません。</p>
-          )}
-        </Section>
+      {/* コンテンツ部分 */}
+      <ContentWrapper>
+        <MainContainer>
+          {/* 左カラム：フレンド追加／フレンドリクエスト */}
+          <LeftColumn>
+            <Card>
+              <SectionTitle>フレンドを追加</SectionTitle>
+              <InputRow>
+                <StyledInput
+                  type="text"
+                  placeholder="ユーザー名を入力してください。"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <SendFloatingButton onClick={handleSendRequest}>
+                  送信
+                </SendFloatingButton>
+              </InputRow>
+            </Card>
 
-        <Section>
-          <h2>フレンド一覧</h2>
-          {friends.length > 0 ? (
-            friends.map((friend) => (
-              <FriendItem key={friend.id}>
-                <span>{friend.username}</span>
-                <ButtonGroup>
-                  <ExchangeButton onClick={() => handleInitiateExchange(friend.id)}>
-                    カード交換
-                  </ExchangeButton>
-                  <DeleteButton onClick={() => confirmRemoveFriend(friend.id)}>
-                    削除
-                  </DeleteButton>
-                </ButtonGroup>
-              </FriendItem>
-            ))
-          ) : (
-            <p>フレンドがいません。</p>
-          )}
-        </Section>
-      </Content>
+            <Card>
+              <SectionTitle>フレンドリクエスト</SectionTitle>
+              {requests.length > 0 ? (
+                requests.map((request) => (
+                  <RequestItem key={request.id}>
+                    <RequestText>{request.from_user}</RequestText>
+                    <RequestButtonGroup>
+                      <ActionFloatingButton onClick={() => handleRequestAction(request.id, 'accept')}>
+                        承認
+                      </ActionFloatingButton>
+                      <RejectFloatingButton onClick={() => handleRequestAction(request.id, 'reject')}>
+                        拒否
+                      </RejectFloatingButton>
+                    </RequestButtonGroup>
+                  </RequestItem>
+                ))
+              ) : (
+                <NoRequestText>フレンドリクエストは届いていません...</NoRequestText>
+              )}
+            </Card>
+          </LeftColumn>
+
+          {/* 右カラム：フレンド一覧 */}
+          <RightColumn>
+            <Card>
+              <SectionTitle>フレンド一覧</SectionTitle>
+              {friends.length > 0 ? (
+                friends.map((friend) => (
+                  <FriendItem key={friend.id}>
+                    <FriendName>{friend.username}</FriendName>
+                    <FriendButtonGroup>
+                      <ActionFloatingButton onClick={() => handleInitiateExchange(friend.id)}>
+                        カード交換
+                      </ActionFloatingButton>
+                      <CustomFloatingDangerButton onClick={() => confirmRemoveFriend(friend.id)}>
+                        削除
+                      </CustomFloatingDangerButton>
+                    </FriendButtonGroup>
+                  </FriendItem>
+                ))
+              ) : (
+                <NoRequestText>
+                  フレンドがいません！ <br />
+                  フレンドを追加してみましょう。
+                </NoRequestText>
+              )}
+            </Card>
+          </RightColumn>
+        </MainContainer>
+      </ContentWrapper>
+
+      {/* フレンド削除モーダル */}
       <FriendDeleteModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleRemoveFriend}
       />
 
-      {/* 交換セッションが存在する場合は、モーダルで操作させる */}
+      {/* カード交換モーダル */}
       {isExchangeModalOpen && exchangeSession && (
         <ExchangeModalOverlay>
           <ExchangeModalContent>
             {exchangeSession.proposer_id === user?.id ? (
               <>
-                <ModalTitle>あなたは既にカード交換を提案中です！</ModalTitle>
+                <ModalTitle>You have already proposed an exchange!</ModalTitle>
                 <ModalMessage>
-                  現在提案中です。相手の返答を待つか、提案をキャンセルしてください。
+                  Waiting for the other user’s response. You can cancel the proposal if you want.
                 </ModalMessage>
                 <ButtonGroup>
-                  <CancelExchangeButton onClick={handleCancelExchange}>
-                    提案をキャンセルする
-                  </CancelExchangeButton>
-                  <CloseModalButton onClick={() => setIsExchangeModalOpen(false)}>
-                    閉じる
-                  </CloseModalButton>
+                  <CustomFloatingDangerButton onClick={handleCancelExchange}>
+                    Cancel Proposal
+                  </CustomFloatingDangerButton>
+                  <CloseFloatingButton onClick={() => setIsExchangeModalOpen(false)}>
+                    Close
+                  </CloseFloatingButton>
                 </ButtonGroup>
               </>
             ) : (
               <>
-                <ModalTitle>相手がカード交換を提案しています！</ModalTitle>
+                <ModalTitle>They have proposed an exchange!</ModalTitle>
                 <ModalMessage>
-                  相手の提案を確認してください。内容に問題なければ「交換成立」ボタンを押してください。
+                  Confirm the proposal if you want to proceed with the card exchange.
                 </ModalMessage>
                 <ButtonGroup>
-                  <ConfirmExchangeButton onClick={handleConfirmExchange}>
-                    交換成立
-                  </ConfirmExchangeButton>
-                  <CloseModalButton onClick={() => setIsExchangeModalOpen(false)}>
-                    閉じる
-                  </CloseModalButton>
+                  <ConfirmFloatingButton onClick={handleConfirmExchange}>
+                    Confirm Exchange
+                  </ConfirmFloatingButton>
+                  <CloseFloatingButton onClick={() => setIsExchangeModalOpen(false)}>
+                    Close
+                  </CloseFloatingButton>
                 </ButtonGroup>
               </>
             )}
@@ -310,98 +327,143 @@ const Friends: React.FC = () => {
   );
 };
 
+export default Friends;
+
+/* =======================
+   ホームページと同じデザインを適用するためのスタイル
+========================== */
 const FriendsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--background-color);
-  color: white;
-  width: 100%;
+  position: relative;
   min-height: 100vh;
-`;
-
-const Content = styled.div`
   width: 100%;
-  max-width: 800px;
-  padding: 20px;
-`;
-
-const Form = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-
-const Input = styled.input`
-  padding: 10px;
-  border-radius: var(--border-radius);
-  border: 1px solid #ccc;
-  flex: 1;
-`;
-
-const Button = styled.button`
-  background-color: var(--primary-color);
+  overflow: hidden;
   color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  text-align: center;
+  background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
+  background-size: 600% 600%;
+  animation: gradientAnimation 15s ease infinite;
 
-  &:hover {
-    background-color: var(--button-hover);
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
   }
 `;
 
-const Section = styled.section`
-  margin-bottom: 30px;
+const HeaderWrapper = styled.div`
+  position: relative;
+  z-index: 10;
+`;
+
+const ContentWrapper = styled.div`
+  position: relative;
+  z-index: 10;
+  margin-top: 130px;
+  padding: 20px;
+`;
+
+const MainContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+`;
+
+const LeftColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  max-width: 400px;
+`;
+
+const RightColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  max-width: 600px;
+`;
+
+const Card = styled.div`
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+`;
+
+const SectionTitle = styled.h2`
+  margin: 0 0 15px 0;
+  font-size: 1.4rem;
+`;
+
+const InputRow = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const StyledInput = styled.input`
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  outline: none;
 `;
 
 const RequestItem = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  background-color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 10px;
   padding: 10px;
-  border-bottom: 1px solid #444;
+  border-radius: 8px;
+`;
+
+const RequestText = styled.span`
+  font-size: 0.95rem;
+`;
+
+const RequestButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const NoRequestText = styled.p`
+  margin: 0;
+  opacity: 0.8;
 `;
 
 const FriendItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 10px;
   padding: 10px;
-  border-bottom: 1px solid #444;
+  border-radius: 8px;
 `;
 
-const ButtonGroup = styled.div`
+const FriendName = styled.span`
+  font-size: 1rem;
+`;
+
+const FriendButtonGroup = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
 `;
 
-const ExchangeButton = styled.button`
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: var(--button-hover);
-  }
-`;
-
-const DeleteButton = styled(Button)`
-  background-color: #e74c3c;
-
-  &:hover {
-    background-color: #c0392b;
-  }
-`;
-
-/* 交換提案用モーダル */
+/* モーダル系 */
 const ExchangeModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -416,7 +478,7 @@ const ExchangeModalOverlay = styled.div`
 `;
 
 const ExchangeModalContent = styled.div`
-  background-color: var(--modal-background-default);
+  background-color: #ffffff;
   padding: 20px;
   border-radius: 10px;
   width: 400px;
@@ -426,30 +488,79 @@ const ExchangeModalContent = styled.div`
 
 const ModalTitle = styled.h2`
   margin-bottom: 15px;
+  font-size: 1.2rem;
 `;
 
 const ModalMessage = styled.p`
   margin-bottom: 20px;
+  line-height: 1.4;
 `;
 
-const CancelExchangeButton = styled(Button)`
-  background-color: #e74c3c;
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+`;
 
+/* ========================
+   FloatingButton を拡張したカスタムボタン群
+========================== */
+// 送信ボタン（緑） - 元の SendButton は padding: 12px 16px だったのでオーバーライド
+const SendFloatingButton = styled(FloatingButton)`
+  padding: 12px 16px;
+  font-size: 16px;
+  background-color: #00b894;
+  &:hover {
+    background-color: #019875;
+  }
+`;
+
+// 承認・カード交換・クローズボタン（青） - 元の ActionButton は padding: 8px 14px
+const ActionFloatingButton = styled(FloatingButton)`
+  padding: 8px 14px;
+  font-size: 14px;
+  background-color: #3498db;
+  &:hover {
+    background-color: #2980b9;
+  }
+`;
+
+// 拒否ボタン（赤）
+const RejectFloatingButton = styled(FloatingButton)`
+  padding: 8px 14px;
+  font-size: 14px;
+  background-color: #e74c3c;
   &:hover {
     background-color: #c0392b;
   }
 `;
 
-const ConfirmExchangeButton = styled(Button)`
-  background-color: #27ae60;
+// 削除・キャンセル用（FloatingDangerButton を拡張）
+const CustomFloatingDangerButton = styled(FloatingDangerButton)`
+  padding: 8px 14px;
+  font-size: 14px;
+  background-color: #e74c3c;
+  &:hover {
+    background-color: #c0392b;
+  }
+`;
 
+// 交換成立ボタン（緑）
+const ConfirmFloatingButton = styled(FloatingButton)`
+  padding: 8px 14px;
+  font-size: 14px;
+  background-color: #27ae60;
   &:hover {
     background-color: #1e8e50;
   }
 `;
 
-const CloseModalButton = styled(Button)`
-  background-color: var(--primary-color);
+// モーダルのクローズボタン（青）
+const CloseFloatingButton = styled(FloatingButton)`
+  padding: 8px 14px;
+  font-size: 14px;
+  background-color: #3498db;
+  &:hover {
+    background-color: #2980b9;
+  }
 `;
-
-export default Friends;
