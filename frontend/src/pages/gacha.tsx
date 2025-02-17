@@ -187,11 +187,11 @@ const Modal = styled.div`
 const cardPop = keyframes`
   0% {
     opacity: 0;
-    transform: scale(0.5) rotate(-15deg);
+    transform: scale(0.8) rotate(-5deg);
   }
   50% {
     opacity: 1;
-    transform: scale(1.3) rotate(10deg);
+    transform: scale(1.05) rotate(5deg);
   }
   100% {
     opacity: 1;

@@ -22,4 +22,6 @@ export interface Card {
   image: string;
   attack: number;
   hp: number;
+  pack: string;
+  type: string;
 }

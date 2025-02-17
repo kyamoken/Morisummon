@@ -31,11 +31,11 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, notificat
     <ModalOverlay>
       <ModalContent>
         <CloseButton onClick={onClose}>×</CloseButton>
-        <h2>通知</h2>
+        <Title>通知</Title>
         <NotificationList>
           {notifications.map(notification => (
             <NotificationItem key={notification.id} $isRead={notification.is_read}>
-              <p>{notification.message}</p>
+              <NotificationText>{notification.message}</NotificationText>
               {!notification.is_read && (
                 <MarkAsReadButton onClick={() => handleMarkAsRead(notification.id)}>
                   マークを既読にする
@@ -48,6 +48,10 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, notificat
     </ModalOverlay>
   );
 };
+
+export default NotificationModal;
+
+/* ------------------ Styled Components ------------------ */
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -63,15 +67,20 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background-color: var(--modal-background-default);
+  background-color: var(--notification-modal-background);
   padding: 20px;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   width: 500px;
   max-height: 80%;
   overflow-y: auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--box-shadow);
   position: relative;
-  color: #2d2d67;
+  color: white;
+`;
+
+const Title = styled.h2`
+  margin-top: 0;
+  text-align: center;
 `;
 
 const CloseButton = styled.button`
@@ -82,34 +91,46 @@ const CloseButton = styled.button`
   top: 10px;
   right: 10px;
   cursor: pointer;
-  color: #333;
+  color: white;
+  transition: color 0.3s;
+  &:hover {
+    color: var(--button-hover);
+  }
 `;
 
 const NotificationList = styled.ul`
   list-style: none;
   padding: 0;
+  margin: 20px 0 0;
 `;
 
 const NotificationItem = styled.li<{ $isRead: boolean }>`
-  background-color: ${({ $isRead }) => ($isRead ? '#f0f0f0' : '#fff')};
+  background-color: ${({ $isRead }) => ($isRead ? 'var(--card-background)' : 'var(--primary-color)')};
   padding: 15px;
   margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--button-hover);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const NotificationText = styled.p`
+  margin: 0;
+  font-size: 14px;
 `;
 
 const MarkAsReadButton = styled.button`
-  background-color: #007bff;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   padding: 8px 12px;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   cursor: pointer;
   transition: background-color 0.3s;
+  align-self: flex-end;
   &:hover {
-    background-color: #0056b3;
+    background-color: var(--button-hover);
   }
 `;
-
-export default NotificationModal;

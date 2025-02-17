@@ -8,7 +8,7 @@ type APIResponse = {
 
 const useDeckManager = () => {
   // デッキの最大枚数
-  const maxDeckSize = 5;
+  const maxDeckSize = 12;
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -91,19 +91,10 @@ const useDeckManager = () => {
    */
   const saveDeck = async () => {
     const deck = sanitizeDeckArray(editingDeck);
-    const deckIds = [
-      deck[0]?.id,
-      deck[1]?.id,
-      deck[2]?.id,
-      deck[3]?.id,
-      deck[4]?.id,
-    ];
-
+    const deckIds = deck.map((card) => card?.id);  // 12枚分のカードIDリストに変更
     await ky.post('/api/save-deck/', { json: deckIds });
-
-    // デッキ保存後に編集用デッキを更新
     setEditingDeck(deck);
-  };
+};
 
 
   /**

@@ -73,8 +73,8 @@ def save_deck(request):
     user = request.user
 
     deck_card_ids = request.data
-    if len(deck_card_ids) != 5:
-        return Response({'error': 'デッキは5枚で構成されている必要があります'}, status=400)
+    if len(deck_card_ids) != 12:
+        return Response({'error': 'デッキは12枚で構成されている必要があります'}, status=400)
 
     if len(deck_card_ids) != len(set(deck_card_ids)):
         return Response({'error': 'duplicate_card', 'message': '同一カードを複数枚デッキに追加することはできません'}, status=400)

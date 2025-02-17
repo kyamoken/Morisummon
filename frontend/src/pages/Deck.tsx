@@ -5,6 +5,7 @@ import useCardManager from '@/hooks/useCardManager';
 import useDeckManager from '@/hooks/useDeckManager';
 import type { Card } from '@/types/models';
 import { toast } from 'react-hot-toast';
+import BubblesBackground from '@/components/BubblesBackground';
 
 const Deck: React.FC = () => {
   const { cards } = useCardManager();
@@ -27,7 +28,6 @@ const Deck: React.FC = () => {
       .catch(async (error) => {
         console.log('Error caught:', error);
         try {
-        // responseをbodyから持ってくる必要があるっぽ
           const errorData = error.response ? await error.response.json() : null;
           console.log('Error Data:', errorData);
 
@@ -43,10 +43,9 @@ const Deck: React.FC = () => {
       });
   };
 
-
-
   return (
     <DeckContainer>
+      <BubblesBackground />
       <Header />
       <Content>
         <h1>デッキ編集</h1>
@@ -65,20 +64,23 @@ const Deck: React.FC = () => {
                 </CardSlot>
               ))}
             </DeckArea>
-            {cards ? <ScrollableArea>
-              <CardList>
-                {cards.map((item, index) => (
-                  <Card key={index} onClick={() => handleAddCardToDeck(item.card)}>
-                    {item.card.image ? (
-                      <CardImage src={item.card.image} alt={item.card.name} />
-                    ) : (
-                      <CardText>{item.card.name} ({item.amount})</CardText>
-                    )}
-                  </Card>
-                ))}
-              </CardList>
-
-            </ScrollableArea> : null}
+            {cards && (
+              <ScrollableArea>
+                <CardList>
+                  {cards.map((item, index) => (
+                    <CardItem key={index} onClick={() => handleAddCardToDeck(item.card)}>
+                      {item.card.image ? (
+                        <CardImage src={item.card.image} alt={item.card.name} />
+                      ) : (
+                        <CardText>
+                          {item.card.name} ({item.amount})
+                        </CardText>
+                      )}
+                    </CardItem>
+                  ))}
+                </CardList>
+              </ScrollableArea>
+            )}
             <Button type="button" onClick={handleSaveDeck}>
               デッキを保存
             </Button>
@@ -111,30 +113,45 @@ const CardText = styled.div`
   z-index: 2;
 `;
 
+// Homeと同様のバブル背景用スタイル
 const DeckContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: var(--background-color);
-  color: white;
+  position: relative;
+  min-height: 100vh;
   width: 100%;
+  color: white;
   text-align: center;
-  padding-top: 120px; /* ヘッダーのスペースを確保 */
+  overflow: hidden;
+  background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
+  background-size: 600% 600%;
+  animation: gradientAnimation 15s ease infinite;
+  padding-top: 120px; /* ヘッダー分のスペース */
+
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
 `;
 
 const Content = styled.div`
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
   margin: 0 auto;
 `;
 
+// デッキ配置を横6×縦2に変更
 const DeckArea = styled.div`
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: 10px;
   margin-bottom: 20px;
@@ -153,25 +170,25 @@ const CardSlot = styled.div`
 `;
 
 const ScrollableArea = styled.div`
-  width: 90%; /* 横スクロールエリアの幅を画面サイズに調整 */
-  max-width: 600px; /* 最大幅を設定 */
-  overflow-x: auto; /* 横スクロールを許可 */
-  margin: 0 auto; /* 中央寄せ */
+  width: 90%;
+  max-width: 600px;
+  overflow-x: auto;
+  margin: 0 auto;
   border: 1px solid var(--input-border);
   border-radius: var(--border-radius);
-  padding: 10px; /* 内側の余白 */
+  padding: 10px;
   box-sizing: border-box;
 `;
 
 const CardList = styled.div`
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap; /* 横方向に並べる */
-  white-space: nowrap; /* 改行を防止 */
+  flex-wrap: nowrap;
+  white-space: nowrap;
 `;
 
-const Card = styled.div`
-  flex: 0 0 auto; /* 横スクロール用に幅を固定 */
+const CardItem = styled.div`
+  flex: 0 0 auto;
   width: 100px;
   height: 150px;
   background-color: var(--card-background);
