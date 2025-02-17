@@ -1,5 +1,6 @@
+// chat.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import useWebSocket from 'react-use-websocket';
 import { ky } from '@/utils/api';
 
@@ -14,6 +15,7 @@ interface Message {
 
 interface ChatProps {
   isModalOpen: boolean;
+  // モーダルが完全に閉じた後、親側で状態を更新するためのコールバック
   onClose: () => void;
 }
 
@@ -24,6 +26,7 @@ interface ChatGroup {
 }
 
 const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
+  // チャット関連のステート
   const [groupName, setGroupName] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const { sendJsonMessage, lastJsonMessage } = useWebSocket<Message>(
@@ -34,18 +37,37 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
   const [chatGroups, setChatGroups] = useState<ChatGroup[]>([]);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
+  // アニメーション用のステート
+  const [shouldRender, setShouldRender] = useState(isModalOpen);
+  const [animateIn, setAnimateIn] = useState(false);
+  const [animateOut, setAnimateOut] = useState(false);
+
+  // モーダルが開くときのアニメーション処理
+  useEffect(() => {
+    if (isModalOpen) {
+      setShouldRender(true);
+      setAnimateOut(false);
+      setAnimateIn(false);
+      // 次のtickでanimateInをtrueにして開くアニメーションを発火
+      setTimeout(() => setAnimateIn(true), 10);
+    }
+  }, [isModalOpen]);
+
+  // WebSocket経由で新規メッセージを受信したら追加
   useEffect(() => {
     if (lastJsonMessage) {
       setReceivedMessages((prev) => [...prev, lastJsonMessage]);
     }
   }, [lastJsonMessage]);
 
+  // 新規メッセージ時に自動スクロール
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [receivedMessages]);
 
+  // グループ一覧を取得
   useEffect(() => {
     fetchChatGroups();
   }, []);
@@ -68,12 +90,12 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
 
   const handleGroupChange = (group: ChatGroup) => {
     if (selectedGroupId === group.id) {
-      // 同じグループを再度クリックした場合、チャットを閉じる
+      // 同じグループをクリックした場合はチャットを閉じる
       setGroupName(null);
       setSelectedGroupId(null);
       setReceivedMessages([]);
     } else {
-      // 新しいグループを選択した場合
+      // 新しいグループを選択
       setGroupName(group.name);
       setSelectedGroupId(group.id);
       setReceivedMessages([]);
@@ -85,15 +107,13 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
     if (newGroupName) {
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('認証トークンが見つかりません');
-        }
-        const data = await ky.post('/api/chat/groups/create/', {
-          json: { name: newGroupName },
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }).json<ChatGroup>();
+        if (!token) throw new Error('認証トークンが見つかりません');
+        const data = await ky
+          .post('/api/chat/groups/create/', {
+            json: { name: newGroupName },
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          .json<ChatGroup>();
         setChatGroups([...chatGroups, data]);
       } catch (error) {
         console.error('Error creating chat group:', error);
@@ -104,14 +124,10 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
   const handleAddUserToGroup = async (groupName: string, username: string) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('認証トークンが見つかりません');
-      }
+      if (!token) throw new Error('認証トークンが見つかりません');
       await ky.post(`/api/chat/groups/${groupName}/add-user/`, {
         json: { username: username },
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       alert('ユーザーがグループに追加されました');
     } catch (error) {
@@ -129,26 +145,33 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
     handleAddUserToGroup(groupName, username);
   };
 
-  if (!isModalOpen) return null;
+  // 「閉じる」ボタン押下時：閉じるアニメーションを実行し、0.5秒後に onClose を呼び出す
+  const handleClose = () => {
+    setAnimateIn(false);
+    setAnimateOut(true);
+    setTimeout(() => {
+      setShouldRender(false);
+      onClose();
+    }, 500);
+  };
+
+  if (!shouldRender) return null;
 
   return (
-    <Modal>
-      <ModalContent>
+    <Modal animateIn={animateIn} animateOut={animateOut}>
+      <ModalContent animateIn={animateIn} animateOut={animateOut}>
         <GroupButtons>
-          {chatGroups.map(group => (
-            <button
+          {chatGroups.map((group) => (
+            <GroupButton
               key={group.id}
+              selected={selectedGroupId === group.id}
               onClick={() => handleGroupChange(group)}
-              style={{
-                backgroundColor: selectedGroupId === group.id ? '#4a4b4e' : '#2a2b2e',
-                color: 'white',
-              }}
             >
               {group.name}
-            </button>
+            </GroupButton>
           ))}
-          <button onClick={handleCreateGroup}>グループ作成</button>
-          <button onClick={handleAddUser}>ユーザー追加</button>
+          <GroupButton onClick={handleCreateGroup}>グループ作成</GroupButton>
+          <GroupButton onClick={handleAddUser}>ユーザー追加</GroupButton>
         </GroupButtons>
         <ChatForm onSubmit={handleSubmit}>
           <input
@@ -156,6 +179,7 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
             className="message-input"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            placeholder="メッセージを入力..."
           />
           <button type="submit">送信</button>
         </ChatForm>
@@ -163,104 +187,110 @@ const Chat: React.FC<ChatProps> = ({ isModalOpen, onClose }) => {
           {receivedMessages.map((m, i) => (
             <ChatItem key={i}>
               <p>{m.message}</p>
-              <small style={{ color: 'gray' }}>By {m.sender.name} at {new Date(m.timestamp).toLocaleString()}</small>
+              <small>
+                By {m.sender.name} at {new Date(m.timestamp).toLocaleString()}
+              </small>
             </ChatItem>
           ))}
           <div ref={chatEndRef} />
         </ChatItems>
-        <CloseButton onClick={onClose}>閉じる</CloseButton>
+        <CloseButton onClick={handleClose}>閉じる</CloseButton>
       </ModalContent>
     </Modal>
   );
 };
 
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-`;
+export default Chat;
 
-const slideUp = keyframes`
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-`;
+/* ----------------------------- */
+/* Styled Components             */
+/* ----------------------------- */
 
-const Modal = styled.div`
+// Modal（オーバーレイ）は閉じるときも開くときも透明度で演出します
+const Modal = styled.div<{ animateIn: boolean; animateOut: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(211, 211, 211, 0.5);
+  /* オーバーレイは半透明の黒 */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1001;
-  animation: ${fadeIn} 0.5s ease-out;
+  opacity: ${({ animateOut, animateIn }) =>
+    animateOut ? 0 : animateIn ? 1 : 0};
+  transition: opacity 0.5s ease-out;
 `;
 
-const ModalContent = styled.div`
-  background-color: var(--modal-content-background);
+// ModalContent は背景色を --chat-modal-background（例：#303065）に設定し、Y軸方向のスライドでアニメーション
+const ModalContent = styled.div<{ animateIn: boolean; animateOut: boolean }>`
+  background-color: var(--chat-modal-background);
   padding: 20px;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   width: 90%;
   max-width: 800px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: ${slideUp} 0.5s ease-out;
+  transform: translateY(
+    ${({ animateOut, animateIn }) => (animateOut ? '100px' : animateIn ? '0' : '100px')}
+  );
+  transition: transform 0.5s ease-out;
 `;
 
 const GroupButtons = styled.div`
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
-  button {
-    padding: 8px 16px;
-    background-color: #2a2b2e;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    &:hover {
-      background-color: #3a3b3e;
-    }
-    &:focus {
-      outline: solid 3px rgba(68, 155, 222, 0.4);
-    }
+  flex-wrap: wrap;
+`;
+
+interface GroupButtonProps {
+  selected?: boolean;
+}
+
+const GroupButton = styled.button<GroupButtonProps>`
+  padding: 8px 16px;
+  background-color: ${({ selected }) =>
+    selected ? 'var(--button-hover)' : 'var(--primary-color)'};
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  &:hover {
+    background-color: var(--button-hover);
+  }
+  &:focus {
+    outline: solid 3px rgba(68, 155, 222, 0.4);
   }
 `;
 
 const ChatForm = styled.form`
   display: flex;
-  padding: 10px;
   gap: 8px;
   width: 100%;
-  .message-input {
+  padding: 10px;
+  input.message-input {
     flex: 1;
     padding: 8px;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     border: none;
+    font-size: 16px;
     &:focus {
       outline: solid 3px rgba(68, 155, 222, 0.4);
     }
   }
-  button[type="submit"] {
+  button[type='submit'] {
     padding: 8px 16px;
-    background-color: #2a2b2e;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     cursor: pointer;
     &:hover {
-      background-color: #3a3b3e;
+      background-color: var(--button-hover);
     }
     &:focus {
       outline: solid 3px rgba(68, 155, 222, 0.4);
@@ -271,34 +301,35 @@ const ChatForm = styled.form`
 const ChatItems = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 10px;
   gap: 10px;
   width: 100%;
+  padding: 10px;
   max-height: 400px;
   overflow-y: auto;
 `;
 
 const ChatItem = styled.div`
   padding: 8px 16px;
-  background-color: #2a2b2e;
-  border-radius: 8px;
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
   p {
     margin: 0;
     color: white;
   }
+  small {
+    color: #ccc;
+  }
 `;
 
 const CloseButton = styled.button`
-  background-color: #2a2b2e;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   padding: 8px 16px;
   cursor: pointer;
   margin-top: 20px;
   &:hover {
-    background-color: #3a3b3e;
+    background-color: var(--button-hover);
   }
 `;
-
-export default Chat;

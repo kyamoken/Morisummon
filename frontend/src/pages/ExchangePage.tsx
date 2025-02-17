@@ -160,74 +160,72 @@ const ExchangePage: React.FC = () => {
           {exchangeData &&
           (exchangeData.status === 'pending' || exchangeData.status === 'proposed') ? (
             // まだカードが提案されていない場合：カード選択画面
-            exchangeData.proposed_card_id === null ? (
-              <>
-                <Title>交換するカードを選択してください</Title>
-                <CardGrid>
-                  {cards
-                    .filter((cardData) => cardData.amount > 1)
-                    .map((cardData) => (
-                      <CardItem key={cardData.card.id} onClick={() => handleCardClick(cardData)}>
-                        <CardImage src={cardData.card.image} alt={cardData.card.name} />
-                        <CardName>{cardData.card.name}</CardName>
-                      </CardItem>
-                    ))}
-                </CardGrid>
-              </>
-            ) : currentUserId && exchangeData.proposer_id === currentUserId ? (
+              exchangeData.proposed_card_id === null ? (
+                <>
+                  <Title>交換するカードを選択してください</Title>
+                  <CardGrid>
+                    {cards
+                      .filter((cardData) => cardData.amount > 1)
+                      .map((cardData) => (
+                        <CardItem key={cardData.card.id} onClick={() => handleCardClick(cardData)}>
+                          <CardImage src={cardData.card.image} alt={cardData.card.name} />
+                          <CardName>{cardData.card.name}</CardName>
+                        </CardItem>
+                      ))}
+                  </CardGrid>
+                </>
+              ) : currentUserId && exchangeData.proposer_id === currentUserId ? (
               // 提案側の場合：すでに提案済みのカードを表示し、キャンセルボタンを表示
-              <>
-                <Title>あなたが提案したカード</Title>
-                {proposedCard ? (
-                  <ProposedCardContainer>
-                    <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
-                    <CardName>{proposedCard.card.name}</CardName>
-                  </ProposedCardContainer>
-                ) : (
-                  <Message>提案されたカード情報はありません。</Message>
-                )}
-                <ButtonGroup>
-                  <CancelExchangeButton onClick={handleCancelExchange}>
+                <>
+                  <Title>あなたが提案したカード</Title>
+                  {proposedCard ? (
+                    <ProposedCardContainer>
+                      <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
+                      <CardName>{proposedCard.card.name}</CardName>
+                    </ProposedCardContainer>
+                  ) : (
+                    <Message>提案されたカード情報はありません。</Message>
+                  )}
+                  <ButtonGroup>
+                    <CancelExchangeButton onClick={handleCancelExchange}>
                     キャンセル
-                  </CancelExchangeButton>
-                </ButtonGroup>
-              </>
-            ) : (
+                    </CancelExchangeButton>
+                  </ButtonGroup>
+                </>
+              ) : (
               // 受信側の場合：相手が提案したカードを表示し、交換成立ボタンを表示
-              <>
-                <Title>相手がカード交換を提案しています！</Title>
-                {proposedCard ? (
-                  <ProposedCardContainer>
-                    <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
-                    <CardName>{proposedCard.card.name}</CardName>
-                  </ProposedCardContainer>
-                ) : (
-                  <Message>提案されたカード情報はありません。</Message>
-                )}
-                <Message>内容に問題なければ「交換成立」ボタンを押してください。</Message>
-                <ConfirmExchangeButton onClick={handleConfirmExchange}>
+                <>
+                  <Title>相手がカード交換を提案しています！</Title>
+                  {proposedCard ? (
+                    <ProposedCardContainer>
+                      <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
+                      <CardName>{proposedCard.card.name}</CardName>
+                    </ProposedCardContainer>
+                  ) : (
+                    <Message>未所持のカードが提案されています！</Message>
+                  )}
+                  <Message>内容に問題なければ「交換成立」ボタンを押してください。</Message>
+                  <ConfirmExchangeButton onClick={handleConfirmExchange}>
                   交換成立
-                </ConfirmExchangeButton>
-              </>
-            )
-          ) : (
-            <Title>有効な交換セッションがありません</Title>
-          )}
+                  </ConfirmExchangeButton>
+                </>
+              )
+            ) : (
+              <Title>有効な交換セッションがありません</Title>
+            )}
         </Content>
       </ContentWrapper>
       {/* カード選択確認モーダル */}
-      {isModalOpen && selectedCard && (
-        <ExchangeSuperModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-          <ModalContent>
-            <ModalTitle>{selectedCard.card.name}</ModalTitle>
-            <ModalMessage>このカードを交換に出しますか？</ModalMessage>
-            <ButtonGroup>
-              <ConfirmButton onClick={handleProposeExchange}>はい</ConfirmButton>
-              <CancelButton onClick={() => setIsModalOpen(false)}>いいえ</CancelButton>
-            </ButtonGroup>
-          </ModalContent>
-        </ExchangeSuperModal>
-      )}
+      {isModalOpen && selectedCard ? <ExchangeSuperModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <ModalContent>
+          <ModalTitle>{selectedCard.card.name}</ModalTitle>
+          <ModalMessage>このカードを交換に出しますか？</ModalMessage>
+          <ButtonGroup>
+            <ConfirmButton onClick={handleProposeExchange}>はい</ConfirmButton>
+            <CancelButton onClick={() => setIsModalOpen(false)}>いいえ</CancelButton>
+          </ButtonGroup>
+        </ModalContent>
+      </ExchangeSuperModal> : null}
     </Container>
   );
 };

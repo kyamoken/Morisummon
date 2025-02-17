@@ -178,7 +178,7 @@ CHANNEL_LAYERS = {
     'default': channel_layer_defaults[env.str('CHANNEL_LAYER', 'memory')],
 }
 
-MORISUMMON_DECK_SIZE = 5 # デッキのサイズ
+MORISUMMON_DECK_SIZE = 12 # デッキのサイズ
 
 AUTH_USER_MODEL = 'accounts.User'
 

@@ -65,7 +65,7 @@ const Gacha: React.FC = () => {
           <Modal>
             <CardContainer>
               {result.map((card, index) => (
-                <Card key={index} delay={index * 0.5}>
+                <Card key={index} delay={index * 0.3}>
                   {card.image ? (
                     <CardImage src={card.image} alt={card.name} />
                   ) : (
@@ -82,8 +82,12 @@ const Gacha: React.FC = () => {
   );
 };
 
+export default Gacha;
+
+/* ------------------ Styled Components ------------------ */
+
 const GachaContainer = styled.div`
-  position: relative; /* BubblesBackgroundの絶対配置の基準 */
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -111,7 +115,7 @@ const GachaContainer = styled.div`
 
 const Content = styled.div`
   position: relative;
-  z-index: 1; /* 背景バブルより前面に表示 */
+  z-index: 1;
   text-align: center;
   margin: 0 auto;
   display: flex;
@@ -140,7 +144,7 @@ const ArrowButton = styled.button`
 `;
 
 const PackIcon = styled.img`
-  width: 250px;  /* サイズを大きく */
+  width: 250px;
   height: 250px;
   object-fit: contain;
   border-radius: 10px;
@@ -179,19 +183,23 @@ const Modal = styled.div`
   position: fixed;
 `;
 
-const fadeIn = keyframes`
-  from {
+/* ★ カード登場用の派手なポップアップアニメーション ★ */
+const cardPop = keyframes`
+  0% {
     opacity: 0;
-    transform: translateY(20px);
+    transform: scale(0.5) rotate(-15deg);
   }
-  to {
+  50% {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1.3) rotate(10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
   }
 `;
 
 const CardContainer = styled.div`
-  animation: ${fadeIn} 0.5s ease-in-out;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -210,7 +218,7 @@ const Card = styled.div<{ delay: number }>`
   overflow: hidden;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   opacity: 0;
-  animation: ${fadeIn} 0.5s ease-in-out forwards;
+  animation: ${cardPop} 0.8s ease-out forwards;
   animation-delay: ${({ delay }) => delay}s;
 `;
 
@@ -240,5 +248,3 @@ const CloseButton = styled.button`
     background-color: var(--button-hover);
   }
 `;
-
-export default Gacha;
