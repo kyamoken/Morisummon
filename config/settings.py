@@ -234,10 +234,12 @@ MONGO_HOST = 'mongodb://' + env.str('MONGO_HOST', 'localhost') + ':' + env.str('
 MONGO_DATABASE = env.str('MONGO_DATABASE', 'morisummon')
 MONGO_USERNAME = env.str('MONGO_USERNAME', '')
 MONGO_PASSWORD = env.str('MONGO_PASSWORD', '')
+MONGO_TIMEOUT = env.int('MONGO_TIMEOUT', 5000)
 
 mongoengine.connect(
     db=MONGO_DATABASE,
     host=MONGO_HOST,
     username=MONGO_USERNAME,
     password=MONGO_PASSWORD,
+    timeoutms=MONGO_TIMEOUT,
 )
