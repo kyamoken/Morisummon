@@ -71,8 +71,10 @@ class BattleRoom(Document):
     player1 = EmbeddedDocumentField(PlayerSet)
     player2 = EmbeddedDocumentField(PlayerSet, null=True)
 
+    player_map = DictField(default={})
+
     turn = IntField(default=1)
-    player_turn = IntField(default=1, min_value=1, max_value=2)
+    turn_player_id = StringField(null=True)
     winner = StringField(null=True)
 
     created_at = DateTimeField(default=datetime.datetime.now)

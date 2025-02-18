@@ -3,12 +3,17 @@ import logging
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 from accounts.models import User
+from battle.consumers.mixins.actions_battle_mixin import BattleActionsMixin
+from battle.consumers.mixins.actions_preparing_mixin import BattlePreparingActionsMixin
+from battle.consumers.mixins.db_mixin import BattleDBMixin
+from battle.consumers.mixins.event_mixin import BattleEventMixin
+from battle.consumers.mixins.helpers_mixin import BattleHelpersMixin
 from battle.models import BattleRoom
 from .mixins import *
 
 logger = logging.getLogger(__name__)
 
-class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin, BattleHelpersMixin):
+class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin, BattleHelpersMixin, BattleActionsMixin, BattlePreparingActionsMixin):
     room_id: str
     room_slug: str
     user: User | AnonymousUser = None
@@ -83,3 +88,5 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
                     "message": content.get("message")
                 }
             )
+        elif request_type == "action.pass":
+            await self._action_pass_turn()
