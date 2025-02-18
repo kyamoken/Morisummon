@@ -20,9 +20,9 @@ const BubblesBackground: React.FC = () => {
       {bubbles.map((bubble, index) => (
         <Bubble
           key={index}
-          left={bubble.left}
-          size={bubble.size}
-          delay={bubble.delay}
+          $left={bubble.left}
+          $size={bubble.size}
+          $delay={bubble.delay}
         />
       ))}
     </Container>
@@ -47,14 +47,14 @@ const rise = keyframes`
   100% { transform: translateY(-120vh) scale(0.5); opacity: 0; }
 `;
 
-const Bubble = styled.div<{ left: number; size: number; delay: number }>`
+const Bubble = styled.div<{ $left: number; $size: number; $delay: number }>`
   position: absolute;
   bottom: -150px;
-  left: ${({ left }) => left}%;
-  width: ${({ size }) => size}px;
-  height: ${({ size }) => size}px;
+  left: ${({ $left }) => $left}%;
+  width: ${({ $size }) => $size}px;
+  height: ${({ $size }) => $size}px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   animation: ${rise} 10s linear infinite;
-  animation-delay: ${({ delay }) => delay}s;
+  animation-delay: ${({ $delay }) => $delay}s;
 `;
