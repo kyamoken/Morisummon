@@ -5,7 +5,7 @@ import Matching from './Matching';
 import Disconnected from './Disconnected';
 import toast from 'react-hot-toast';
 import { WebSocketHook } from 'react-use-websocket/dist/lib/types';
-// import PlayerTurnOverlay from './PlayerTurnOverlay';
+import BattleTurnEndModal from '@/components/BattleComponents/battleTurnEndModal';
 
 type PlayerInfo = {
   _id: string;
@@ -33,7 +33,6 @@ type WebSocketMessage = {
 } | {
   type: "battle.turn.change";
   target: "player" | "opponent";
-  // data: BattleDetails;
 } | {
   type: "chat.message";
   user: {
@@ -58,12 +57,11 @@ type Props = {
 
 const BattleMainFrame = ({ websocket }: Props) => {
   const { sendJsonMessage, lastJsonMessage, readyState, getWebSocket } = websocket;
-
   const [battleDetails, setBattleDetails] = useState<BattleDetails | null>(null);
+  const [isTurnEndModalOpen, setIsTurnEndModalOpen] = useState(false);
 
   useEffect(() => {
     window.addEventListener('beforeunload', handleWindowUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleWindowUnload);
     };
@@ -73,15 +71,10 @@ const BattleMainFrame = ({ websocket }: Props) => {
     if (battleDetails?.status !== 'progress') {
       return;
     }
-
     if (battleDetails?.turn_player_id === battleDetails?.you.info._id) {
-      toast(`あなたのターンです`, {
-        icon: '🔥'
-      });
+      toast(`あなたのターンです`, { icon: '🔥' });
     } else {
-      toast(`相手のターンです`, {
-        icon: '🔥'
-      });
+      toast(`相手のターンです`, { icon: '🔥' });
     }
   }, [battleDetails?.status, battleDetails?.turn_player_id]);
 
@@ -94,20 +87,18 @@ const BattleMainFrame = ({ websocket }: Props) => {
         toast((
           <div>
             <div>{data.message}</div>
-            <div style={{ fontSize: "80%", color: "gray", textAlign: "right" }}>By {data.user?.name}</div>
+            <div style={{ fontSize: "80%", color: "gray", textAlign: "right" }}>
+              By {data.user?.name}
+            </div>
           </div>
-        ), {
-          icon: '💬'
-        });
+        ), { icon: '💬' });
       },
       'error': (data: any) => {
         toast.error(data.message);
         getWebSocket()?.close();
       },
       'warning': (data: any) => {
-        toast(data.message, {
-          icon: '⚠️'
-        });
+        toast(data.message, { icon: '⚠️' });
       }
     };
 
@@ -123,21 +114,15 @@ const BattleMainFrame = ({ websocket }: Props) => {
   }, [lastJsonMessage]);
 
   if (readyState === ReadyState.CONNECTING) {
-    return (
-      <Matching message="サーバーに接続中..." />
-    );
+    return <Matching message="サーバーに接続中..." />;
   }
 
   if (readyState !== ReadyState.OPEN) {
-    return (
-      <Disconnected message="切断されました" />
-    );
+    return <Disconnected message="切断されました" />;
   }
 
   if (lastJsonMessage === null || battleDetails?.status === 'waiting' || !battleDetails?.opponent) {
-    return (
-      <Matching message="対戦相手をさがしています..." />
-    );
+    return <Matching message="対戦相手をさがしています..." />;
   }
 
   const sendMessage = (message: string) => {
@@ -163,8 +148,23 @@ const BattleMainFrame = ({ websocket }: Props) => {
       }
       return;
     }
-
     sendJsonMessage({ type: cmd });
+  };
+
+  // ターン終了ボタンが押されたときはモーダルを表示
+  const handleEndTurn = () => {
+    setIsTurnEndModalOpen(true);
+  };
+
+  // モーダル内で「終了する」が押されたときの処理
+  const confirmEndTurn = () => {
+    sendJsonMessage({ type: 'action.end_turn', forced: false });
+    setIsTurnEndModalOpen(false);
+  };
+
+  // モーダル内で「キャンセル」が押されたときの処理
+  const cancelEndTurn = () => {
+    setIsTurnEndModalOpen(false);
   };
 
   return (
@@ -192,6 +192,9 @@ const BattleMainFrame = ({ websocket }: Props) => {
           <button onClick={() => handleAction('attack')}>攻撃</button>
           <button onClick={() => handleAction('heal')}>回復</button>
           <button onClick={() => handleAction('defend')}>防御</button>
+          {battleDetails?.turn_player_id === battleDetails?.you.info._id && ( // 自分のターンのときだけ表示
+            <button onClick={handleEndTurn}>ターン終了</button>
+          )}
         </ActionButtons>
         <HandCards>
           <p>手札: カード1, カード2, カード3</p>
@@ -219,6 +222,12 @@ const BattleMainFrame = ({ websocket }: Props) => {
           </Bench>
         </BattleArea>
       </BattleContainer>
+      {/* モーダルの表示 */}
+      <BattleTurnEndModal
+        isOpen={isTurnEndModalOpen}
+        onConfirm={confirmEndTurn}
+        onCancel={cancelEndTurn}
+      />
     </>
   );
 };
@@ -258,7 +267,6 @@ const ActionButtons = styled.div`
   grid-area: action-buttons;
   align-self: end;
   text-align: right;
-
   button {
     margin: 0 5px;
   }
@@ -299,7 +307,6 @@ const Card = styled.div`
   align-items: center;
   justify-content: center;
   margin: 0 5px;
-
   &.empty {
     background-color: transparent;
     border: none;

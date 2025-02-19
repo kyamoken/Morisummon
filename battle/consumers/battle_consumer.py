@@ -90,3 +90,8 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
             )
         elif request_type == "action.pass":
             await self._action_pass_turn()
+        elif request_type == "action.end_turn":
+            # フロント側から forced フラグを渡すことで、
+            # 将来的に攻撃後の自動終了処理と区別できるようにしておく
+            forced = content.get("forced", False)
+            await self._action_end_turn(forced)

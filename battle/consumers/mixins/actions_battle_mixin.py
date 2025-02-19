@@ -9,13 +9,29 @@ from .base import BaseMixin
 logger = logging.getLogger(__name__)
 
 class BattleActionsMixin(BaseMixin):
-    async def _action_pass_turn(self):
-        room: BattleRoom | None = await self.get_room()
+    async def _end_turn(self):
+        """
+        共通のターン終了処理。
+        現在のプレイヤーから相手にターンを渡し、更新通知を送信する。
+        """
+        room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
 
-        logger.debug(f"Player {player.info.id}, Opponent {opponent.info.id}, Current {room.turn_player_id}")
+        # ターンを相手に渡す
+        room.turn_player_id = opponent.info.id
+        await self.save_room(room)
+        await self._send_battle_update()
+
+    async def _action_pass_turn(self):
+        """
+        現在は手動で「pass」コマンドが入力された場合のターン終了処理。
+        """
+        room: BattleRoom = await self.get_room()
+        user = await self.get_user()
+        player = self.get_player(room, user)
+        opponent = self.get_opponent(room, user)
 
         if room.turn_player_id != str(player.info.id):
             await self.send_json({
@@ -24,11 +40,28 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        logger.debug(f"User {player.info.id} is passing the turn")
+        logger.debug(f"Player {player.info.id} is passing the turn")
+        await self._end_turn()
 
-        room.turn_player_id = opponent.info.id
+    async def _action_end_turn(self, forced: bool = False):
+        """
+        任意のタイミングでターンを終了するアクション。
+        forced が True の場合、攻撃後など強制的なターン終了として利用できる想定。
+        （現状は forced の値に関わらず同じ処理ですが、将来的に条件分岐など追加可能）
+        """
+        room: BattleRoom = await self.get_room()
+        user = await self.get_user()
+        player = self.get_player(room, user)
+        opponent = self.get_opponent(room, user)
 
-        await self.save_room(room)
+        if room.turn_player_id != str(player.info.id):
+            await self.send_json({
+                "type": "warning",
+                "message": "現在相手のターンです"
+            })
+            return
 
-        await self._send_battle_update()
+        logger.debug(f"Player {player.info.id} is ending turn {'forcibly' if forced else 'voluntarily'}")
+        # forced が True の場合に追加処理を実装することも可能
+        await self._end_turn()
 
