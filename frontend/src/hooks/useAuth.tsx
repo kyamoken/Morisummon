@@ -15,8 +15,9 @@ export default function useAuth() {
     await ky.post('/api/auth/logout/');
 
     if (redirectTo) {
-      navigate(redirectTo);
       await mutate('/api/auth/me/', null);
+      navigate(redirectTo);
+    //   なんかおかしいよこれなんで逆だと動くんだろうね
     }
   }
 

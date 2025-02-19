@@ -358,7 +358,7 @@ const FriendsContainer = styled.div`
 
 const HeaderWrapper = styled.div`
   position: relative;
-  z-index: 10;
+  z-index: 998;
 `;
 
 const ContentWrapper = styled.div`
