@@ -13,14 +13,25 @@ class BattleActionsMixin(BaseMixin):
         """
         共通のターン終了処理。
         現在のプレイヤーから相手にターンを渡し、更新通知を送信する。
+        ※ターン終了時に、相手のエネルギーを1追加する処理を実装
         """
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
 
+        # 相手のエネルギーを1追加する
+        opponent.status.energy = 1
+
+        # 埋め込みドキュメントの変更を検知させるために、埋め込みフィールドを再代入する
+        if room.player1.info.id == opponent.info.id:
+            room.player1.status = opponent.status
+        else:
+            room.player2.status = opponent.status
+
         # ターンを相手に渡す
         room.turn_player_id = opponent.info.id
+
         await self.save_room(room)
         await self._send_battle_update()
 
@@ -62,6 +73,4 @@ class BattleActionsMixin(BaseMixin):
             return
 
         logger.debug(f"Player {player.info.id} is ending turn {'forcibly' if forced else 'voluntarily'}")
-        # forced が True の場合に追加処理を実装することも可能
         await self._end_turn()
-

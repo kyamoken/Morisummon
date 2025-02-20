@@ -8,12 +8,14 @@ from battle.consumers.mixins.actions_preparing_mixin import BattlePreparingActio
 from battle.consumers.mixins.db_mixin import BattleDBMixin
 from battle.consumers.mixins.event_mixin import BattleEventMixin
 from battle.consumers.mixins.helpers_mixin import BattleHelpersMixin
+from battle.consumers.mixins.actions_energy_mixin import BattleEnergyMixin
 from battle.models import BattleRoom
 from .mixins import *
 
+
 logger = logging.getLogger(__name__)
 
-class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin, BattleHelpersMixin, BattleActionsMixin, BattlePreparingActionsMixin):
+class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin, BattleHelpersMixin, BattleActionsMixin, BattlePreparingActionsMixin, BattleEnergyMixin):
     room_id: str
     room_slug: str
     user: User | AnonymousUser = None
@@ -95,3 +97,7 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
             # 将来的に攻撃後の自動終了処理と区別できるようにしておく
             forced = content.get("forced", False)
             await self._action_end_turn(forced)
+        elif request_type == "action.assign_energy":
+            # クライアント側から card_id を渡す前提
+            card_id = content.get("card_id")
+            await self._action_assign_energy(card_id)

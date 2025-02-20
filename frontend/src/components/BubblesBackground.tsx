@@ -57,4 +57,5 @@ const Bubble = styled.div<{ $left: number; $size: number; $delay: number }>`
   border-radius: 50%;
   animation: ${rise} 10s linear infinite;
   animation-delay: ${({ $delay }) => $delay}s;
+  filter: blur(2px);
 `;

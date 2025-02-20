@@ -45,6 +45,7 @@ class BattlePlayerStatus(EmbeddedDocument):
     _deck_cards = ListField(EmbeddedDocumentField(BattleCardInfo), default=[])
 
     life = IntField(default=2)
+    energy = IntField(default=0)
 
 class PlayerSet(EmbeddedDocument):
     info = EmbeddedDocumentField(BattlePlayerInfo)
