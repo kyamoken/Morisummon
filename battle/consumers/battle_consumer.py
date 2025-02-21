@@ -101,3 +101,9 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
             # クライアント側から card_id を渡す前提
             card_id = content.get("card_id")
             await self._action_assign_energy(card_id)
+        elif request_type == "action.place_card":
+            card_index = content.get("card_index")
+            to_field = content.get("to_field")
+            await self._action_place_card(card_index, to_field)
+        elif request_type == "action.setup_complete":
+            await self._action_setup_complete()

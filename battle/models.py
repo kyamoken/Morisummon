@@ -35,7 +35,7 @@ class BattlePlayerStatus(EmbeddedDocument):
 
     # ベンチ
     bench_cards = ListField(EmbeddedDocumentField(BattleCardInfo), default=[])
-    bench_cards_max = IntField(default=5)
+    bench_cards_max = IntField(default=2)
 
     # 手札
     _hand_cards = ListField(EmbeddedDocumentField(BattleCardInfo), default=[])
@@ -46,10 +46,13 @@ class BattlePlayerStatus(EmbeddedDocument):
 
     life = IntField(default=2)
     energy = IntField(default=0)
+    setup_done = BooleanField(default=False)
+
 
 class PlayerSet(EmbeddedDocument):
     info = EmbeddedDocumentField(BattlePlayerInfo)
     status = EmbeddedDocumentField(BattlePlayerStatus)
+
 
 class BattleRoomType(Enum):
     PUBLIC = 'public'
@@ -58,6 +61,7 @@ class BattleRoomType(Enum):
 
 class BattleRoomStatus(Enum):
     WAITING = 'waiting'
+    SETUP = 'setup'
     IN_PROGRESS = 'progress'
     FINISHED = 'finished'
 

@@ -40,7 +40,12 @@ class BattleHelpersMixin(BaseMixin):
         dictutil.delete(data, "player1")
         dictutil.delete(data, "player2")
 
-        # 非公開情報を削除
+        # 自分の手札情報を内部フィールド _hand_cards から hand_cards にコピー
+        your_status = data["you"]["status"]
+        your_status["hand_cards"] = your_status.get("_hand_cards", [])
+        dictutil.delete(data, "you.status._hand_cards")
+
+        # 相手の非公開情報は削除
         dictutil.delete(data, "you.status.private")
         dictutil.delete(data, "opponent.status.private")
         dictutil.delete(data, "opponent.status.hand_cards")
