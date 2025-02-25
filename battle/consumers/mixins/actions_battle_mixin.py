@@ -12,18 +12,17 @@ class BattleActionsMixin(BaseMixin):
     async def _end_turn(self):
         """
         共通のターン終了処理。
-        現在のプレイヤーから相手にターンを渡し、更新通知を送信する。
-        ※ターン終了時に、相手のエネルギーを1追加する処理を実装
+        現在のプレイヤーから相手にターンを渡し、相手のターンを開始する。
         """
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
 
-        # 相手のエネルギーを1追加する
+        # 相手のエネルギーを1追加する例
         opponent.status.energy = 1
 
-        # 埋め込みドキュメントの変更を検知させるために、埋め込みフィールドを再代入する
+        # 埋め込みドキュメントの変更を検知させるための再代入
         if room.player1.info.id == opponent.info.id:
             room.player1.status = opponent.status
         else:
@@ -32,17 +31,22 @@ class BattleActionsMixin(BaseMixin):
         # ターンを相手に渡す
         room.turn_player_id = opponent.info.id
 
+        # ルームを保存
         await self.save_room(room)
+
+        # ここで相手のターンを開始（カードを1枚ドロー）
+        await self._start_new_turn(room, opponent)
+
+        # 最後に全体更新を送る
         await self._send_battle_update()
 
     async def _action_pass_turn(self):
         """
-        現在は手動で「pass」コマンドが入力された場合のターン終了処理。
+        手動で「pass」コマンドが入力された場合のターン終了処理。
         """
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
-        opponent = self.get_opponent(room, user)
 
         if room.turn_player_id != str(player.info.id):
             await self.send_json({
@@ -58,12 +62,10 @@ class BattleActionsMixin(BaseMixin):
         """
         任意のタイミングでターンを終了するアクション。
         forced が True の場合、攻撃後など強制的なターン終了として利用できる想定。
-        （現状は forced の値に関わらず同じ処理ですが、将来的に条件分岐など追加可能）
         """
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
-        opponent = self.get_opponent(room, user)
 
         if room.turn_player_id != str(player.info.id):
             await self.send_json({
@@ -74,3 +76,30 @@ class BattleActionsMixin(BaseMixin):
 
         logger.debug(f"Player {player.info.id} is ending turn {'forcibly' if forced else 'voluntarily'}")
         await self._end_turn()
+
+    # ▼▼▼ ここから追加 ▼▼▼
+    async def _start_new_turn(self, room: BattleRoom, next_player: PlayerSet):
+        """
+        ターン開始時の処理：カードを1枚ドローする
+        """
+        self._draw_cards(next_player, 1)
+        await self.save_room(room)
+        await self._send_battle_update()
+
+    def _draw_cards(self, player: PlayerSet, count: int = 1):
+        """
+        山札 (_deck_cards) から指定枚数ドローし、手札 (_hand_cards) に加える
+        """
+        if not player.status._deck_cards:
+            return
+        if not player.status._hand_cards:
+            player.status._hand_cards = []
+
+        for _ in range(count):
+            if not player.status._deck_cards:
+                break
+            card = player.status._deck_cards.pop(0)
+            player.status._hand_cards.append(card)
+
+        player.status.hand_cards_count = len(player.status._hand_cards)
+    # ▲▲▲ ここまで追加 ▲▲▲

@@ -23,6 +23,7 @@ type CardInfo = {
   name?: string;
   image?: string;
   energy?: number;
+  placeholder?: string; // バックエンドから { placeholder: "配置済" } として送られる
 };
 
 type PlayerStatus = {
@@ -30,9 +31,11 @@ type PlayerStatus = {
   battle_card: CardInfo | null;
   bench_cards: CardInfo[];
   energy: number;
-  hand_cards: CardInfo[];
-  bench_cards_max?: number; // サーバーから送信される最大ベンチ数
-  setup_done?: boolean;     // 準備完了状態（サーバー側で設定）
+  hand_cards: CardInfo[]; // 自分用（詳細表示用）
+  bench_cards_max?: number;
+  setup_done?: boolean;
+  hand_cards_count?: number;
+  _hand_cards?: CardInfo[]; // バックエンド内部用
 };
 
 type BattleDetails = {
@@ -59,8 +62,23 @@ const BattleMainFrame = ({ websocket }: Props) => {
   const [battleDetails, setBattleDetails] = useState<BattleDetails | null>(null);
   const [isTurnEndModalOpen, setIsTurnEndModalOpen] = useState(false);
   const [turnOwner, setTurnOwner] = useState<"player" | "opponent" | null>(null);
-  // セットアップフェーズ用：手札から選択中のカードのインデックス
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
+
+  // handleCommand を定義（コマンド入力用）
+  const handleCommand = () => {
+    const cmd = window.prompt('Command?');
+    if (cmd?.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(cmd);
+        sendJsonMessage(parsed);
+      } catch (e) {
+        console.error(e);
+        return;
+      }
+      return;
+    }
+    sendJsonMessage({ type: cmd });
+  };
 
   useEffect(() => {
     window.addEventListener('beforeunload', handleWindowUnload);
@@ -100,7 +118,7 @@ const BattleMainFrame = ({ websocket }: Props) => {
     }
   }, [lastJsonMessage]);
 
-  // 戦闘中の場合のターンチェンジ処理
+  // 戦闘フェーズの場合、ターン変更の処理
   useEffect(() => {
     if (!battleDetails || battleDetails.status !== 'progress') return;
     setTurnOwner(
@@ -118,43 +136,56 @@ const BattleMainFrame = ({ websocket }: Props) => {
     return <Matching message="対戦相手をさがしています..." />;
   }
 
-  const sendMessage = (message: string) => {
-    sendJsonMessage({ type: 'chat.message', message });
-  };
-  const handleAction = (action: string) => {
-    sendJsonMessage({ action });
-  };
-  const handleCommand = () => {
-    const cmd = window.prompt('Command?');
-    if (cmd?.startsWith('{')) {
-      try {
-        const parsed = JSON.parse(cmd);
-        sendJsonMessage(parsed);
-      } catch (e) {
-        console.error(e);
-        return;
-      }
-      return;
+  // 相手の場情報のレンダリング関数
+  const renderOpponentBattleCard = () => {
+    const oppCard = battleDetails.opponent?.status?.battle_card;
+    if (!oppCard) return <EmptyArea>未配置</EmptyArea>;
+    if (oppCard.placeholder) {
+      return <Card>{oppCard.placeholder}</Card>;
     }
-    sendJsonMessage({ type: cmd });
+    return (
+      <Card>
+        {oppCard.image && <img src={oppCard.image} alt={oppCard.name} />}
+        <span>{oppCard.name}</span>
+        <span>{oppCard.energy ? `(${oppCard.energy})` : ''}</span>
+      </Card>
+    );
   };
 
-  const handleEndTurn = () => {
-    setIsTurnEndModalOpen(true);
-  };
-  const confirmEndTurn = () => {
-    sendJsonMessage({ type: 'action.end_turn', forced: false });
-    setIsTurnEndModalOpen(false);
-  };
-  const cancelEndTurn = () => {
-    setIsTurnEndModalOpen(false);
+  const renderOpponentBenchArea = () => {
+    const benchCards = battleDetails.opponent?.status?.bench_cards || [];
+    const maxBench = battleDetails.opponent?.status?.bench_cards_max || 2;
+    const benchSlots = Array.from({ length: maxBench }, (_, i) => benchCards[i] || null);
+    return (
+      <AreaBox>
+        {benchSlots.map((card, index) => (
+          <BenchSlot key={`opp-bench-${index}`}>
+            {card ? (
+              card.placeholder ? (
+                <Card>{card.placeholder}</Card>
+              ) : (
+                <Card>
+                  {card.image && <img src={card.image} alt={card.name} />}
+                  <span>{card.name}</span>
+                  <span>{card.energy ? `(${card.energy})` : ''}</span>
+                </Card>
+              )
+            ) : (
+              <EmptyArea>空</EmptyArea>
+            )}
+          </BenchSlot>
+        ))}
+      </AreaBox>
+    );
   };
 
-  const handleAssignEnergy = (cardId: string) => {
-    sendJsonMessage({ type: 'action.assign_energy', card_id: cardId });
+  const renderOpponentHandCount = () => {
+    const oppStatus = battleDetails.opponent?.status || {};
+    const count = oppStatus.hand_cards_count ?? oppStatus._hand_cards?.length ?? 0;
+    return <div>手札: {count}枚</div>;
   };
 
-  // 手札のカードはカード名で表示
+  // 自分の場情報のレンダリング関数
   const renderHandCards = () => {
     const handCards = battleDetails.you.status.hand_cards || [];
     return handCards.map((card, index) => (
@@ -168,7 +199,6 @@ const BattleMainFrame = ({ websocket }: Props) => {
     ));
   };
 
-  // メインエリア：空の場合、選択中の手札カードを配置するリクエストを送信
   const renderMainArea = () => {
     const mainCard = battleDetails.you.status.battle_card;
     return (
@@ -196,7 +226,6 @@ const BattleMainFrame = ({ websocket }: Props) => {
     );
   };
 
-  // ベンチエリア：サーバーからの bench_cards_max を利用して各スロットをレンダリング
   const renderBenchArea = () => {
     const benchCards = battleDetails.you.status.bench_cards || [];
     const maxBench = battleDetails.you.status.bench_cards_max || 2;
@@ -232,8 +261,6 @@ const BattleMainFrame = ({ websocket }: Props) => {
     );
   };
 
-  // 準備完了ボタン：メインカード配置済みの場合のみ有効
-  // すでに setup_done が true なら「準備完了待機中」と表示し、ボタンを無効化
   const renderReadyButton = () => {
     if (!battleDetails.you.status.battle_card) return null;
     if (battleDetails.you.status.setup_done) {
@@ -250,22 +277,19 @@ const BattleMainFrame = ({ websocket }: Props) => {
     <>
       <PlayerTurnOverlay target={turnOwner} />
       <div className="global-style" />
-      <div style={{ position: 'fixed', top: '10px', right: '10px', fontSize: '80%' }}>
-        {JSON.stringify(battleDetails)}
-      </div>
       <BattleContainer>
         <OpponentInfo>
-          <p>相手の名前: {battleDetails.opponent.info.name}</p>
-          <p>残りHP: {battleDetails.opponent.status.life}</p>
+          <p>相手の名前: {battleDetails.opponent?.info?.name}</p>
+          <p>残りHP: {battleDetails.opponent?.status?.life}</p>
         </OpponentInfo>
         <TurnInfo>
           <p>ターン: {battleDetails.turn}</p>
           <p>現在プレイヤー: {battleDetails.turn_player_id}</p>
         </TurnInfo>
         <PlayerInfo>
-          <p>自分の名前: {battleDetails.you.info.name}</p>
-          <p>残りHP: {battleDetails.you.status.life}</p>
-          <p>利用可能エネルギー: {battleDetails.you.status.energy}</p>
+          <p>自分の名前: {battleDetails.you?.info?.name}</p>
+          <p>残りHP: {battleDetails.you?.status?.life}</p>
+          <p>利用可能エネルギー: {battleDetails.you?.status?.energy}</p>
         </PlayerInfo>
         <ActionButtons>
           <button onClick={handleCommand}>Cmd</button>
@@ -275,10 +299,11 @@ const BattleMainFrame = ({ websocket }: Props) => {
           <button onClick={() => handleAction('defend')}>防御</button>
           <button onClick={() => handleAction('attack')}>攻撃</button>
           <button onClick={() => handleAction('heal')}>回復</button>
-          {battleDetails.turn_player_id === battleDetails.you.info._id && (
-            <button onClick={handleEndTurn}>ターン終了</button>
+          {battleDetails.turn_player_id === battleDetails.you?.info?._id && (
+            <button onClick={() => setIsTurnEndModalOpen(true)}>ターン終了</button>
           )}
         </ActionButtons>
+
         {battleDetails.status === 'setup' && (
           <SetupSection>
             <HandCards>
@@ -298,17 +323,50 @@ const BattleMainFrame = ({ websocket }: Props) => {
             {renderReadyButton()}
           </SetupSection>
         )}
+
         {battleDetails.status !== 'setup' && (
           <BattleArea>
-            <Bench>{/* 戦闘中のベンチ表示 */}</Bench>
-            <MainArea>{/* 戦闘中のメインカード表示 */}</MainArea>
+            <OpponentField>
+              <h3>相手の場</h3>
+              <Field>
+                <FieldColumn>
+                  <h4>メインエリア</h4>
+                  {renderOpponentBattleCard()}
+                </FieldColumn>
+                <FieldColumn>
+                  <h4>ベンチ</h4>
+                  {renderOpponentBenchArea()}
+                </FieldColumn>
+              </Field>
+              {renderOpponentHandCount()}
+            </OpponentField>
+            <PlayerField>
+              <h3>自分の場</h3>
+              <Field>
+                <FieldColumn>
+                  <h4>メインエリア</h4>
+                  {renderMainArea()}
+                </FieldColumn>
+                <FieldColumn>
+                  <h4>ベンチ</h4>
+                  {renderBenchArea()}
+                </FieldColumn>
+              </Field>
+              <div>
+                <h4>手札</h4>
+                <HandCardsContainer>{renderHandCards()}</HandCardsContainer>
+              </div>
+            </PlayerField>
           </BattleArea>
         )}
       </BattleContainer>
       <BattleTurnEndModal
         isOpen={isTurnEndModalOpen}
-        onConfirm={confirmEndTurn}
-        onCancel={cancelEndTurn}
+        onConfirm={() => {
+          sendJsonMessage({ type: 'action.end_turn', forced: false });
+          setIsTurnEndModalOpen(false);
+        }}
+        onCancel={() => setIsTurnEndModalOpen(false)}
       />
     </>
   );
@@ -385,11 +443,22 @@ const FieldColumn = styled.div`
 `;
 
 const BattleArea = styled.div`
-  grid-area: battle-area;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+`;
+
+const OpponentField = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+`;
+
+const PlayerField = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const Bench = styled.div`
@@ -418,6 +487,12 @@ const Card = styled.div`
   &.empty {
     background-color: transparent;
     border: none;
+  }
+  /* 画像をカードサイズに合わせる */
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
   }
 `;
 

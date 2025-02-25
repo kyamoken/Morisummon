@@ -1,12 +1,20 @@
+# battle/consumers/mixins/helpers_mixin.py
+
 import json
 from ulid import ULID
 from channels.db import database_sync_to_async
 from morisummon.utils import dictutil
-from battle.models import BattleRoom, PlayerSet, BattlePlayerInfo, BattlePlayerStatus
+from battle.models import BattleRoom, PlayerSet, BattlePlayerInfo, BattlePlayerStatus, BattleRoomStatus
 from .base import BaseMixin
 
 class BattleHelpersMixin(BaseMixin):
-    """ データフォーマットなどの便利関数をまとめたMixin """
+    """
+    BattleHelpersMixin
+    ・BattleRoom の情報を JSON 化し、各プレイヤー用に整形して送信する。
+    ・セットアップフェーズでは、相手の配置済みカード情報は { "placeholder": "配置済" } に置き換え、
+      手札は枚数のみを表示する。
+    ・対戦フェーズ（IN_PROGRESS）では、相手のカード情報はそのまま詳細を公開する。
+    """
 
     async def _set_player_connection_status(self, room: BattleRoom, is_connected: bool) -> None:
         """プレイヤーの接続状態を更新する"""
@@ -29,7 +37,13 @@ class BattleHelpersMixin(BaseMixin):
     def _format_battle_status(self, room: BattleRoom, user_set: PlayerSet) -> dict:
         data = json.loads(room.to_json())
 
-        # player1, player2 を you, opponent に変更
+        # 対戦相手が存在しない場合、部屋の状態を "waiting" にして opponent を None に設定する
+        if not room.player2:
+            data["status"] = "waiting"
+            data["opponent"] = None
+            return data
+
+        # 自分と相手の情報を入れ替える
         if room.player1.info.id == user_set.info.id:
             data["you"] = data["player1"]
             data["opponent"] = data["player2"]
@@ -40,16 +54,33 @@ class BattleHelpersMixin(BaseMixin):
         dictutil.delete(data, "player1")
         dictutil.delete(data, "player2")
 
-        # 自分の手札情報を内部フィールド _hand_cards から hand_cards にコピー
-        your_status = data["you"]["status"]
+        # ----- 自分側の情報 -----
+        your_status = data.get("you", {}).get("status", {})
+        # 自分は内部フィールド _hand_cards の詳細を hand_cards にコピーして表示する
         your_status["hand_cards"] = your_status.get("_hand_cards", [])
-        dictutil.delete(data, "you.status._hand_cards")
+        if "status" in data.get("you", {}):
+            dictutil.delete(data["you"]["status"], "_hand_cards")
 
-        # 相手の非公開情報は削除
-        dictutil.delete(data, "you.status.private")
-        dictutil.delete(data, "opponent.status.private")
-        dictutil.delete(data, "opponent.status.hand_cards")
-        dictutil.delete(data, "opponent.status._deck_cards")
+        # ----- 相手側の情報 -----
+        const_opponent = data.get("opponent") or {}
+        const_opponent_status = const_opponent.get("status", {})
+        # 手札詳細は隠し、枚数のみ表示（hand_cards_count があれば利用、なければ _hand_cards の長さ）
+        const_opponent_status[
+            "hand_cards"] = f"{const_opponent_status.get('hand_cards_count', len(const_opponent_status.get('_hand_cards', [])))}枚"
+        dictutil.delete(const_opponent_status, "_deck_cards")
+        dictutil.delete(const_opponent_status, "private")
+
+        # 部屋の状態に応じた相手の配置済みカードの表示内容を制御
+        # セットアップフェーズの場合は詳細を伏せる（プレースホルダー表示）
+        if room.status in ["setup", "SETUP"] or (hasattr(room.status, "name") and room.status.name.lower() == "setup"):
+            if const_opponent_status.get("battle_card"):
+                const_opponent_status["battle_card"] = {"placeholder": "配置済"}
+            if const_opponent_status.get("bench_cards"):
+                new_bench = []
+                for card in const_opponent_status["bench_cards"]:
+                    new_bench.append({"placeholder": "配置済"} if card else None)
+                const_opponent_status["bench_cards"] = new_bench
+        # 対戦フェーズ（IN_PROGRESS）なら、相手の配置済みカード情報はそのまま公開
 
         return data
 
