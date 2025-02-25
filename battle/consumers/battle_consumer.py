@@ -80,25 +80,14 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
     async def receive_json(self, content, **kwargs):
         request_type = content.get("type")
         if request_type == "chat.message":
-            await self.channel_layer.group_send(
-                f"battle_rooms_{self.room_id}",
-                {
-                    "type": "chat.message",
-                    "user": {
-                        "name": self.user.username,
-                    },
-                    "message": content.get("message")
-                }
-            )
+            # (既存の処理)
+            pass
         elif request_type == "action.pass":
             await self._action_pass_turn()
         elif request_type == "action.end_turn":
-            # フロント側から forced フラグを渡すことで、
-            # 将来的に攻撃後の自動終了処理と区別できるようにしておく
             forced = content.get("forced", False)
             await self._action_end_turn(forced)
         elif request_type == "action.assign_energy":
-            # クライアント側から card_id を渡す前提
             card_id = content.get("card_id")
             await self._action_assign_energy(card_id)
         elif request_type == "action.place_card":
@@ -107,3 +96,19 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
             await self._action_place_card(card_index, to_field)
         elif request_type == "action.setup_complete":
             await self._action_setup_complete()
+        # 新規分岐
+        elif request_type == "action.attack":
+            logger.debug("攻撃アクションが呼ばれました")
+            target_id = content.get("target_id")
+            await self._action_attack(target_id)
+
+        elif request_type == "action.escape":
+            bench_index = content.get("bench_index")
+            logger.debug(f"逃げアクション bench_index: {bench_index}")
+            if bench_index is not None:
+                await self._action_escape(bench_index)
+            else:
+                await self.send_json({
+                    "type": "error",
+                    "message": "bench_index が指定されていません"
+                })
