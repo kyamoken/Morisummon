@@ -102,4 +102,5 @@ class BattleActionsMixin(BaseMixin):
             player.status._hand_cards.append(card)
 
         player.status.hand_cards_count = len(player.status._hand_cards)
-    # ▲▲▲ ここまで追加 ▲▲▲
+
+

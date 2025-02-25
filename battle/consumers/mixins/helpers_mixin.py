@@ -37,10 +37,10 @@ class BattleHelpersMixin(BaseMixin):
     def _format_battle_status(self, room: BattleRoom, user_set: PlayerSet) -> dict:
         data = json.loads(room.to_json())
 
-        # 対戦相手が存在しない場合、部屋の状態を "waiting" にして opponent を None に設定する
-        if not room.player2:
+        # opponent情報がない場合は waiting 状態にして opponent を空の辞書にする
+        if not data.get("player2"):
             data["status"] = "waiting"
-            data["opponent"] = None
+            data["opponent"] = {}
             return data
 
         # 自分と相手の情報を入れ替える
@@ -56,31 +56,29 @@ class BattleHelpersMixin(BaseMixin):
 
         # ----- 自分側の情報 -----
         your_status = data.get("you", {}).get("status", {})
-        # 自分は内部フィールド _hand_cards の詳細を hand_cards にコピーして表示する
         your_status["hand_cards"] = your_status.get("_hand_cards", [])
         if "status" in data.get("you", {}):
             dictutil.delete(data["you"]["status"], "_hand_cards")
 
         # ----- 相手側の情報 -----
-        const_opponent = data.get("opponent") or {}
-        const_opponent_status = const_opponent.get("status", {})
-        # 手札詳細は隠し、枚数のみ表示（hand_cards_count があれば利用、なければ _hand_cards の長さ）
-        const_opponent_status[
-            "hand_cards"] = f"{const_opponent_status.get('hand_cards_count', len(const_opponent_status.get('_hand_cards', [])))}枚"
-        dictutil.delete(const_opponent_status, "_deck_cards")
-        dictutil.delete(const_opponent_status, "private")
+        # ここで opponent は必ず空ではないと仮定できる
+        opponent = data.get("opponent") or {}
+        opponent_status = opponent.get("status", {})
+        # 手札詳細は隠して枚数のみ表示
+        hand_count = opponent_status.get("hand_cards_count", len(opponent_status.get("_hand_cards", [])))
+        opponent_status["hand_cards"] = f"{hand_count}枚"
+        dictutil.delete(opponent_status, "_deck_cards")
+        dictutil.delete(opponent_status, "private")
 
-        # 部屋の状態に応じた相手の配置済みカードの表示内容を制御
-        # セットアップフェーズの場合は詳細を伏せる（プレースホルダー表示）
+        # セットアップフェーズの場合、相手の配置済みカード情報を伏せる
         if room.status in ["setup", "SETUP"] or (hasattr(room.status, "name") and room.status.name.lower() == "setup"):
-            if const_opponent_status.get("battle_card"):
-                const_opponent_status["battle_card"] = {"placeholder": "配置済"}
-            if const_opponent_status.get("bench_cards"):
+            if opponent_status.get("battle_card"):
+                opponent_status["battle_card"] = {"placeholder": "配置済"}
+            if opponent_status.get("bench_cards"):
                 new_bench = []
-                for card in const_opponent_status["bench_cards"]:
+                for card in opponent_status["bench_cards"]:
                     new_bench.append({"placeholder": "配置済"} if card else None)
-                const_opponent_status["bench_cards"] = new_bench
-        # 対戦フェーズ（IN_PROGRESS）なら、相手の配置済みカード情報はそのまま公開
+                opponent_status["bench_cards"] = new_bench
 
         return data
 

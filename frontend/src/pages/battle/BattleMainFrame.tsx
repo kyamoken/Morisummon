@@ -296,9 +296,7 @@ const BattleMainFrame = ({ websocket }: Props) => {
           <button onClick={() => sendJsonMessage({ type: 'chat.message', message: 'こんにちは' })}>
             msg
           </button>
-          <button onClick={() => handleAction('defend')}>防御</button>
           <button onClick={() => handleAction('attack')}>攻撃</button>
-          <button onClick={() => handleAction('heal')}>回復</button>
           {battleDetails.turn_player_id === battleDetails.you?.info?._id && (
             <button onClick={() => setIsTurnEndModalOpen(true)}>ターン終了</button>
           )}

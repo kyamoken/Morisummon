@@ -185,16 +185,20 @@ class BattlePreparingActionsMixin(BaseMixin):
         player.status.hand_cards_count = len(player.status._hand_cards)
 
     async def _action_place_card(self, card_index: int, to_field: str):
+        """
+        手札から指定のカードを取り出し、指定されたフィールドに配置するアクション。
+        セットアップフェーズでは誰でも配置可能、対戦フェーズでは自分のターンのみ配置可能とする。
+        """
+        from battle.models import BattleRoomStatus
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
 
-        # BattleRoomStatus を使って状態を比較する
-        from battle.models import BattleRoomStatus
-        if room.status != BattleRoomStatus.SETUP:
+        # セットアップフェーズの場合はターンチェックをスキップする
+        if room.status != BattleRoomStatus.SETUP and room.turn_player_id != str(player.info.id):
             await self.send_json({
                 "type": "warning",
-                "message": "現在はカード配置フェーズではありません。"
+                "message": "自分のターンではありません"
             })
             return
 
@@ -207,27 +211,39 @@ class BattlePreparingActionsMixin(BaseMixin):
             return
 
         card = hand.pop(card_index)
-        if to_field == "battle_card":
+
+        # ベンチ配置の場合（"bench" または "bench-0" 等）
+        if to_field == "bench" or to_field.startswith("bench-"):
+            # 最大ベンチ数（bench_cards_max）を取得（なければ 2 枚とする）
+            max_bench = player.status.bench_cards_max or 2
+            current_bench = player.status.bench_cards or []
+            if len(current_bench) >= max_bench:
+                await self.send_json({
+                    "type": "error",
+                    "message": "ベンチが満杯です"
+                })
+                # カードを元に戻す
+                hand.insert(card_index, card)
+                return
+            # ※もし "bench-<index>" で特定の位置に配置したい場合は、index の取得処理を追加可能
+            # ここでは単純に末尾に追加する
+            current_bench.append(card)
+            player.status.bench_cards = current_bench
+
+        # メインカード配置の場合
+        elif to_field == "battle_card" or to_field.startswith("main"):
             if player.status.battle_card:
                 await self.send_json({
                     "type": "warning",
                     "message": "すでにメインカードが配置されています。"
                 })
+                # カードを元に戻す
                 hand.insert(card_index, card)
                 return
             player.status.battle_card = card
-        elif to_field == "bench":
-            bench = player.status.bench_cards or []
-            if len(bench) >= player.status.bench_cards_max:
-                await self.send_json({
-                    "type": "warning",
-                    "message": "ベンチが満杯です。"
-                })
-                hand.insert(card_index, card)
-                return
-            bench.append(card)
-            player.status.bench_cards = bench
+
         else:
+            # どの条件にも合致しない場合
             hand.insert(card_index, card)
             await self.send_json({
                 "type": "error",
@@ -238,7 +254,6 @@ class BattlePreparingActionsMixin(BaseMixin):
         player.status.hand_cards_count = len(hand)
         await self.save_room(room)
         await self._send_battle_update()
-
 
     async def _action_setup_complete(self):
         """
@@ -302,9 +317,6 @@ class BattlePreparingActionsMixin(BaseMixin):
             })
 
         await self._send_battle_update()
-
-
-
 
     async def _start_new_turn(self, room: BattleRoom, player: PlayerSet):
         """
