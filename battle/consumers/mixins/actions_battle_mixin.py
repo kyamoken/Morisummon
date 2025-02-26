@@ -81,12 +81,15 @@ class BattleActionsMixin(BaseMixin):
             player.status._hand_cards.append(card)
         player.status.hand_cards_count = len(player.status._hand_cards)
 
-    async def _action_attack(self, target_id: str = None):
+    async def _action_attack(self, message):
+        logger.debug("Received _action_attack message: %s", message)
+
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
 
+        # ターンチェック
         if room.turn_player_id != str(player.info.id):
             await self.send_json({
                 "type": "warning",
@@ -108,23 +111,45 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        if target_id and target_id != opponent.status.battle_card.id:
+        # 受信メッセージから target_id を取得（相手カードに id が設定されている場合のみチェック）
+        target_id = message.get("target_id")
+        logger.debug("target_id from message: %s", target_id)
+        card_id = getattr(opponent.status.battle_card, "id", None)
+        logger.debug("Opponent battle card id: %s", card_id)
+        if card_id is not None and target_id and target_id != card_id:
             await self.send_json({
                 "type": "warning",
                 "message": "無効な攻撃対象です"
             })
             return
 
-        atk_value = player.status.battle_card.attack
+        # プレイヤーのバトルカードから攻撃値を取得
+        atk_value = getattr(player.status.battle_card, "attack", None)
+        if atk_value is None:
+            await self.send_json({
+                "type": "warning",
+                "message": "攻撃カードに攻撃値が設定されていません"
+            })
+            return
+
+        logger.debug("攻撃力: %s", atk_value)
+
+        # 相手のメインカードの HP を更新
         if opponent.status.battle_card.hp is None:
             opponent.status.battle_card.hp = 0
+        old_hp = opponent.status.battle_card.hp
         opponent.status.battle_card.hp -= atk_value
-        logger.debug(
-            f"Player {player.info.id} attacked for {atk_value}. Opponent main card HP is now {opponent.status.battle_card.hp}")
+        logger.debug("攻撃前のHP: %s → 攻撃後のHP: %s", old_hp, opponent.status.battle_card.hp)
 
+        # 変更内容を保存
         await self.save_room(room)
 
-        attack_msg = f"{player.status.battle_card.name}が{opponent.status.battle_card.name}に{atk_value}ダメージ！ 残HP: {opponent.status.battle_card.hp}"
+        # 攻撃結果をチャットメッセージとして送信
+        attack_msg = (
+            f"{player.status.battle_card.name}が"
+            f"{opponent.status.battle_card.name}に{atk_value}ダメージ！ "
+            f"残HP: {opponent.status.battle_card.hp}"
+        )
         await self.channel_layer.group_send(
             f"battle_rooms_{room.id}",
             {
@@ -134,6 +159,7 @@ class BattleActionsMixin(BaseMixin):
             }
         )
 
+        # HP が 0 以下の場合の処理
         if opponent.status.battle_card.hp <= 0:
             opponent.status.battle_card = None
             await self.send_json({
@@ -155,6 +181,7 @@ class BattleActionsMixin(BaseMixin):
                     "message": "相手はカードがなくなりました。あなたの勝ちです！"
                 })
 
+        # 最後にターン終了処理を実行（逃げる処理と同様のフロー）
         await self._end_turn()
 
     async def _action_escape(self, bench_index: int):

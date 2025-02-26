@@ -16,7 +16,7 @@ class BattleHelpersMixin(BaseMixin):
     ・対戦フェーズ（IN_PROGRESS）では、相手のカード情報はそのまま詳細を公開する。
     """
 
-    async def _set_player_connection_status(self, room: BattleRoom, is_connected: bool) -> None:
+    async def _set_player_connleection_status(self, room: BattleRoom, is_connected: bool) -> None:
         """プレイヤーの接続状態を更新する"""
         if self.user.id != room.player1.info.id:
             if room.player2:
