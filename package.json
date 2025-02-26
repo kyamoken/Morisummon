@@ -13,7 +13,22 @@
     "lint": "tsc -b && eslint --cache --cache-location node_modules/.cache/eslint/ frontend/src",
     "fix": "tsc -b && eslint --cache --cache-location node_modules/.cache/eslint/ frontend/src --fix"
   },
-
+  "dependencies": {
+    "@mui/icons-material": "^6.4.4",
+    "@mui/material": "^6.4.4",
+    "@mui/styled-engine-sc": "^6.4.3",
+    "ky": "^1.7.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
+    "react-hot-toast": "^2.5.2",
+    "react-howler": "^5.2.0",
+    "react-router": "^7.2.0",
+    "react-use-websocket": "^4.11.1",
+    "styled-components": "^6.1.15",
+    "swr": "^2.3.2",
+    "wanakana": "^5.3.1"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
@@ -27,25 +42,9 @@
     "eslint": "^9.18.0",
     "eslint-plugin-react": "^7.37.4",
     "globals": "^15.14.0",
-    "ky": "^1.7.4",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-helmet-async": "^2.0.5",
-    "react-router": "^7.1.1",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.19.1",
     "vite": "^6.0.11",
     "vite-plugin-svgr": "^4.3.0"
-  },
-  "dependencies": {
-    "@mui/icons-material": "^6.4.4",
-    "@mui/material": "^6.4.4",
-    "@mui/styled-engine-sc": "^6.4.3",
-    "react-hot-toast": "^2.5.1",
-    "react-howler": "^5.2.0",
-    "react-use-websocket": "^4.11.1",
-    "styled-components": "^6.1.15",
-    "swr": "^2.3.0",
-    "wanakana": "^5.3.1"
   }
 }
