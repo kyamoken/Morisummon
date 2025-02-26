@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { ReadyState } from 'react-use-websocket';
 import Matching from './Matching';
 import Disconnected from './Disconnected';
 import toast from 'react-hot-toast';
@@ -102,7 +102,7 @@ const CardActionModal: React.FC<CardActionModalProps> = ({
             <ModalHeader>どのカードを攻撃しますか？</ModalHeader>
             <TargetContainer>
               {opponentTargets.map((targetCard, idx) => (
-                <TargetCard key={idx} onClick={() => onTargetSelect({ id: targetCard.id })}>
+                <TargetCard key={idx} onClick={() => onTargetSelect({ id: idx })}>
                   {targetCard.image ? (
                     <img src={targetCard.image} alt={targetCard.name} />
                   ) : (
@@ -284,8 +284,9 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
 
   // モーダル内でターゲット選択後の処理
   const handleModalTargetSelect = (target: { id?: string; benchIndex?: number }) => {
-    if (selectedAction === "attack" && target.id) {
-      sendJsonMessage({ type: 'action.attack', target_id: target.id });
+    console.log('Selected target:', target, 'Action:', selectedAction);
+    if (selectedAction === "attack") {
+      sendJsonMessage({ type: 'action.attack', targetType: 'battleCard' });
       toast.success("攻撃を実行しました");
     } else if (selectedAction === "retreat" && target.benchIndex !== undefined) {
       sendJsonMessage({ type: 'action.escape', bench_index: target.benchIndex });
@@ -356,7 +357,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
     if (oppCard.placeholder) return <Card>{oppCard.placeholder}</Card>;
     return (
       <Card>
-        {oppCard.image && <img src={oppCard.image} alt={oppCard.name} />}
+        {oppCard.image ? <img src={oppCard.image} alt={oppCard.name} /> : null}
         <span>HP: {oppCard.hp}</span>
         <span>{oppCard.energy ? `(${oppCard.energy})` : ''}</span>
       </Card>
@@ -385,7 +386,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
                 <Card>{card.placeholder}</Card>
               ) : (
                 <Card>
-                  {card.image && <img src={card.image} alt={card.name} />}
+                  {card.image ? <img src={card.image} alt={card.name} /> : null}
                   <span>{card.energy ? `(${card.energy})` : ''}</span>
                 </Card>
               )
@@ -479,7 +480,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
           >
             {card ? (
               <Card>
-                {card.image && <img src={card.image} alt={card.name} />}
+                {card.image ? <img src={card.image} alt={card.name} /> : null}
                 <span>{card.energy ? `(${card.energy})` : ''}</span>
               </Card>
             ) : (

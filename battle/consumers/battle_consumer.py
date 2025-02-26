@@ -98,8 +98,13 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
             await self._action_setup_complete()
         # 新規分岐
         elif request_type == "action.attack":
+            target_type = content.get("targetType")
             logger.debug("攻撃アクション受信: %s", content)
-            await self._action_attack(content)
+            if target_type == "battleCard":
+                await self._action_attack_battle_card()
+            else:
+                await self._action_attack(content)
+
 
         elif request_type == "action.escape":
             bench_index = content.get("bench_index")
