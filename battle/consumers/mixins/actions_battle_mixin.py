@@ -86,12 +86,16 @@ class BattleActionsMixin(BaseMixin):
         user = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
+
+        # ターンチェック
         if room.turn_player_id != str(player.info.id):
             await self.send_json({
                 "type": "warning",
                 "message": "自分のターンではありません"
             })
+            return
 
+        # 攻撃側のメインカードの存在チェック
         if not player.status.battle_card:
             await self.send_json({
                 "type": "warning",
@@ -99,6 +103,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
+        # 防御側のメインカードの存在チェック
         if not opponent.status.battle_card:
             await self.send_json({
                 "type": "warning",
@@ -106,6 +111,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
+        # 攻撃側のメインカードから攻撃値を取得
         atk_value = getattr(player.status.battle_card, "attack", None)
         if atk_value is None:
             await self.send_json({
@@ -119,12 +125,13 @@ class BattleActionsMixin(BaseMixin):
             opponent.status.battle_card.hp = 0
         old_hp = opponent.status.battle_card.hp
         opponent.status.battle_card.hp -= atk_value
-        logger.debug("攻撃前のHP: %s → 攻撃後のHP: %s", old_hp, opponent.status.battle_card.hp)
-        await self.save_room(room)
+        new_hp = opponent.status.battle_card.hp
+
+        # 攻撃結果の通知
         attack_msg = (
-            f"{player.status.battle_card.name}が"
-            f"{opponent.status.battle_card.name}に{atk_value}ダメージ！ "
-            f"残HP: {opponent.status.battle_card.hp}"
+            f"{player.status.battle_card.name} が "
+            f"{opponent.status.battle_card.name} に {atk_value} ダメージ！ "
+            f"(HP: {old_hp} → {new_hp})"
         )
         await self.channel_layer.group_send(
             f"battle_rooms_{room.id}",
@@ -134,28 +141,64 @@ class BattleActionsMixin(BaseMixin):
                 "message": attack_msg,
             }
         )
-        # if opponent.status.battle_card.hp <= 0:
-        #     opponent.status.battle_card = None
-        #     await self.send_json({
-        #         "type": "info",
-        #         "message": "相手のメインカードが倒れました。"
-        #     })
-        #     if opponent.status.bench_cards and len(opponent.status.bench_cards) > 0:
-        #         new_main = opponent.status.bench_cards.pop(0)
-        #         opponent.status.battle_card = new_main
-        #         await self.send_json({
-        #             "type": "info",
-        #             "message": "相手のベンチカードがメインカードに昇格しました。"
-        #         })
-        #     else:
-        #         room.status = "finished"
-        #         room.winner = str(player.info.id)
-        #         await self.send_json({
-        #             "type": "info",
-        #             "message": "相手はカードがなくなりました。あなたの勝ちです！"
-        #         })
-        await self._end_turn()
 
+        # ノックアウト処理：相手のメインカードのHPが0以下の場合
+        if new_hp <= 0:
+            knocked_card_name = opponent.status.battle_card.name
+            # カード倒しにより、相手のライフを1減少
+            opponent.status.life -= 1
+
+            # ノックアウト通知
+            await self.channel_layer.group_send(
+                f"battle_rooms_{room.id}",
+                {
+                    "type": "chat.message",
+                    "user": {"name": "システム"},
+                    "message": f"相手の {knocked_card_name} が倒れました！"
+                }
+            )
+
+            # ライフが0以下なら敗北（即時バトル終了）
+            if opponent.status.life <= 0:
+                room.status = BattleRoomStatus.FINISHED.value
+                room.winner = str(player.info.id)
+                await self.channel_layer.group_send(
+                    f"battle_rooms_{room.id}",
+                    {
+                        "type": "chat.message",
+                        "user": {"name": "システム"},
+                        "message": "相手のHPが0になりました。あなたの勝ちです！"
+                    }
+                )
+            else:
+                # ベンチカードがある場合は、先頭のカードをメインカードに昇格
+                if opponent.status.bench_cards and len(opponent.status.bench_cards) > 0:
+                    new_main = opponent.status.bench_cards.pop(0)
+                    opponent.status.battle_card = new_main
+                    await self.channel_layer.group_send(
+                        f"battle_rooms_{room.id}",
+                        {
+                            "type": "chat.message",
+                            "user": {"name": "システム"},
+                            "message": f"相手のベンチカード {new_main.name} がメインカードに昇格しました！"
+                        }
+                    )
+                else:
+                    # ベンチカードがない場合は敗北
+                    room.status = BattleRoomStatus.FINISHED.value
+                    room.winner = str(player.info.id)
+                    await self.channel_layer.group_send(
+                        f"battle_rooms_{room.id}",
+                        {
+                            "type": "chat.message",
+                            "user": {"name": "システム"},
+                            "message": "相手はメインカードがなく、ベンチカードもありません。あなたの勝ちです！"
+                        }
+                    )
+        # 変更内容を保存
+        await self.save_room(room)
+        # ターン終了処理
+        await self._end_turn()
 
     async def _action_attack(self, message):
         logger.debug("Received _action_attack message: %s", message)
