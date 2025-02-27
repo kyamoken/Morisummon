@@ -60,19 +60,19 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
         await self.channel_layer.group_discard(f"battle_rooms_{self.room_id}", self.channel_name)
         room = await self.get_room()
 
-        if room.player1:
-            channel_name = room.player1.info.channel_name
-            await self.channel_layer.send(channel_name, {
-                "type": "error",
-                "message": "相手が切断しました"
-            })
-
-        if room.player2:
-            channel_name = room.player2.info.channel_name
-            await self.channel_layer.send(channel_name, {
-                "type": "error",
-                "message": "相手が切断しました"
-            })
+        if not room.winner:
+            if room.player1:
+                channel_name = room.player1.info.channel_name
+                await self.channel_layer.send(channel_name, {
+                    "type": "error",
+                    "message": "相手が切断しました"
+                })
+            if room.player2:
+                channel_name = room.player2.info.channel_name
+                await self.channel_layer.send(channel_name, {
+                    "type": "error",
+                    "message": "相手が切断しました"
+                })
 
         await self.delete_room(self.room_id)
 
@@ -104,8 +104,6 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
                 await self._action_attack_battle_card()
             else:
                 await self._action_attack(content)
-
-
         elif request_type == "action.escape":
             bench_index = content.get("bench_index")
             logger.debug(f"逃げアクション bench_index: {bench_index}")
@@ -116,3 +114,10 @@ class BattleConsumer(AsyncJsonWebsocketConsumer, BattleDBMixin, BattleEventMixin
                     "type": "error",
                     "message": "bench_index が指定されていません"
                 })
+        elif request_type == "action.surrender":
+            await self._action_surrender()
+        else:
+            await self.send_json({
+                "type": "error",
+                "message": "不明なアクションです"
+            })

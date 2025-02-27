@@ -14,6 +14,7 @@ import CardCollection from "@/pages/CardCollection.tsx";
 import Demo from './pages/Demo';
 import Friends from './pages/friend';
 import ExchangePage from './pages/ExchangePage';
+import ResultPage from './pages/result';
 
 // 認証してないときにログインページに飛ぶ用のコンポーネントコンポーネント
 import PrivateRoute from '@/components/PrivateRoute';
@@ -41,6 +42,7 @@ const AppRouter: React.FC = () => {
       <Route path="/gacha" element={<PrivateRoute><Gacha /></PrivateRoute>} />
       <Route path="/card-collection" element={<PrivateRoute><CardCollection /></PrivateRoute>} />
       <Route path="/battle" element={<PrivateRoute><Battle /></PrivateRoute>} />
+      <Route path="/result" element={<PrivateRoute><ResultPage /></PrivateRoute>} />
       <Route path="/friends" element={<PrivateRoute><Friends /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><Setting /></PrivateRoute>} />
       <Route path="/exchange/:exchange_ulid" element={<PrivateRoute><ExchangePage /></PrivateRoute>} />

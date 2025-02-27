@@ -306,12 +306,25 @@ class BattleActionsMixin(BaseMixin):
         user = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
-        room.status = "finished"
+        # 部屋の状態を finished にして、勝者を相手に設定
+        room.status = BattleRoomStatus.FINISHED.value  # もしくは "finished"
         room.winner = str(opponent.info.id)
         await self.save_room(room)
         await self._send_battle_update()
+
+        # 降参したプレイヤーには個別に「あなたは降参しました。」を送信
         await self.send_json({
             "type": "chat.message",
             "user": {"name": player.info.name},
             "message": "あなたは降参しました。"
         })
+
+        # 対戦相手には個別に「相手が降参を選びました！」を送信
+        await self.channel_layer.send(
+            opponent.info.channel_name,
+            {
+                "type": "chat.message",
+                "user": {"name": "システム"},
+                "message": "相手が降参を選びました！"
+            }
+        )

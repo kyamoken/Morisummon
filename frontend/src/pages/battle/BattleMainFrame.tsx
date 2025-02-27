@@ -1,13 +1,15 @@
+// BattleMainFrame.tsx
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ReadyState } from 'react-use-websocket';
+import { useNavigate } from 'react-router';
 import Matching from './Matching';
 import Disconnected from './Disconnected';
 import toast from 'react-hot-toast';
 import { WebSocketHook } from 'react-use-websocket/dist/lib/types';
 import BattleTurnEndModal from '@/components/BattleComponents/battleTurnEndModal';
 import PlayerTurnOverlay from './PlayerTurnOverlay';
-import CardActionModal from '@/components/BattleComponents/CardActionModal'; // 別ファイルに切り出したモーダルコンポーネント
+import CardActionModal from '@/components/BattleComponents/CardActionModal';
 
 const handleWindowUnload = (e: BeforeUnloadEvent) => {
   e.preventDefault();
@@ -24,7 +26,7 @@ export type CardInfo = {
   name?: string;
   image?: string;
   energy?: number;
-  hp?: number; // HPを表示するため追加（仮の数値でもOK）
+  hp?: number; // HP表示用
   placeholder?: string;
 };
 
@@ -41,11 +43,13 @@ type PlayerStatus = {
 };
 
 type BattleDetails = {
-  status: "setup" | "progress" | "waiting";
+  status: "setup" | "progress" | "waiting" | "finished";
   turn: number;
   turn_player_id: string;
   you: { info: PlayerInfo; status: PlayerStatus };
   opponent?: { info: PlayerInfo; status: PlayerStatus };
+  room_id?: string;
+  winner?: string;
 };
 
 type WebSocketMessage =
@@ -62,6 +66,7 @@ type Props = {
 export type ModalMode = "actionSelect" | "targetSelect";
 
 const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
+  const navigate = useNavigate();
   const { sendJsonMessage, lastJsonMessage, readyState, getWebSocket } = websocket;
   const [battleDetails, setBattleDetails] = useState<BattleDetails | null>(null);
   const [isTurnEndModalOpen, setIsTurnEndModalOpen] = useState(false);
@@ -75,33 +80,19 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   const [selectedAction, setSelectedAction] = useState<"attack" | "retreat" | null>(null);
   const [selectedActionCard, setSelectedActionCard] = useState<CardInfo | null>(null);
 
-  const handleCommand = () => {
-    const cmd = window.prompt('Command?');
-    if (cmd?.startsWith('{')) {
-      try {
-        const parsed = JSON.parse(cmd);
-        sendJsonMessage(parsed);
-      } catch (e) {
-        console.error(e);
-        return;
-      }
-      return;
-    }
-    sendJsonMessage({ type: cmd });
-  };
-
   const handleEnergyAssign = () => {
     setEnergyAssignMode(true);
     toast("どのカードにエネルギー付与しますか？", { icon: '⚡' });
   };
 
+  // 降参ボタン押下時：確認後に WebSocket 経由で 'action.surrender' を送信
   const handleSurrender = () => {
     if (window.confirm("降参しますか？")) {
       sendJsonMessage({ type: 'action.surrender' });
     }
   };
 
-  // メインカードクリック時（対戦フェーズかつ自分のターンならモーダル表示）
+  // メインカードクリック時の処理（対戦フェーズかつ自分のターンならモーダル表示）
   const handleMainCardClick = () => {
     const mainCard = battleDetails?.you.status.battle_card;
     if (battleDetails?.status !== 'setup' && turnOwner === 'player' && mainCard) {
@@ -172,6 +163,18 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
       console.log('Message received:', lastJsonMessage);
     }
   }, [lastJsonMessage]);
+
+  // バトル終了（status === 'finished'）の場合、結果ページへ state を渡してリダイレクト
+  useEffect(() => {
+    if (!battleDetails) return;
+    if (battleDetails.status === 'finished') {
+      const battleResult = {
+        room_id: battleDetails.room_id || '',
+        winner: battleDetails.winner || '',
+      };
+      navigate('/result', { state: { battleResult } });
+    }
+  }, [battleDetails, navigate]);
 
   useEffect(() => {
     if (!battleDetails || battleDetails.status !== 'progress') return;
@@ -348,9 +351,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
         mode={modalMode}
         selectedAction={selectedAction}
         card={selectedActionCard}
-        // 攻撃対象は相手のメインカードのみ（対象がない場合は空配列）
         opponentTargets={battleDetails.opponent?.status?.battle_card ? [battleDetails.opponent.status.battle_card] : []}
-        // 逃げの場合は自分の bench カードを対象とする
         benchTargets={battleDetails.you.status.bench_cards || []}
         onActionSelect={handleModalActionSelect}
         onTargetSelect={handleModalTargetSelect}
@@ -377,8 +378,6 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
           <p>利用可能エネルギー: {battleDetails.you?.status?.energy}</p>
         </PlayerInfo>
         <ActionButtons>
-          <button onClick={handleCommand}>Cmd</button>
-          <button onClick={() => sendJsonMessage({ type: 'chat.message', message: 'こんにちは' })}>msg</button>
           {battleDetails.status === 'progress' && turnOwner === 'player' && (
             <>
               <button
