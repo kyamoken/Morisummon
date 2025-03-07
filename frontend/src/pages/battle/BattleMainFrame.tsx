@@ -73,7 +73,6 @@ export type ModalMode = 'actionSelect' | 'targetSelect';
 const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   const navigate = useNavigate();
   const { sendJsonMessage, lastJsonMessage, readyState, getWebSocket } = websocket;
-
   const [battleDetails, setBattleDetails] = useState<BattleDetails | null>(null);
   const [isTurnEndModalOpen, setIsTurnEndModalOpen] = useState(false);
   const [turnOwner, setTurnOwner] = useState<'player' | 'opponent' | null>(null);
@@ -103,11 +102,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   const handleMainCardClick = () => {
     const mainCard = battleDetails?.you.status.battle_card;
     if (battleDetails?.status === 'setup' && !mainCard && selectedCardIndex !== null) {
-      sendJsonMessage({
-        type: 'action.place_card',
-        card_index: selectedCardIndex,
-        to_field: 'battle_card',
-      });
+      sendJsonMessage({ type: 'action.place_card', card_index: selectedCardIndex, to_field: 'battle_card' });
       setSelectedCardIndex(null);
     } else if (battleDetails?.status !== 'setup' && turnOwner === 'player' && mainCard) {
       setSelectedActionCard(mainCard);
@@ -136,17 +131,13 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
     setSelectedActionCard(null);
   };
 
-  // beforeunload イベント登録
   useEffect(() => {
     window.addEventListener('beforeunload', handleWindowUnload);
     return () => window.removeEventListener('beforeunload', handleWindowUnload);
   }, []);
 
-  // WebSocket メッセージ受信処理
   useEffect(() => {
-    const handlerMap: {
-      [K in WebSocketMessage['type']]?: (data: Extract<WebSocketMessage, { type: K }>) => void;
-    } = {
+    const handlerMap: { [K in WebSocketMessage['type']]?: (data: Extract<WebSocketMessage, { type: K }>) => void } = {
       'battle.update': (data) => setBattleDetails(data.data),
       'chat.message': (data) => {
         toast(
@@ -172,14 +163,10 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
     }
   }, [lastJsonMessage, getWebSocket]);
 
-  // デバッグ用ログ出力
   useEffect(() => {
-    if (lastJsonMessage) {
-      console.log('Message received:', lastJsonMessage);
-    }
+    if (lastJsonMessage) console.log('Message received:', lastJsonMessage);
   }, [lastJsonMessage]);
 
-  // バトル終了時のリダイレクト処理
   useEffect(() => {
     if (!battleDetails) return;
     if (battleDetails.status === 'finished') {
@@ -191,15 +178,11 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
     }
   }, [battleDetails, navigate]);
 
-  // ターン所有者の判定
   useEffect(() => {
     if (!battleDetails || battleDetails.status !== 'progress') return;
-    setTurnOwner(
-      battleDetails.turn_player_id === battleDetails.you.info._id ? 'player' : 'opponent'
-    );
+    setTurnOwner(battleDetails.turn_player_id === battleDetails.you.info._id ? 'player' : 'opponent');
   }, [battleDetails?.turn, battleDetails?.turn_player_id, battleDetails?.status]);
 
-  // 各レンダリング用メソッド
   const renderOpponentBattleCard = () => {
     const oppCard = battleDetails?.opponent?.status?.battle_card;
     if (!oppCard) return <EmptyArea>未配置</EmptyArea>;
@@ -256,21 +239,25 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
 
   const renderHandCards = () => {
     const handCards = battleDetails?.you.status.hand_cards || [];
-    return handCards.map((card, index) => (
-      <HandCard
-        key={`hand-${index}`}
-        onClick={() => {
-          if (energyAssignMode) {
-            toast("手札にはエネルギーを付与できません", { icon: "⚠️" });
-            return;
-          }
-          setSelectedCardIndex(index);
-        }}
-        selected={selectedCardIndex === index}
-      >
-        {card.image ? <img src={card.image} alt={card.name} /> : <span>{card.name || `カード${index + 1}`}</span>}
-      </HandCard>
-    ));
+    return (
+      <HandContainer>
+        {handCards.map((card, index) => (
+          <HandCard
+            key={`hand-${index}`}
+            onClick={() => {
+              if (energyAssignMode) {
+                toast("手札にはエネルギーを付与できません", { icon: "⚠️" });
+                return;
+              }
+              setSelectedCardIndex(index);
+            }}
+            selected={selectedCardIndex === index}
+          >
+            {card.image ? <img src={card.image} alt={card.name} /> : <span>{card.name || `カード${index + 1}`}</span>}
+          </HandCard>
+        ))}
+      </HandContainer>
+    );
   };
 
   const renderMainArea = () => {
@@ -345,16 +332,9 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
     );
   };
 
-  // 通信状態と部屋情報のチェック
-  if (readyState === ReadyState.CONNECTING) {
-    return <Matching message="サーバーに接続中..." />;
-  }
-  if (readyState !== ReadyState.OPEN) {
-    return <Disconnected message="切断されました" />;
-  }
-  if (!battleDetails || battleDetails.status === 'waiting' || !battleDetails.opponent) {
-    return <Matching message="対戦相手をさがしています..." />;
-  }
+  if (readyState === ReadyState.CONNECTING) return <Matching message="サーバーに接続中..." />;
+  if (readyState !== ReadyState.OPEN) return <Disconnected message="切断されました" />;
+  if (!battleDetails || battleDetails.status === 'waiting' || !battleDetails.opponent) return <Matching message="対戦相手をさがしています..." />;
 
   return (
     <>
@@ -364,9 +344,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
         mode={modalMode}
         selectedAction={selectedAction}
         card={selectedActionCard}
-        opponentTargets={
-          battleDetails.opponent?.status?.battle_card ? [battleDetails.opponent.status.battle_card] : []
-        }
+        opponentTargets={battleDetails.opponent?.status?.battle_card ? [battleDetails.opponent.status.battle_card] : []}
         benchTargets={battleDetails.you.status.bench_cards || []}
         onActionSelect={handleModalActionSelect}
         onTargetSelect={handleModalTargetSelect}
@@ -397,10 +375,10 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
           </OpponentInfo>
         </TopBar>
         <OpponentFieldArea>
+          <FieldTitle>相手のベンチ</FieldTitle>
+          {renderOpponentBenchArea()}
           <FieldTitle>相手のメインエリア</FieldTitle>
           {renderOpponentBattleCard()}
-          <FieldTitle>ベンチ</FieldTitle>
-          {renderOpponentBenchArea()}
         </OpponentFieldArea>
         {battleDetails.status === 'setup' ? (
           <SetupArea>
@@ -457,7 +435,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
             {battleDetails.status === 'progress' && (
               <button onClick={handleSurrender}>降参</button>
             )}
-            {battleDetails.turn_player_id === battleDetails.you?.info?._id && (
+            {battleDetails.turn_player_id === battleDetails.you.info._id && (
               <button onClick={() => setIsTurnEndModalOpen(true)}>ターン終了</button>
             )}
           </ActionButtons>
