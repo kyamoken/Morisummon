@@ -6,4 +6,5 @@ urlpatterns = [
 
     path('', include('accounts.urls')),
     path('', include('morisummon.urls')),
+    path('', include('battle.urls')),
 ]

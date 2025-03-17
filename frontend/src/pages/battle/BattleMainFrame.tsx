@@ -28,64 +28,18 @@ import { useNavigate } from 'react-router';
 import Matching from './Matching';
 import Disconnected from './Disconnected';
 import toast from 'react-hot-toast';
-import { WebSocketHook } from 'react-use-websocket/dist/lib/types';
 import BattleTurnEndModal from '@/components/BattleComponents/battleTurnEndModal';
 import PlayerTurnOverlay from './PlayerTurnOverlay';
 import CardActionModal from '@/components/BattleComponents/CardActionModal';
 import BubblesBackground from '@/components/BubblesBackground';
+import { BattleDetails, BattleWebSocket, BattleWebSocketMessage, CardInfo } from '../Battle';
 
 const handleWindowUnload = (e: BeforeUnloadEvent) => {
   e.preventDefault();
 };
 
-type PlayerInfo = {
-  _id: string;
-  name: string;
-  avatar: number;
-};
-
-export type CardInfo = {
-  id: string;
-  name?: string;
-  image?: string;
-  energy?: number;
-  hp?: number;
-  max_hp?: number;
-  placeholder?: string;
-};
-
-type PlayerStatus = {
-  life: number;
-  battle_card: CardInfo | null;
-  bench_cards: CardInfo[];
-  energy: number;
-  hand_cards: CardInfo[];
-  bench_cards_max?: number;
-  setup_done?: boolean;
-  hand_cards_count?: number;
-  _hand_cards?: CardInfo[];
-};
-
-type BattleDetails = {
-  status: 'setup' | 'progress' | 'waiting' | 'finished';
-  turn: number;
-  turn_player_id: string;
-  you: { info: PlayerInfo; status: PlayerStatus };
-  opponent?: { info: PlayerInfo; status: PlayerStatus };
-  room_id?: string;
-  winner?: string;
-};
-
-type WebSocketMessage =
-  | { type: 'battle.update'; data: BattleDetails }
-  | { type: 'battle.turn.change'; target: 'player' | 'opponent' }
-  | { type: 'chat.message'; user: { name: string }; message: string }
-  | { type: 'error'; message: string }
-  | { type: 'warning'; message: string }
-  | { type: 'info'; message: string };
-
 type Props = {
-  websocket: WebSocketHook<WebSocketMessage>;
+  websocket: BattleWebSocket;
 };
 
 export type ModalMode = 'actionSelect' | 'targetSelect';
@@ -190,7 +144,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
 
   useEffect(() => {
     const handlerMap: {
-      [K in WebSocketMessage['type']]?: (data: Extract<WebSocketMessage, { type: K }>) => void;
+      [K in BattleWebSocketMessage['type']]?: (data: Extract<BattleWebSocketMessage, { type: K }>) => void;
     } = {
       'battle.update': (data) => {
         setBattleDetails(data.data);
