@@ -15,6 +15,7 @@ class BattleCardInfo(EmbeddedDocument):
     attack_needs_energy = IntField(default=0)
     escape_needs_energy = IntField(default=0)
 
+    max_hp = IntField()
     hp = IntField()
     attack = IntField()
     # defense = IntField()

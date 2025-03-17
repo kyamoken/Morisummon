@@ -164,10 +164,12 @@ class BattlePreparingActionsMixin(BaseMixin):
                 energy=0,
                 attack_needs_energy=card_obj.attack_cost,
                 escape_needs_energy=card_obj.retreat_cost,
-                hp=card_obj.hp,
+                hp=card_obj.hp,         # 現在HP
+                max_hp=card_obj.hp,      # 追加：最大HPとして初期HPを設定
                 attack=card_obj.attack
             )
             player.status._deck_cards.append(bc)
+
 
     def _draw_cards(self, player: PlayerSet, count: int = 1):
         """

@@ -1,231 +1,313 @@
-// BattleMainFrame.styles.ts
 import styled from 'styled-components';
 
 /**
- * グリッドレイアウト構成はそのままですが、
- * color: #fff を追加し、要素を中央寄せするためのプロパティをいくつか修正しています。
+ * 大まかに「上部に相手エリア」「下部に自分エリア」を2分割し、
+ * グリッド配置するレイアウトです。
  */
 export const BattleContainer = styled.div`
   display: grid;
-  grid-template-areas:
-    "top"
-    "opponent"
-    "center"
-    "player";
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto 1fr 1fr;
+  gap: 10px;
   height: 100vh;
-
-  /* 文字色を白に統一 */
-  color: #fff;
-
   background-color: var(--background-color);
-  padding: 20px;
+  color: #fff;
+  padding: 10px;
 `;
 
-/* ヘッダー部分 */
 export const TopBar = styled.div`
-  grid-area: top;
+  grid-row: 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: flex-start;
   padding: 0 10px;
   background-color: var(--primary-color);
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
+  font-weight: bold;
 `;
 
-/* ターン情報 */
-export const TurnInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-/* 相手情報 */
-export const OpponentInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: center;
-`;
-
-/* 相手フィールドエリア */
-export const OpponentFieldArea = styled.div`
-  grid-area: opponent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center; /* 中央寄せを追加 */
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: var(--border-radius);
-`;
-
-export const FieldTitle = styled.h3`
-  margin: 10px 0 5px;
-`;
-
-export const BenchArea = styled.div`
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center; /* 中央揃え */
-`;
-
-export const BenchSlot = styled.div`
-  cursor: pointer;
-`;
-
-/* セットアップフェーズ */
-export const SetupArea = styled.div`
-  grid-area: center;
+/* 相手エリア */
+export const OpponentArea = styled.div`
+  grid-row: 2;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 10px;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: var(--border-radius);
-  margin-bottom: 10px;
+  grid-template-areas: "info main bench";
+  grid-template-columns: 1fr 1fr 1fr;
+  background-color: #8e44ad;
+  border-radius: 8px;
+  padding: 20px;
+  box-sizing: border-box;
 `;
 
-export const SetupInfo = styled.div`
+export const OpponentInfoArea = styled.div`
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const OpponentMainArea = styled.div`
+  grid-area: main;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 10px;
 `;
 
-export const HandContainer = styled.div`
+export const OpponentBenchArea = styled.div`
+  grid-area: bench;
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+`;
+
+/* 自分エリア */
+export const PlayerArea = styled.div`
+  grid-row: 3;
+  display: grid;
+  grid-template-areas:
+    "hand main info"
+    "bench bench bench";
+  grid-template-columns: 1fr 1fr 1fr;
+  background-color: #5f27cd;
+  border-radius: 8px;
+  padding: 20px;
+  box-sizing: border-box;
+`;
+
+export const PlayerBenchArea = styled.div`
+  grid-area: bench;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const PlayerMainArea = styled.div`
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+`;
+
+export const PlayerInfoArea = styled.div`
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+`;
+
+export const HandArea = styled.div`
+  grid-area: hand;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
   margin-top: 10px;
 `;
 
-export const SelfFieldArea = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-/* バトルフェーズ */
-export const BattleArea = styled.div`
-  grid-area: center;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 10px;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: var(--border-radius);
-  margin-bottom: 10px;
-`;
-
-export const HandSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-export const HandTitle = styled.h3`
+export const FieldTitle = styled.h3`
   margin: 0;
-  padding: 0.5rem;
-  font-size: 1.5rem;
-  /* color: #fff;  // Containerで白にしているので、ここは不要 */
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
 `;
 
-/* メインカードエリア */
-export const MainArea = styled.div`
-  cursor: pointer;
-  margin-bottom: 10px;
-`;
-
-/* 下部：自分の情報とアクションボタン */
-export const PlayerInfoBar = styled.div`
-  grid-area: player;
+/* メインカード（サイズ: 120x170） */
+export const MainCard = styled.div`
+  position: relative;
+  width: 120px;
+  height: 170px;
+  background-color: transparent;
+  border: none;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  border-top: 1px solid rgba(255,255,255,0.2);
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  border-radius: 6px;
+  &:hover {
+    transform: translateY(-5px);
+  }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  span {
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
 `;
 
-export const PlayerInfoBox = styled.div`
+export const MainCardEmptyArea = styled.div`
+  position: relative;
+  width: 120px;
+  height: 170px;
+  border: 2px dashed #999;
+  border-radius: 6px;
+  background-color: transparent;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  cursor: pointer;
+`;
+
+/* ベンチカード（サイズ: 90x130） */
+export const BenchCard = styled.div`
+  position: relative;
+  width: 90px;
+  height: 130px;
+  background-color: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  border-radius: 4px;
+  &:hover {
+    transform: translateY(-5px);
+  }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  span {
+    font-size: 0.75rem;
+    margin-top: 2px;
+  }
+`;
+
+export const BenchCardEmptyArea = styled.div`
+  position: relative;
+  width: 90px;
+  height: 130px;
+  border: 2px dashed #999;
+  border-radius: 4px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  cursor: pointer;
+`;
+
+export const HandCard = styled.div`
+  width: 70px;
+  height: 100px;
+  background-color: transparent;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  &.selected {
+    border-color: #ffd700;
+  }
+  &:hover {
+    transform: translateY(-5px);
+  }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  span {
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 4px;
+  }
+`;
+
+/* HPゲージ用 */
+export const HPGaugeContainer = styled.div`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 40px;
+  height: 14px;
+  background-color: #000;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  overflow: hidden;
+`;
+
+export const HPGaugeFill = styled.div`
+  height: 100%;
+  transition: width 0.3s ease;
+`;
+
+export const HPGaugeText = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 10px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+`;
+
+/* Energy アイコン表示用 */
+export const EnergyIconContainer = styled.div`
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  gap: 2px;
+`;
+
+export const EnergyIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+`;
+
+/* ボタン関連 */
+export const ReadyButton = styled.button`
+  margin-top: 5px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  &:hover {
+    background-color: #0056b3;
+  }
+  &:disabled {
+    background-color: #999;
+    cursor: default;
+  }
 `;
 
 export const ActionButtons = styled.div`
   display: flex;
   gap: 8px;
+  margin-top: 8px;
   button {
-    padding: 10px 20px;
+    padding: 6px 12px;
     background-color: var(--primary-color);
     color: #fff;
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: 6px;
     cursor: pointer;
     &:hover {
-      background-color: var(--button-hover);
+      opacity: 0.9;
     }
-  }
-`;
-
-/* カード表示 */
-export const Card = styled.div`
-  width: 60px;
-  height: 90px;
-  background-color: #666;
-  border: 1px solid #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0 5px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  &:hover {
-    transform: translateY(-5px);
-  }
-  img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-  span {
-    font-size: 0.8rem;
-  }
-`;
-
-interface HandCardProps {
-  selected?: boolean;
-}
-export const HandCard = styled(Card)<HandCardProps>`
-  border: 2px solid ${(props) => (props.selected ? '#FFD700' : '#fff')};
-`;
-
-export const EmptyArea = styled.div`
-  width: 60px;
-  height: 90px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed #999;
-  color: #999;
-`;
-
-export const ReadyButton = styled.button`
-  margin-top: 15px;
-  padding: 10px 20px;
-  font-size: 1rem;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  &:hover {
-    background-color: #0056b3;
   }
 `;

@@ -1,10 +1,27 @@
-// BattleMainFrame.tsx
 import React, { useEffect, useState } from 'react';
 import {
-  BattleContainer, TopBar, TurnInfo, OpponentInfo, OpponentFieldArea, FieldTitle,
-  BenchArea, BenchSlot, SetupArea, SetupInfo, HandContainer, SelfFieldArea, BattleArea,
-  HandSection, HandTitle, MainArea, PlayerInfoBar, PlayerInfoBox, ActionButtons, Card,
-  HandCard, EmptyArea, ReadyButton
+  BattleContainer,
+  TopBar,
+  OpponentArea,
+  PlayerArea,
+  OpponentInfoArea,
+  OpponentMainArea,
+  OpponentBenchArea,
+  PlayerInfoArea,
+  PlayerBenchArea,
+  PlayerMainArea,
+  HandArea,
+  MainCard,
+  BenchCard,
+  HandCard,
+  MainCardEmptyArea,
+  BenchCardEmptyArea,
+  ReadyButton,
+  ActionButtons,
+  FieldTitle,
+  HPGaugeContainer,
+  HPGaugeFill,
+  HPGaugeText
 } from './BattleMainFrame.styles';
 import { ReadyState } from 'react-use-websocket';
 import { useNavigate } from 'react-router';
@@ -15,6 +32,7 @@ import { WebSocketHook } from 'react-use-websocket/dist/lib/types';
 import BattleTurnEndModal from '@/components/BattleComponents/battleTurnEndModal';
 import PlayerTurnOverlay from './PlayerTurnOverlay';
 import CardActionModal from '@/components/BattleComponents/CardActionModal';
+import BubblesBackground from '@/components/BubblesBackground';
 
 const handleWindowUnload = (e: BeforeUnloadEvent) => {
   e.preventDefault();
@@ -31,7 +49,8 @@ export type CardInfo = {
   name?: string;
   image?: string;
   energy?: number;
-  hp?: number; // HP表示用
+  hp?: number;
+  max_hp?: number;
   placeholder?: string;
 };
 
@@ -62,13 +81,46 @@ type WebSocketMessage =
   | { type: 'battle.turn.change'; target: 'player' | 'opponent' }
   | { type: 'chat.message'; user: { name: string }; message: string }
   | { type: 'error'; message: string }
-  | { type: 'warning'; message: string };
+  | { type: 'warning'; message: string }
+  | { type: 'info'; message: string };
 
 type Props = {
   websocket: WebSocketHook<WebSocketMessage>;
 };
 
 export type ModalMode = 'actionSelect' | 'targetSelect';
+
+/** HPゲージコンポーネント */
+const HPGauge: React.FC<{ hp: number; max_hp: number }> = ({ hp, max_hp }) => {
+  const ratio = hp / max_hp;
+  let gaugeColor = 'green';
+  if (ratio < 0.5 && ratio >= 0.2) {
+    gaugeColor = 'yellow';
+  } else if (ratio < 0.2 && ratio > 0) {
+    gaugeColor = 'red';
+  } else if (ratio <= 0) {
+    gaugeColor = 'black';
+  }
+
+  return (
+    <HPGaugeContainer>
+      <HPGaugeFill style={{ width: `${ratio * 100}%`, backgroundColor: gaugeColor }} />
+      <HPGaugeText>{hp}</HPGaugeText>
+    </HPGaugeContainer>
+  );
+};
+
+/** EnergyIcons コンポーネント：エネルギー数分のアイコンを表示 */
+const EnergyIcons: React.FC<{ energy: number }> = ({ energy }) => {
+  if (!energy) return null;
+  return (
+    <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: '2px' }}>
+      {Array.from({ length: energy }).map((_, i) => (
+        <img key={i} src="/static/images/ENERGY.png" alt="energy" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+      ))}
+    </div>
+  );
+};
 
 const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   const navigate = useNavigate();
@@ -85,46 +137,46 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   const [selectedAction, setSelectedAction] = useState<'attack' | 'retreat' | null>(null);
   const [selectedActionCard, setSelectedActionCard] = useState<CardInfo | null>(null);
 
-  // エネルギー付与ハンドラ
   const handleEnergyAssign = () => {
     setEnergyAssignMode(true);
     toast('どのカードにエネルギー付与しますか？', { icon: '⚡' });
   };
 
-  // 降参ハンドラ
   const handleSurrender = () => {
     if (window.confirm('降参しますか？')) {
       sendJsonMessage({ type: 'action.surrender' });
     }
   };
 
-  // メインカードクリック時の処理
+  /** メインカードをクリックしたとき */
   const handleMainCardClick = () => {
     const mainCard = battleDetails?.you.status.battle_card;
     if (battleDetails?.status === 'setup' && !mainCard && selectedCardIndex !== null) {
-      sendJsonMessage({ type: 'action.place_card', card_index: selectedCardIndex, to_field: 'battle_card' });
+      sendJsonMessage({
+        type: 'action.place_card',
+        card_index: selectedCardIndex,
+        to_field: 'battle_card',
+      });
       setSelectedCardIndex(null);
-    } else if (battleDetails?.status !== 'setup' && turnOwner === 'player' && mainCard) {
+      return;
+    }
+    if (battleDetails?.status === 'progress' && turnOwner === 'player' && mainCard) {
       setSelectedActionCard(mainCard);
       setModalMode('actionSelect');
       setModalVisible(true);
     }
   };
 
-  // モーダル内アクション選択後
   const handleModalActionSelect = (actionType: 'attack' | 'retreat') => {
     setSelectedAction(actionType);
     setModalMode('targetSelect');
   };
 
-  // モーダル内ターゲット選択後
   const handleModalTargetSelect = (target: { id?: string; benchIndex?: number }) => {
     if (selectedAction === 'attack') {
       sendJsonMessage({ type: 'action.attack', targetType: 'battleCard' });
-      toast.success('攻撃を実行しました');
     } else if (selectedAction === 'retreat' && target.benchIndex !== undefined) {
       sendJsonMessage({ type: 'action.escape', bench_index: target.benchIndex });
-      toast.success('逃げ（入れ替え）を実行しました');
     }
     setModalVisible(false);
     setSelectedAction(null);
@@ -137,8 +189,12 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   }, []);
 
   useEffect(() => {
-    const handlerMap: { [K in WebSocketMessage['type']]?: (data: Extract<WebSocketMessage, { type: K }>) => void } = {
-      'battle.update': (data) => setBattleDetails(data.data),
+    const handlerMap: {
+      [K in WebSocketMessage['type']]?: (data: Extract<WebSocketMessage, { type: K }>) => void;
+    } = {
+      'battle.update': (data) => {
+        setBattleDetails(data.data);
+      },
       'chat.message': (data) => {
         toast(
           <div>
@@ -157,6 +213,9 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
       warning: (data: any) => {
         toast(data.message, { icon: '⚠️' });
       },
+      info: (data: any) => {
+        toast.success(data.message);
+      }
     };
     if (lastJsonMessage?.type && handlerMap[lastJsonMessage.type]) {
       handlerMap[lastJsonMessage.type]?.(lastJsonMessage as any);
@@ -180,90 +239,155 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
 
   useEffect(() => {
     if (!battleDetails || battleDetails.status !== 'progress') return;
-    setTurnOwner(battleDetails.turn_player_id === battleDetails.you.info._id ? 'player' : 'opponent');
+    setTurnOwner(
+      battleDetails.turn_player_id === battleDetails.you.info._id ? 'player' : 'opponent'
+    );
   }, [battleDetails?.turn, battleDetails?.turn_player_id, battleDetails?.status]);
 
-  const renderOpponentBattleCard = () => {
-    const oppCard = battleDetails?.opponent?.status?.battle_card;
-    if (!oppCard) return <EmptyArea>未配置</EmptyArea>;
-    if (oppCard.placeholder) return <Card>{oppCard.placeholder}</Card>;
+  /** 相手のメインカード */
+  const renderOpponentMainCard = () => {
+    const oppCard = battleDetails?.opponent?.status.battle_card;
+    if (!oppCard) {
+      return <MainCardEmptyArea>未配置</MainCardEmptyArea>;
+    }
+    if (oppCard.placeholder) return <MainCardEmptyArea>{oppCard.placeholder}</MainCardEmptyArea>;
     return (
-      <Card onClick={(e) => e.stopPropagation()}>
+      <MainCard onClick={(e) => e.stopPropagation()}>
         {oppCard.image ? <img src={oppCard.image} alt={oppCard.name} /> : null}
-        <span>HP: {oppCard.hp}</span>
-        <span>{oppCard.energy ? `(${oppCard.energy})` : ''}</span>
-      </Card>
+        {oppCard.hp !== undefined && oppCard.max_hp !== undefined && (
+          <div style={{ position: 'absolute', top: 4, right: 4 }}>
+            <HPGauge hp={oppCard.hp} max_hp={oppCard.max_hp} />
+          </div>
+        )}
+        {oppCard.energy ? <EnergyIcons energy={oppCard.energy} /> : null}
+      </MainCard>
     );
   };
 
+  /** 相手のベンチ */
   const renderOpponentBenchArea = () => {
-    const benchCards = battleDetails?.opponent?.status?.bench_cards || [];
-    const maxBench = battleDetails?.opponent?.status?.bench_cards_max || 2;
+    const benchCards = battleDetails?.opponent?.status.bench_cards || [];
+    const maxBench = battleDetails?.opponent?.status.bench_cards_max || 2;
     const benchSlots = Array.from({ length: maxBench }, (_, i) => benchCards[i] || null);
+
     return (
-      <BenchArea>
-        {benchSlots.map((card, index) => (
-          <BenchSlot
-            key={`opp-bench-${index}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (energyAssignMode && card) {
-                sendJsonMessage({ type: 'action.assign_energy', card_id: `bench-${index}` });
-                setEnergyAssignMode(false);
-              }
-            }}
-          >
-            {card ? (
-              card.placeholder ? (
-                <Card>{card.placeholder}</Card>
-              ) : (
-                <Card>
-                  {card.image ? <img src={card.image} alt={card.name} /> : null}
-                  <span>{card.energy ? `(${card.energy})` : ''}</span>
-                </Card>
-              )
-            ) : (
-              <EmptyArea>空</EmptyArea>
-            )}
-          </BenchSlot>
-        ))}
-      </BenchArea>
+      <OpponentBenchArea>
+        <FieldTitle>相手のベンチ</FieldTitle>
+        {benchSlots.map((card, i) => {
+          if (!card) {
+            return <BenchCardEmptyArea key={i}>空</BenchCardEmptyArea>;
+          }
+          if (card.placeholder) return <BenchCardEmptyArea key={i}>{card.placeholder}</BenchCardEmptyArea>;
+          return (
+            <BenchCard
+              key={i}
+              onClick={(e) => {
+                e.stopPropagation();
+                toast('相手のカードにはエネルギーを付与できません', { icon: '⚠️' });
+              }}
+            >
+              {card.image ? <img src={card.image} alt={card.name} /> : null}
+              {card.hp !== undefined && card.max_hp !== undefined && (
+                <div style={{ position: 'absolute', top: 2, right: 2 }}>
+                  <HPGauge hp={card.hp} max_hp={card.max_hp} />
+                </div>
+              )}
+              {card.energy ? <EnergyIcons energy={card.energy} /> : null}
+            </BenchCard>
+          );
+        })}
+      </OpponentBenchArea>
     );
   };
 
-  const renderOpponentHandCount = () => {
-    const oppStatus = battleDetails?.opponent?.status || {};
-    const count = oppStatus.hand_cards_count ?? oppStatus._hand_cards?.length ?? 0;
-    return <div>手札: {count}枚</div>;
-  };
+  /** 自分のベンチ */
+  const renderPlayerBenchArea = () => {
+    const benchCards = battleDetails?.you.status.bench_cards || [];
+    const maxBench = battleDetails?.you.status.bench_cards_max || 2;
+    const benchSlots = Array.from({ length: maxBench }, (_, i) => benchCards[i] || null);
 
-  const renderHandCards = () => {
-    const handCards = battleDetails?.you.status.hand_cards || [];
     return (
-      <HandContainer>
-        {handCards.map((card, index) => (
-          <HandCard
-            key={`hand-${index}`}
-            onClick={() => {
-              if (energyAssignMode) {
-                toast("手札にはエネルギーを付与できません", { icon: "⚠️" });
-                return;
-              }
-              setSelectedCardIndex(index);
-            }}
-            selected={selectedCardIndex === index}
-          >
-            {card.image ? <img src={card.image} alt={card.name} /> : <span>{card.name || `カード${index + 1}`}</span>}
-          </HandCard>
-        ))}
-      </HandContainer>
+      <PlayerBenchArea>
+        {benchSlots.map((card, i) => {
+          if (!card) {
+            return (
+              <BenchCardEmptyArea
+                key={i}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (
+                    (((battleDetails?.status === 'setup') ||
+                      (battleDetails?.status === 'progress' && turnOwner === 'player')) &&
+                      selectedCardIndex !== null)
+                  ) {
+                    sendJsonMessage({
+                      type: 'action.place_card',
+                      card_index: selectedCardIndex,
+                      to_field: 'bench',
+                      bench_index: i,
+                    });
+                    setSelectedCardIndex(null);
+                  }
+                }}
+              >
+                空
+              </BenchCardEmptyArea>
+            );
+          }
+          if (card.placeholder) {
+            return <BenchCardEmptyArea key={i}>{card.placeholder}</BenchCardEmptyArea>;
+          }
+          return (
+            <BenchCard
+              key={i}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (energyAssignMode) {
+                  sendJsonMessage({ type: 'action.assign_energy', card_id: `bench-${i}` });
+                  setEnergyAssignMode(false);
+                }
+              }}
+            >
+              {card.image ? <img src={card.image} alt={card.name} /> : null}
+              {card.hp !== undefined && card.max_hp !== undefined && (
+                <div style={{ position: 'absolute', top: 2, right: 2 }}>
+                  <HPGauge hp={card.hp} max_hp={card.max_hp} />
+                </div>
+              )}
+              {card.energy ? <EnergyIcons energy={card.energy} /> : null}
+            </BenchCard>
+          );
+        })}
+      </PlayerBenchArea>
     );
   };
 
-  const renderMainArea = () => {
+  /** 自分のメインカード */
+  const renderPlayerMainCard = () => {
     const mainCard = battleDetails?.you.status.battle_card;
+    if (!mainCard) {
+      return (
+        <MainCardEmptyArea
+          onClick={() => {
+            if (battleDetails?.status === 'setup' && selectedCardIndex !== null) {
+              sendJsonMessage({
+                type: 'action.place_card',
+                card_index: selectedCardIndex,
+                to_field: 'battle_card',
+              });
+              setSelectedCardIndex(null);
+            }
+          }}
+        >
+          メインカード未配置
+        </MainCardEmptyArea>
+      );
+    }
+    if (mainCard.placeholder) {
+      return <MainCardEmptyArea>{mainCard.placeholder}</MainCardEmptyArea>;
+    }
     return (
-      <MainArea
+      <MainCard
         onClick={() => {
           if (energyAssignMode && mainCard) {
             sendJsonMessage({ type: 'action.assign_energy', card_id: 'battle_card' });
@@ -273,56 +397,54 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
           }
         }}
       >
-        {mainCard ? (
-          <Card>
-            {mainCard.image ? <img src={mainCard.image} alt={mainCard.name} /> : <EmptyArea>画像なし</EmptyArea>}
-            <span>HP: {mainCard.hp}</span>
-            <span>{mainCard.energy ? `(${mainCard.energy})` : ''}</span>
-          </Card>
+        {mainCard.image ? (
+          <img src={mainCard.image} alt={mainCard.name} />
         ) : (
-          <EmptyArea>メインカード未配置</EmptyArea>
+          <MainCardEmptyArea>画像なし</MainCardEmptyArea>
         )}
-      </MainArea>
+        {mainCard.hp !== undefined && mainCard.max_hp !== undefined && (
+          <div style={{ position: 'absolute', top: 4, right: 4 }}>
+            <HPGauge hp={mainCard.hp} max_hp={mainCard.max_hp} />
+          </div>
+        )}
+        {mainCard.energy ? <EnergyIcons energy={mainCard.energy} /> : null}
+      </MainCard>
     );
   };
 
-  const renderBenchArea = () => {
-    const benchCards = battleDetails?.you.status.bench_cards || [];
-    const maxBench = battleDetails?.you.status.bench_cards_max || 2;
-    const benchSlots = Array.from({ length: maxBench }, (_, i) => benchCards[i] || null);
+  /** 手札 */
+  const renderPlayerHandArea = () => {
+    const handCards = battleDetails?.you.status.hand_cards || [];
     return (
-      <BenchArea>
-        {benchSlots.map((card, index) => (
-          <BenchSlot
-            key={`bench-slot-${index}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (energyAssignMode && card) {
-                sendJsonMessage({ type: 'action.assign_energy', card_id: `bench-${index}` });
-                setEnergyAssignMode(false);
-              } else if (!card && selectedCardIndex !== null && (battleDetails?.status === 'setup' || turnOwner === 'player')) {
-                sendJsonMessage({ type: 'action.place_card', card_index: selectedCardIndex, to_field: 'bench' });
-                setSelectedCardIndex(null);
+      <HandArea>
+        <FieldTitle>手札</FieldTitle>
+        {handCards.map((card, i) => (
+          <HandCard
+            key={i}
+            onClick={() => {
+              if (energyAssignMode) {
+                toast('手札にはエネルギーを付与できません', { icon: '⚠️' });
+                return;
               }
+              setSelectedCardIndex(i);
             }}
+            className={selectedCardIndex === i ? 'selected' : ''}
           >
-            {card ? (
-              <Card>
-                {card.image ? <img src={card.image} alt={card.name} /> : null}
-                <span>{card.energy ? `(${card.energy})` : ''}</span>
-              </Card>
+            {card.image ? (
+              <img src={card.image} alt={card.name} />
             ) : (
-              <EmptyArea>空</EmptyArea>
+              <span>{card.name || `カード${i + 1}`}</span>
             )}
-          </BenchSlot>
+          </HandCard>
         ))}
-      </BenchArea>
+      </HandArea>
     );
   };
 
+  /** 準備完了ボタン */
   const renderReadyButton = () => {
     if (!battleDetails?.you.status.battle_card) return null;
-    if (battleDetails?.you.status.setup_done) {
+    if (battleDetails.you.status.setup_done) {
       return <ReadyButton disabled>準備完了待機中</ReadyButton>;
     }
     return (
@@ -334,7 +456,9 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
 
   if (readyState === ReadyState.CONNECTING) return <Matching message="サーバーに接続中..." />;
   if (readyState !== ReadyState.OPEN) return <Disconnected message="切断されました" />;
-  if (!battleDetails || battleDetails.status === 'waiting' || !battleDetails.opponent) return <Matching message="対戦相手をさがしています..." />;
+  if (!battleDetails || battleDetails.status === 'waiting' || !battleDetails.opponent) {
+    return <Matching message="対戦相手をさがしています..." />;
+  }
 
   return (
     <>
@@ -344,7 +468,9 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
         mode={modalMode}
         selectedAction={selectedAction}
         card={selectedActionCard}
-        opponentTargets={battleDetails.opponent?.status?.battle_card ? [battleDetails.opponent.status.battle_card] : []}
+        opponentTargets={
+          battleDetails.opponent?.status?.battle_card ? [battleDetails.opponent.status.battle_card] : []
+        }
         benchTargets={battleDetails.you.status.bench_cards || []}
         onActionSelect={handleModalActionSelect}
         onTargetSelect={handleModalTargetSelect}
@@ -362,84 +488,62 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
         }}
         onCancel={() => setIsTurnEndModalOpen(false)}
       />
+      <BubblesBackground />
       <BattleContainer>
         <TopBar>
-          <TurnInfo>
-            <div>ターン: {battleDetails.turn}</div>
-            <div>現在プレイヤーID: {battleDetails.turn_player_id}</div>
-          </TurnInfo>
-          <OpponentInfo>
-            <div>相手: {battleDetails.opponent.info.name}</div>
-            <div>相手HP: {battleDetails.opponent.status.life}</div>
-            <div>{renderOpponentHandCount()}</div>
-          </OpponentInfo>
+          <div>ターン数: {battleDetails.turn}</div>
         </TopBar>
-        <OpponentFieldArea>
-          <FieldTitle>相手のベンチ</FieldTitle>
+        <OpponentArea>
+          <OpponentInfoArea>
+            <div>相手: {battleDetails.opponent.info.name}</div>
+            <div>HP: {battleDetails.opponent.status.life}</div>
+            <div>手札: {battleDetails.opponent.status.hand_cards_count ?? 0}枚</div>
+          </OpponentInfoArea>
           {renderOpponentBenchArea()}
-          <FieldTitle>相手のメインエリア</FieldTitle>
-          {renderOpponentBattleCard()}
-        </OpponentFieldArea>
-        {battleDetails.status === 'setup' ? (
-          <SetupArea>
-            <SetupInfo>
-              <div>自分の手札</div>
-              <HandContainer>{renderHandCards()}</HandContainer>
-              {renderReadyButton()}
-            </SetupInfo>
-            <SelfFieldArea>
-              <FieldTitle>メインエリア</FieldTitle>
-              {renderMainArea()}
-              <FieldTitle>ベンチ</FieldTitle>
-              {renderBenchArea()}
-            </SelfFieldArea>
-          </SetupArea>
-        ) : (
-          <BattleArea>
-            <SelfFieldArea>
-              <FieldTitle>自分のメインエリア</FieldTitle>
-              {renderMainArea()}
-              <FieldTitle>ベンチ</FieldTitle>
-              {renderBenchArea()}
-            </SelfFieldArea>
-            <HandSection>
-              <HandTitle>手札</HandTitle>
-              <HandContainer>{renderHandCards()}</HandContainer>
-            </HandSection>
-          </BattleArea>
-        )}
-        <PlayerInfoBar>
-          <PlayerInfoBox>
+          <OpponentMainArea>
+            <FieldTitle>相手のメインカード</FieldTitle>
+            {renderOpponentMainCard()}
+          </OpponentMainArea>
+        </OpponentArea>
+        <PlayerArea>
+          {renderPlayerHandArea()}
+          <PlayerMainArea>
+            <FieldTitle>自分のメインカード</FieldTitle>
+            {renderPlayerMainCard()}
+          </PlayerMainArea>
+          <PlayerInfoArea>
             <div>自分: {battleDetails.you.info.name}</div>
             <div>HP: {battleDetails.you.status.life}</div>
             <div>エネルギー: {battleDetails.you.status.energy}</div>
-          </PlayerInfoBox>
-          <ActionButtons>
-            {battleDetails.status === 'progress' && turnOwner === 'player' && (
-              <>
-                <button
-                  onClick={() => {
-                    const mainCard = battleDetails.you.status.battle_card;
-                    if (mainCard) {
-                      setSelectedActionCard(mainCard);
-                      setModalMode('actionSelect');
-                      setModalVisible(true);
-                    }
-                  }}
-                >
-                  攻撃/逃げ
-                </button>
-                <button onClick={handleEnergyAssign}>エネルギー付与</button>
-              </>
-            )}
+            {battleDetails.status === 'setup' && renderReadyButton()}
             {battleDetails.status === 'progress' && (
-              <button onClick={handleSurrender}>降参</button>
+              <ActionButtons>
+                {turnOwner === 'player' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        const mainCard = battleDetails.you.status.battle_card;
+                        if (mainCard) {
+                          setSelectedActionCard(mainCard);
+                          setModalMode('actionSelect');
+                          setModalVisible(true);
+                        }
+                      }}
+                    >
+                      攻撃/逃げ
+                    </button>
+                    <button onClick={handleEnergyAssign}>エネルギー付与</button>
+                  </>
+                )}
+                <button onClick={handleSurrender}>降参</button>
+                {turnOwner === 'player' && (
+                  <button onClick={() => setIsTurnEndModalOpen(true)}>ターン終了</button>
+                )}
+              </ActionButtons>
             )}
-            {battleDetails.turn_player_id === battleDetails.you.info._id && (
-              <button onClick={() => setIsTurnEndModalOpen(true)}>ターン終了</button>
-            )}
-          </ActionButtons>
-        </PlayerInfoBar>
+          </PlayerInfoArea>
+          {renderPlayerBenchArea()}
+        </PlayerArea>
       </BattleContainer>
     </>
   );

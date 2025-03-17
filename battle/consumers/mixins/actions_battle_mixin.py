@@ -16,6 +16,7 @@ from .base import BaseMixin
 logger = logging.getLogger(__name__)
 
 class BattleActionsMixin(BaseMixin):
+
     async def _end_turn(self):
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
@@ -82,6 +83,10 @@ class BattleActionsMixin(BaseMixin):
         player.status.hand_cards_count = len(player.status._hand_cards)
 
     async def _action_attack_battle_card(self):
+        """
+        相手のメインカードを攻撃するアクション。
+        attack_needs_energy をチェックして足りない場合は攻撃不可とする。
+        """
         room: BattleRoom = await self.get_room()
         user = await self.get_user()
         player = self.get_player(room, user)
@@ -95,7 +100,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 攻撃側のメインカードの存在チェック
+        # 攻撃側のメインカードチェック
         if not player.status.battle_card:
             await self.send_json({
                 "type": "warning",
@@ -103,7 +108,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 防御側のメインカードの存在チェック
+        # 防御側のメインカードチェック
         if not opponent.status.battle_card:
             await self.send_json({
                 "type": "warning",
@@ -111,7 +116,19 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 攻撃側のメインカードから攻撃値を取得
+        # 攻撃に必要なエネルギー数を取得 # 追加
+        required_energy = getattr(player.status.battle_card, "attack_needs_energy", 0)
+        if player.status.battle_card.energy < required_energy:
+            await self.send_json({
+                "type": "warning",
+                "message": "攻撃に必要なエネルギーが足りません"
+            })
+            return
+
+        # 必要エネルギーを消費 # 追加
+        player.status.battle_card.energy -= required_energy
+
+        # 攻撃値を取得
         atk_value = getattr(player.status.battle_card, "attack", None)
         if atk_value is None:
             await self.send_json({
@@ -142,13 +159,10 @@ class BattleActionsMixin(BaseMixin):
             }
         )
 
-        # ノックアウト処理：相手のメインカードのHPが0以下の場合
+        # ノックアウト処理
         if new_hp <= 0:
             knocked_card_name = opponent.status.battle_card.name
-            # カード倒しにより、相手のライフを1減少
             opponent.status.life -= 1
-
-            # ノックアウト通知
             await self.channel_layer.group_send(
                 f"battle_rooms_{room.id}",
                 {
@@ -157,8 +171,6 @@ class BattleActionsMixin(BaseMixin):
                     "message": f"相手の {knocked_card_name} が倒れました！"
                 }
             )
-
-            # ライフが0以下なら敗北（即時バトル終了）
             if opponent.status.life <= 0:
                 room.status = BattleRoomStatus.FINISHED.value
                 room.winner = str(player.info.id)
@@ -171,7 +183,7 @@ class BattleActionsMixin(BaseMixin):
                     }
                 )
             else:
-                # ベンチカードがある場合は、先頭のカードをメインカードに昇格
+                # ベンチからメインカードを昇格
                 if opponent.status.bench_cards and len(opponent.status.bench_cards) > 0:
                     new_main = opponent.status.bench_cards.pop(0)
                     opponent.status.battle_card = new_main
@@ -184,7 +196,6 @@ class BattleActionsMixin(BaseMixin):
                         }
                     )
                 else:
-                    # ベンチカードがない場合は敗北
                     room.status = BattleRoomStatus.FINISHED.value
                     room.winner = str(player.info.id)
                     await self.channel_layer.group_send(
@@ -195,12 +206,17 @@ class BattleActionsMixin(BaseMixin):
                             "message": "相手はメインカードがなく、ベンチカードもありません。あなたの勝ちです！"
                         }
                     )
+
         # 変更内容を保存
         await self.save_room(room)
-        # ターン終了処理
+        # ターン終了
         await self._end_turn()
 
     async def _action_attack(self, message):
+        """
+        target_id が指定されるタイプの攻撃アクション。
+        こちらも同様に attack_needs_energy をチェックしてから攻撃する。
+        """
         logger.debug("Received _action_attack message: %s", message)
 
         room: BattleRoom = await self.get_room()
@@ -230,11 +246,21 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 受信メッセージから target_id を取得（相手カードに id が設定されている場合のみチェック）
+        # 攻撃に必要なエネルギーチェック # 追加
+        required_energy = getattr(player.status.battle_card, "attack_needs_energy", 0)
+        if player.status.battle_card.energy < required_energy:
+            await self.send_json({
+                "type": "warning",
+                "message": "攻撃に必要なエネルギーが足りません"
+            })
+            return
+
+        # 必要エネルギーを消費 # 追加
+        player.status.battle_card.energy -= required_energy
+
+        # ターゲットチェック
         target_id = message.get("target_id")
-        logger.debug("target_id from message: %s", target_id)
         card_id = getattr(opponent.status.battle_card, "id", None)
-        logger.debug("Opponent battle card id: %s", card_id)
         if card_id is not None and target_id and target_id != card_id:
             await self.send_json({
                 "type": "warning",
@@ -242,7 +268,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # プレイヤーのバトルカードから攻撃値を取得
+        # 攻撃値を取得
         atk_value = getattr(player.status.battle_card, "attack", None)
         if atk_value is None:
             await self.send_json({
@@ -251,19 +277,12 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        logger.debug("攻撃力: %s", atk_value)
-
-        # 相手のメインカードの HP を更新
-        if opponent.status.battle_card.hp is None:
-            opponent.status.battle_card.hp = 0
-        old_hp = opponent.status.battle_card.hp
-        opponent.status.battle_card.hp -= atk_value
+        # ダメージ処理
+        old_hp = opponent.status.battle_card.hp or 0
+        opponent.status.battle_card.hp = old_hp - atk_value
         logger.debug("攻撃前のHP: %s → 攻撃後のHP: %s", old_hp, opponent.status.battle_card.hp)
 
-        # 変更内容を保存
-        await self.save_room(room)
-
-        # 攻撃結果をチャットメッセージとして送信
+        # 攻撃結果メッセージ
         attack_msg = (
             f"{player.status.battle_card.name}が"
             f"{opponent.status.battle_card.name}に{atk_value}ダメージ！ "
@@ -278,7 +297,7 @@ class BattleActionsMixin(BaseMixin):
             }
         )
 
-        # HP が 0 以下の場合の処理
+        # HP が 0 以下の場合
         if opponent.status.battle_card.hp <= 0:
             opponent.status.battle_card = None
             await self.send_json({
@@ -300,7 +319,9 @@ class BattleActionsMixin(BaseMixin):
                     "message": "相手はカードがなくなりました。あなたの勝ちです！"
                 })
 
-        # 最後にターン終了処理を実行（逃げる処理と同様のフロー）
+        # 更新を保存
+        await self.save_room(room)
+        # 攻撃後はターン終了
         await self._end_turn()
 
     async def _action_escape(self, bench_index: int):
@@ -349,20 +370,17 @@ class BattleActionsMixin(BaseMixin):
         user = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
-        # 部屋の状態を finished にして、勝者を相手に設定
-        room.status = BattleRoomStatus.FINISHED.value  # もしくは "finished"
+        room.status = BattleRoomStatus.FINISHED.value
         room.winner = str(opponent.info.id)
         await self.save_room(room)
         await self._send_battle_update()
 
-        # 降参したプレイヤーには個別に「あなたは降参しました。」を送信
         await self.send_json({
             "type": "chat.message",
             "user": {"name": player.info.name},
             "message": "あなたは降参しました。"
         })
 
-        # 対戦相手には個別に「相手が降参を選びました！」を送信
         await self.channel_layer.send(
             opponent.info.channel_name,
             {
