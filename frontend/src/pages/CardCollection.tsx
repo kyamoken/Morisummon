@@ -52,8 +52,13 @@ const CardCollection: React.FC = () => {
       const matchAttribute = selectedAttribute === "All" || card.type === selectedAttribute;
       const matchPack = selectedPackFilter === "All" || card.pack === selectedPackFilter;
       // ひらがなに変換して部分一致判定
-      const normalizedCardName = toHiragana(card.name);
-      const normalizedSearchTerm = toHiragana(searchTerm.trim());
+      const normalizedCardName = toHiragana(card.name, {
+        convertLongVowelMark: false
+      });
+      const normalizedSearchTerm = toHiragana(searchTerm.trim(), {
+        convertLongVowelMark: false
+      });
+      console.log(normalizedCardName, normalizedSearchTerm);
       const matchName =
         normalizedSearchTerm === "" || normalizedCardName.includes(normalizedSearchTerm);
       return matchAttribute && matchPack && matchName;
@@ -123,17 +128,15 @@ const CardCollection: React.FC = () => {
           )}
         </CardGrid>
       </Content>
-      {selectedCard && (
-        <ModalOverlay onClick={handleCloseModal}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ExpandedCardImage
-              src={selectedCard.image || ''}
-              alt={selectedCard.name}
-            />
-            <CloseButton onClick={handleCloseModal}>×</CloseButton>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      {selectedCard ? <ModalOverlay onClick={handleCloseModal}>
+        <ModalContent onClick={(e) => e.stopPropagation()}>
+          <ExpandedCardImage
+            src={selectedCard.image || ''}
+            alt={selectedCard.name}
+          />
+          <CloseButton onClick={handleCloseModal}>×</CloseButton>
+        </ModalContent>
+      </ModalOverlay> : null}
     </CardCollectionContainer>
   );
 };
