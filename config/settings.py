@@ -243,3 +243,8 @@ mongoengine.connect(
     password=MONGO_PASSWORD,
     timeoutms=MONGO_TIMEOUT,
 )
+
+try:
+    from . import local_settings
+except ImportError:
+    pass
