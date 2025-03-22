@@ -25,6 +25,7 @@ idna==3.10
 incremental==24.7.2
 mongoengine==0.29.1
 msgpack==1.1.0
+mysqlclient==2.2.7
 pillow==11.1.0
 pipreqs==0.4.13
 pyasn1==0.6.1
@@ -45,6 +46,3 @@ tzdata==2024.2
 urllib3==2.3.0
 yarg==0.1.10
 zope.interface==7.2
-
-
-
