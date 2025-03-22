@@ -245,6 +245,6 @@ mongoengine.connect(
 )
 
 try:
-    from . import local_settings
+    from .local_settings import * # type: ignore
 except ImportError:
     pass
