@@ -30,14 +30,13 @@ const Login: React.FC = () => {
 
   return (
     <Container>
-      {/* バブル背景は z-index: 0 で配置 */}
       <BubblesBackground />
-      {/* コンテンツ部分は z-index: 1 を指定して背景より前面に表示 */}
       <ContentWrapper>
         <Helmet>
           <title>ログイン</title>
         </Helmet>
         <Header />
+        <Title>ログイン</Title>
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <Label>ユーザーネーム:</Label>
@@ -59,7 +58,7 @@ const Login: React.FC = () => {
         </Form>
         <RegisterLink>
           <p>
-            アカウントがありませんか？ <Link to="/register">登録はこちら</Link>
+            アカウントがありませんか？ <StyledLink to="/register">登録はこちら</StyledLink>
           </p>
         </RegisterLink>
       </ContentWrapper>
@@ -74,8 +73,8 @@ const Container = styled.div`
   overflow: hidden;
   min-height: 100vh;
   background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
-  background-size: 600% 600%; /* アニメーションのための背景サイズ */
-  padding-top: 70px; /* ヘッダー分の余白 */
+  background-size: 600% 600%;
+  padding-top: 70px;
   margin-top: 70px;
   animation: gradientAnimation 15s ease infinite;
 
@@ -84,14 +83,37 @@ const Container = styled.div`
     50% { background-position: 100% 50%; }
     100% { background-position: 0 50%; }
   }
+
+  @media (max-width: 480px) {
+    padding-top: 50px;
+    margin-top: 50px;
+  }
 `;
 
 const ContentWrapper = styled.div`
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  color: #fff;
+  margin: 20px 0 30px;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+  @media (max-width: 480px) {
+    font-size: 1.8rem;
+  }
 `;
 
 const Form = styled.form`
@@ -99,9 +121,12 @@ const Form = styled.form`
   border-radius: 8px;
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   padding: 30px;
-  max-width: 450px;
   width: 100%;
-  margin: 0 auto;
+  box-sizing: border-box;
+
+  @media (max-width: 480px) {
+    padding: 20px;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -113,7 +138,7 @@ const Label = styled.label`
   margin-bottom: 8px;
   font-size: 16px;
   font-weight: bold;
-  color: #333;
+  color: #fff;
 `;
 
 const Input = styled.input`
@@ -151,6 +176,20 @@ const Button = styled.button`
 const RegisterLink = styled.div`
   margin-top: 20px;
   font-size: 16px;
-  color: #333;
-  opacity: 0.8;
+  color: #fff;
+  opacity: 0.9;
+
+  p {
+    margin: 0;
+  }
+`;
+
+const StyledLink = styled(Link)`
+  color: #fff;
+  text-decoration: underline;
+  transition: opacity 0.3s;
+
+  &:hover {
+    opacity: 0.8;
+  }
 `;

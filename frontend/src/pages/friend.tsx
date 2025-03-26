@@ -199,15 +199,10 @@ const Friends: React.FC = () => {
 
   return (
     <FriendsContainer>
-      {/* 背面のバブル背景 */}
       <BubblesBackground />
-
-      {/* ヘッダー */}
       <HeaderWrapper>
         <Header />
       </HeaderWrapper>
-
-      {/* コンテンツ部分 */}
       <ContentWrapper>
         <MainContainer>
           {/* 左カラム：フレンド追加／フレンドリクエスト */}
@@ -278,14 +273,12 @@ const Friends: React.FC = () => {
         </MainContainer>
       </ContentWrapper>
 
-      {/* フレンド削除モーダル */}
       <FriendDeleteModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleRemoveFriend}
       />
 
-      {/* カード交換モーダル */}
       {isExchangeModalOpen && exchangeSession && (
         <ExchangeModalOverlay>
           <ExchangeModalContent>
@@ -329,9 +322,7 @@ const Friends: React.FC = () => {
 
 export default Friends;
 
-/* =======================
-   ホームページと同じデザインを適用するためのスタイル
-========================== */
+/* ===================== Styled Components ===================== */
 const FriendsContainer = styled.div`
   position: relative;
   min-height: 100vh;
@@ -344,15 +335,9 @@ const FriendsContainer = styled.div`
   animation: gradientAnimation 15s ease infinite;
 
   @keyframes gradientAnimation {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 `;
 
@@ -366,6 +351,11 @@ const ContentWrapper = styled.div`
   z-index: 10;
   margin-top: 130px;
   padding: 20px;
+
+  @media (max-width: 768px) {
+    margin-top: 100px;
+    padding: 10px;
+  }
 `;
 
 const MainContainer = styled.div`
@@ -376,6 +366,12 @@ const MainContainer = styled.div`
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 20px;
+  }
 `;
 
 const LeftColumn = styled.div`
@@ -384,6 +380,10 @@ const LeftColumn = styled.div`
   gap: 20px;
   flex: 1;
   max-width: 400px;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+  }
 `;
 
 const RightColumn = styled.div`
@@ -392,6 +392,10 @@ const RightColumn = styled.div`
   gap: 20px;
   flex: 1;
   max-width: 600px;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+  }
 `;
 
 const Card = styled.div`
@@ -405,6 +409,10 @@ const Card = styled.div`
 const SectionTitle = styled.h2`
   margin: 0 0 15px 0;
   font-size: 1.4rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+  }
 `;
 
 const InputRow = styled.div`
@@ -484,6 +492,10 @@ const ExchangeModalContent = styled.div`
   width: 400px;
   color: #2d2d67;
   text-align: center;
+
+  @media (max-width: 480px) {
+    width: 90%;
+  }
 `;
 
 const ModalTitle = styled.h2`
@@ -500,12 +512,14 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
   justify-content: center;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 10px;
+  }
 `;
 
-/* ========================
-   FloatingButton を拡張したカスタムボタン群
-========================== */
-// 送信ボタン（緑） - 元の SendButton は padding: 12px 16px だったのでオーバーライド
+/* ========== FloatingButton 拡張ボタン ========== */
 const SendFloatingButton = styled(FloatingButton)`
   padding: 12px 16px;
   font-size: 16px;
@@ -515,7 +529,6 @@ const SendFloatingButton = styled(FloatingButton)`
   }
 `;
 
-// 承認・カード交換・クローズボタン（青） - 元の ActionButton は padding: 8px 14px
 const ActionFloatingButton = styled(FloatingButton)`
   padding: 8px 14px;
   font-size: 14px;
@@ -525,7 +538,6 @@ const ActionFloatingButton = styled(FloatingButton)`
   }
 `;
 
-// 拒否ボタン（赤）
 const RejectFloatingButton = styled(FloatingButton)`
   padding: 8px 14px;
   font-size: 14px;
@@ -535,7 +547,6 @@ const RejectFloatingButton = styled(FloatingButton)`
   }
 `;
 
-// 削除・キャンセル用（FloatingDangerButton を拡張）
 const CustomFloatingDangerButton = styled(FloatingDangerButton)`
   padding: 8px 14px;
   font-size: 14px;
@@ -545,7 +556,6 @@ const CustomFloatingDangerButton = styled(FloatingDangerButton)`
   }
 `;
 
-// 交換成立ボタン（緑）
 const ConfirmFloatingButton = styled(FloatingButton)`
   padding: 8px 14px;
   font-size: 14px;
@@ -555,7 +565,6 @@ const ConfirmFloatingButton = styled(FloatingButton)`
   }
 `;
 
-// モーダルのクローズボタン（青）
 const CloseFloatingButton = styled(FloatingButton)`
   padding: 8px 14px;
   font-size: 14px;

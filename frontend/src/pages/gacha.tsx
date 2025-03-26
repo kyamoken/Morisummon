@@ -92,12 +92,13 @@ const GachaContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
+  overflow-y: auto;
+  width: 100%;
   background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
   background-size: 600% 600%;
   animation: gradientAnimation 15s ease infinite;
   color: white;
-  width: 100%;
   text-align: center;
 
   @keyframes gradientAnimation {
@@ -118,6 +119,7 @@ const Content = styled.div`
   z-index: 1;
   text-align: center;
   margin: 0 auto;
+  padding: 0 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -138,8 +140,14 @@ const ArrowButton = styled.button`
   cursor: pointer;
   padding: 0 10px;
   transition: color 0.2s;
+
   &:hover {
     color: var(--button-hover);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    padding: 0 5px;
   }
 `;
 
@@ -148,6 +156,11 @@ const PackIcon = styled.img`
   height: 250px;
   object-fit: contain;
   border-radius: 10px;
+
+  @media (max-width: 768px) {
+    width: 150px;
+    height: 150px;
+  }
 `;
 
 const Button = styled.button`
@@ -161,10 +174,12 @@ const Button = styled.button`
   transition: background-color 0.3s ease, transform 0.2s ease;
   width: 200px;
   margin-top: 20px;
+
   &:hover {
     background-color: var(--button-hover);
     transform: scale(1.05);
   }
+
   &:disabled {
     background-color: gray;
     cursor: not-allowed;
@@ -183,7 +198,6 @@ const Modal = styled.div`
   position: fixed;
 `;
 
-/* ★ カード登場用の派手なポップアップアニメーション ★ */
 const cardPop = keyframes`
   0% {
     opacity: 0;
@@ -244,6 +258,7 @@ const CloseButton = styled.button`
   padding: 10px 20px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+
   &:hover {
     background-color: var(--button-hover);
   }

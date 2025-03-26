@@ -143,4 +143,6 @@ input {
   &::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(180deg, #383875, #6f6fa8);
   }
-
+* {
+  -webkit-tap-highlight-color: transparent;
+}

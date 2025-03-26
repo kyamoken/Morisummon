@@ -153,11 +153,11 @@ function App() {
           <h2>デベロッパー</h2>
           <DeveloperCards>
             <DeveloperCard onClick={() => window.open('https://github.com/kyamoken', '_blank')}>
-              <img src="/static/images/kyamokenICON.png" width="125" height="125" alt="icon" />
+              <DeveloperIcon src="/static/images/kyamokenICON.png" alt="Kyamoken Icon" />
               <DeveloperName>Kyamoken</DeveloperName>
             </DeveloperCard>
             <DeveloperCard onClick={() => window.open('https://github.com/kp63', '_blank')}>
-              <img src="/static/images/sawakiLOGO.png" alt="GitHub" width="125" height="125" />
+              <DeveloperIcon src="/static/images/sawakiLOGO.png" alt="kp63 Icon" />
               <DeveloperName>kp63</DeveloperName>
             </DeveloperCard>
           </DeveloperCards>
@@ -326,6 +326,7 @@ const DeveloperCards = styled.div`
   gap: 20px;
   justify-content: center;
   margin-top: 20px;
+  flex-wrap: wrap;
 `;
 
 const DeveloperCard = styled.div`
@@ -342,7 +343,21 @@ const DeveloperCard = styled.div`
 
   &:hover { transform: scale(1.02); }
 
-  img { border-radius: var(--border-radius); }
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+`;
+
+const DeveloperIcon = styled.img`
+  width: 125px;
+  height: 125px;
+  object-fit: cover;
+  border-radius: var(--border-radius);
+
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 80px;
+  }
 `;
 
 const DeveloperName = styled.p`

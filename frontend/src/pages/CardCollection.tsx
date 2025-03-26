@@ -58,7 +58,6 @@ const CardCollection: React.FC = () => {
       const normalizedSearchTerm = toHiragana(searchTerm.trim(), {
         convertLongVowelMark: false
       });
-      console.log(normalizedCardName, normalizedSearchTerm);
       const matchName =
         normalizedSearchTerm === "" || normalizedCardName.includes(normalizedSearchTerm);
       return matchAttribute && matchPack && matchName;
@@ -128,15 +127,17 @@ const CardCollection: React.FC = () => {
           )}
         </CardGrid>
       </Content>
-      {selectedCard ? <ModalOverlay onClick={handleCloseModal}>
-        <ModalContent onClick={(e) => e.stopPropagation()}>
-          <ExpandedCardImage
-            src={selectedCard.image || ''}
-            alt={selectedCard.name}
-          />
-          <CloseButton onClick={handleCloseModal}>×</CloseButton>
-        </ModalContent>
-      </ModalOverlay> : null}
+      {selectedCard ? (
+        <ModalOverlay onClick={handleCloseModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ExpandedCardImage
+              src={selectedCard.image || ''}
+              alt={selectedCard.name}
+            />
+            <CloseButton onClick={handleCloseModal}>×</CloseButton>
+          </ModalContent>
+        </ModalOverlay>
+      ) : null}
     </CardCollectionContainer>
   );
 };
@@ -176,12 +177,17 @@ const Content = styled.div`
   width: 100%;
   max-width: 1200px;
   padding: 20px;
+  text-align: center;
 `;
 
 const Title = styled.h1`
   text-align: center;
   font-size: 2.5rem;
   margin-bottom: 40px;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
 `;
 
 const FilterContainer = styled.div`
@@ -195,12 +201,13 @@ const FilterContainer = styled.div`
 const FilterGroup = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
 `;
 
 const FilterLabel = styled.label`
   margin-bottom: 8px;
   font-size: 1rem;
+  text-align: center;
 `;
 
 const FilterSelect = styled.select`
@@ -224,6 +231,7 @@ const CardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 20px;
+  justify-items: center;
 `;
 
 const CardSlot = styled.div`
@@ -308,6 +316,16 @@ const ExpandedCardImage = styled.img`
   object-fit: cover;
   border-radius: 8px;
   display: block;
+
+  @media (max-width: 768px) {
+    width: 200px;
+    height: 300px;
+  }
+
+  @media (max-width: 480px) {
+    width: 150px;
+    height: 225px;
+  }
 `;
 
 const CloseButton = styled.button`
