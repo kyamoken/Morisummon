@@ -113,7 +113,6 @@ const CardText = styled.div`
   z-index: 2;
 `;
 
-// Homeと同様のバブル背景用スタイル
 const DeckContainer = styled.div`
   position: relative;
   min-height: 100vh;
@@ -127,15 +126,9 @@ const DeckContainer = styled.div`
   padding-top: 120px; /* ヘッダー分のスペース */
 
   @keyframes gradientAnimation {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 `;
 
@@ -148,13 +141,22 @@ const Content = styled.div`
   margin: 0 auto;
 `;
 
-// デッキ配置を横6×縦2に変更
+// デッキエリアのグリッド：大画面は6列、1024px以下で4列、768px以下で3列、480px以下で2列に変更
 const DeckArea = styled.div`
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(2, 1fr);
   gap: 10px;
   margin-bottom: 20px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 `;
 
 const CardSlot = styled.div`
@@ -167,6 +169,19 @@ const CardSlot = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+
+  @media (max-width: 1024px) {
+    width: 90px;
+    height: 135px;
+  }
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 120px;
+  }
+  @media (max-width: 480px) {
+    width: 70px;
+    height: 105px;
+  }
 `;
 
 const ScrollableArea = styled.div`
@@ -178,6 +193,10 @@ const ScrollableArea = styled.div`
   border-radius: var(--border-radius);
   padding: 10px;
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+  }
 `;
 
 const CardList = styled.div`
@@ -198,6 +217,19 @@ const CardItem = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+
+  @media (max-width: 1024px) {
+    width: 90px;
+    height: 135px;
+  }
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 120px;
+  }
+  @media (max-width: 480px) {
+    width: 70px;
+    height: 105px;
+  }
 `;
 
 const Button = styled.button`
@@ -215,6 +247,15 @@ const Button = styled.button`
   &:hover {
     background-color: var(--button-hover);
     transform: scale(1.05);
+  }
+
+  @media (max-width: 768px) {
+    width: 150px;
+    font-size: 16px;
+  }
+  @media (max-width: 480px) {
+    width: 120px;
+    font-size: 14px;
   }
 `;
 

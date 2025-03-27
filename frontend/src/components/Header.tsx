@@ -75,13 +75,10 @@ const Header: React.FC = () => {
 
   return (
     <HeaderContainer>
-      <img
+      <Logo
         src="/static/images/morisummonLOGO.png"
         alt="Logo"
-        width="100"
-        height="100"
         onClick={handleLogoClick}
-        style={{ cursor: 'pointer' }}
       />
       <UserInfo>
         {/* ユーザーがログインしている場合のみ、チャット・通知ボタンを表示 */}
@@ -126,7 +123,7 @@ const Header: React.FC = () => {
             <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z" />
           </svg>
         </SettingsButton>
-        <div>{user ? `${user.username} さん` : 'ゲスト さん'}</div>
+        <div>{user ? `${user.username}` : 'ゲスト さん'}</div>
         <MagicStoneContainer>
           <MagicStoneImage src="/static/images/Magic_Stone.png" alt="Magic Stone" />
           <div>{gachaStones}</div>
@@ -167,6 +164,22 @@ const HeaderContainer = styled.header`
   padding: 0 20px;
   z-index: 1000;
   box-shadow: var(--box-shadow);
+
+  @media (max-width: 768px) {
+    height: 50px;
+    padding: 0 10px;
+  }
+`;
+
+const Logo = styled.img`
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+
+  @media (max-width: 768px) {
+    width: 60px;
+    height: 60px;
+  }
 `;
 
 const UserInfo = styled.div`
@@ -178,6 +191,7 @@ const UserInfo = styled.div`
   padding: 10px 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
 
   & > div {
     margin-left: 20px;
@@ -185,6 +199,19 @@ const UserInfo = styled.div`
 
   & > div:not(:last-child) {
     margin-right: 20px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 5px 10px;
+    font-size: 14px;
+
+    & > div {
+      margin-left: 10px;
+    }
+
+    & > div:not(:last-child) {
+      margin-right: 10px;
+    }
   }
 `;
 
@@ -202,15 +229,36 @@ const ChatButton = styled.button`
   &:hover {
     background-color: #3a3b3e;
   }
+
+  @media (max-width: 768px) {
+    padding: 4px 8px;
+    margin-right: 10px;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
 `;
 
 const NotificationButton = styled(ChatButton)`
   position: relative;
   font-size: 24px;
+
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
 `;
 
 const SettingsButton = styled(ChatButton)`
-  /* 必要に応じて色やサイズなどを調整 */
+  @media (max-width: 768px) {
+    padding: 4px 8px;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
 `;
 
 const Badge = styled.span`
@@ -222,16 +270,33 @@ const Badge = styled.span`
   border-radius: 50%;
   padding: 5px 10px;
   font-size: 12px;
+
+  @media (max-width: 768px) {
+    padding: 3px 6px;
+    font-size: 10px;
+    top: -3px;
+    right: -6px;
+  }
 `;
 
 const MagicStoneContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 768px) {
+    gap: 4px;
+    font-size: 14px;
+  }
 `;
 
 const MagicStoneImage = styled.img`
   width: 20px;
   height: 20px;
   object-fit: cover;
+
+  @media (max-width: 768px) {
+    width: 16px;
+    height: 16px;
+  }
 `;

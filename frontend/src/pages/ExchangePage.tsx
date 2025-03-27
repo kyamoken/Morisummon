@@ -37,7 +37,7 @@ const ExchangePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [proposedCard, setProposedCard] = useState<CardData | null>(null);
 
-  // 交換セッション情報を取得
+  // 交換セッション情報の取得
   const fetchExchangeData = async () => {
     if (!exchange_ulid) return;
     try {
@@ -55,7 +55,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // ユーザーのカード一覧を取得
+  // ユーザーのカード一覧の取得
   const fetchUserCards = async () => {
     try {
       const response: CardData[] = await ky
@@ -70,7 +70,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
-  // 提案されたカードの詳細を取得（ユーザーのカード一覧から探す場合）
+  // 提案されたカードを探す
   const findProposedCard = (cardId: number) => {
     return cards.find((cardData) => cardData.card.id === cardId) || null;
   };
@@ -80,7 +80,6 @@ const ExchangePage: React.FC = () => {
     fetchUserCards();
   }, [exchange_ulid]);
 
-  // 交換セッション情報とカード一覧が両方取得できたら、提案されたカードを探す
   useEffect(() => {
     if (exchangeData && exchangeData.proposed_card_id && cards.length > 0) {
       const card = findProposedCard(exchangeData.proposed_card_id);
@@ -90,7 +89,7 @@ const ExchangePage: React.FC = () => {
     }
   }, [exchangeData, cards]);
 
-  // 提案側または受信側がカードを選択して交換提案を完了する処理
+  // 交換提案の処理
   const handleProposeExchange = async () => {
     if (!selectedCard || !exchange_ulid) return;
     try {
@@ -106,6 +105,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
+  // 交換成立の処理
   const handleConfirmExchange = async () => {
     if (!exchange_ulid) return;
     try {
@@ -120,6 +120,7 @@ const ExchangePage: React.FC = () => {
     }
   };
 
+  // 交換キャンセルの処理
   const handleCancelExchange = async () => {
     if (!exchange_ulid) return;
     try {
@@ -145,12 +146,10 @@ const ExchangePage: React.FC = () => {
 
   if (loading) return <div>Loading...</div>;
 
-  // 現在のユーザーIDを取得
   const currentUserId = user?.id;
 
   return (
     <Container>
-      {/* バブル背景 */}
       <BubblesBackground />
       <HeaderWrapper>
         <Header />
@@ -159,82 +158,78 @@ const ExchangePage: React.FC = () => {
         <Content>
           {exchangeData &&
           (exchangeData.status === 'pending' || exchangeData.status === 'proposed') ? (
-            // まだカードが提案されていない場合：カード選択画面
-              exchangeData.proposed_card_id === null ? (
-                <>
-                  <Title>交換するカードを選択してください</Title>
-                  <CardGrid>
-                    {cards
-                      .filter((cardData) => cardData.amount > 1)
-                      .map((cardData) => (
-                        <CardItem key={cardData.card.id} onClick={() => handleCardClick(cardData)}>
-                          <CardImage src={cardData.card.image} alt={cardData.card.name} />
-                          <CardName>{cardData.card.name}</CardName>
-                        </CardItem>
-                      ))}
-                  </CardGrid>
-                </>
-              ) : currentUserId && exchangeData.proposer_id === currentUserId ? (
-              // 提案側の場合：すでに提案済みのカードを表示し、キャンセルボタンを表示
-                <>
-                  <Title>あなたが提案したカード</Title>
-                  {proposedCard ? (
-                    <ProposedCardContainer>
-                      <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
-                      <CardName>{proposedCard.card.name}</CardName>
-                    </ProposedCardContainer>
-                  ) : (
-                    <Message>提案されたカード情報はありません。</Message>
-                  )}
-                  <ButtonGroup>
-                    <CancelExchangeButton onClick={handleCancelExchange}>
+            exchangeData.proposed_card_id === null ? (
+              <>
+                <Title>交換するカードを選択してください</Title>
+                <CardGrid>
+                  {cards
+                    .filter((cardData) => cardData.amount > 1)
+                    .map((cardData) => (
+                      <CardItem key={cardData.card.id} onClick={() => handleCardClick(cardData)}>
+                        <CardImage src={cardData.card.image} alt={cardData.card.name} />
+                        <CardName>{cardData.card.name}</CardName>
+                      </CardItem>
+                    ))}
+                </CardGrid>
+              </>
+            ) : currentUserId && exchangeData.proposer_id === currentUserId ? (
+              <>
+                <Title>あなたが提案したカード</Title>
+                {proposedCard ? (
+                  <ProposedCardContainer>
+                    <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
+                    <CardName>{proposedCard.card.name}</CardName>
+                  </ProposedCardContainer>
+                ) : (
+                  <Message>提案されたカード情報はありません。</Message>
+                )}
+                <ButtonGroup>
+                  <CancelExchangeButton onClick={handleCancelExchange}>
                     キャンセル
-                    </CancelExchangeButton>
-                  </ButtonGroup>
-                </>
-              ) : (
-              // 受信側の場合：相手が提案したカードを表示し、交換成立ボタンを表示
-                <>
-                  <Title>相手がカード交換を提案しています！</Title>
-                  {proposedCard ? (
-                    <ProposedCardContainer>
-                      <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
-                      <CardName>{proposedCard.card.name}</CardName>
-                    </ProposedCardContainer>
-                  ) : (
-                    <Message>未所持のカードが提案されています！</Message>
-                  )}
-                  <Message>内容に問題なければ「交換成立」ボタンを押してください。</Message>
-                  <ConfirmExchangeButton onClick={handleConfirmExchange}>
-                  交換成立
-                  </ConfirmExchangeButton>
-                </>
-              )
+                  </CancelExchangeButton>
+                </ButtonGroup>
+              </>
             ) : (
-              <Title>有効な交換セッションがありません</Title>
-            )}
+              <>
+                <Title>相手がカード交換を提案しています！</Title>
+                {proposedCard ? (
+                  <ProposedCardContainer>
+                    <CardImage src={proposedCard.card.image} alt={proposedCard.card.name} />
+                    <CardName>{proposedCard.card.name}</CardName>
+                  </ProposedCardContainer>
+                ) : (
+                  <Message>未所持のカードが提案されています！</Message>
+                )}
+                <Message>内容に問題なければ「交換成立」ボタンを押してください。</Message>
+                <ConfirmExchangeButton onClick={handleConfirmExchange}>
+                  交換成立
+                </ConfirmExchangeButton>
+              </>
+            )
+          ) : (
+            <Title>有効な交換セッションがありません</Title>
+          )}
         </Content>
       </ContentWrapper>
-      {/* カード選択確認モーダル */}
-      {isModalOpen && selectedCard ? <ExchangeSuperModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <ModalContent>
-          <ModalTitle>{selectedCard.card.name}</ModalTitle>
-          <ModalMessage>このカードを交換に出しますか？</ModalMessage>
-          <ButtonGroup>
-            <ConfirmButton onClick={handleProposeExchange}>はい</ConfirmButton>
-            <CancelButton onClick={() => setIsModalOpen(false)}>いいえ</CancelButton>
-          </ButtonGroup>
-        </ModalContent>
-      </ExchangeSuperModal> : null}
+      {isModalOpen && selectedCard ? (
+        <ExchangeSuperModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          <ModalContent>
+            <ModalTitle>{selectedCard.card.name}</ModalTitle>
+            <ModalMessage>このカードを交換に出しますか？</ModalMessage>
+            <ButtonGroup>
+              <ConfirmButton onClick={handleProposeExchange}>はい</ConfirmButton>
+              <CancelButton onClick={() => setIsModalOpen(false)}>いいえ</CancelButton>
+            </ButtonGroup>
+          </ModalContent>
+        </ExchangeSuperModal>
+      ) : null}
     </Container>
   );
 };
 
 export default ExchangePage;
 
-/* ===========================
-   ホーム／フレンドページと統一したデザイン
-=========================== */
+/* =========================== Styled Components =========================== */
 const Container = styled.div`
   position: relative;
   min-height: 100vh;
@@ -247,15 +242,9 @@ const Container = styled.div`
   animation: gradientAnimation 15s ease infinite;
 
   @keyframes gradientAnimation {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 `;
 
@@ -269,6 +258,10 @@ const ContentWrapper = styled.div`
   z-index: 10;
   margin-top: 130px;
   padding: 20px;
+  @media (max-width: 768px) {
+    margin-top: 100px;
+    padding: 10px;
+  }
 `;
 
 const Content = styled.div`
@@ -277,17 +270,26 @@ const Content = styled.div`
 
 const Title = styled.h1`
   margin-bottom: 20px;
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const Message = styled.p`
   margin-bottom: 20px;
   font-size: 16px;
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
 `;
 
 const CardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 20px;
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
 `;
 
 const CardItem = styled.div`
@@ -316,6 +318,12 @@ const ProposedCardContainer = styled.div`
   border-radius: var(--border-radius);
   width: 150px;
   text-align: center;
+  @media (max-width: 768px) {
+    width: 120px;
+  }
+  @media (max-width: 480px) {
+    width: 100px;
+  }
 `;
 
 const ModalContent = styled.div`
@@ -337,6 +345,10 @@ const ButtonGroup = styled.div`
   display: flex;
   justify-content: center;
   gap: 15px;
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 10px;
+  }
 `;
 
 const ConfirmButton = styled.button`
@@ -346,6 +358,10 @@ const ConfirmButton = styled.button`
   border-radius: var(--border-radius);
   padding: 10px 20px;
   cursor: pointer;
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 `;
 
 const CancelButton = styled.button`
@@ -355,6 +371,10 @@ const CancelButton = styled.button`
   border-radius: var(--border-radius);
   padding: 10px 20px;
   cursor: pointer;
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 `;
 
 const ConfirmExchangeButton = styled(ConfirmButton)`

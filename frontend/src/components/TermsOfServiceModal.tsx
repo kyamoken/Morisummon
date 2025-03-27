@@ -13,12 +13,14 @@ const TermsOfServiceModal: React.FC<TermsOfServiceModalProps> = ({ isOpen, onClo
     <ModalOverlay onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <CloseButton onClick={onClose}>×</CloseButton>
-        <h2>利用規約</h2>
-        <p>あなたがこれを見ているということはあなたはすでに同意しているでしょう。</p>
+        <Title>利用規約</Title>
+        <Text>あなたがこれを見ているということはあなたはすでに同意しているでしょう。</Text>
       </ModalContent>
     </ModalOverlay>
   );
 };
+
+export default TermsOfServiceModal;
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -32,7 +34,7 @@ const ModalOverlay = styled.div`
   justify-content: center;
   opacity: 0;
   animation: fadeIn 0.3s ease-in-out forwards;
-  z-index: 1002; /* z-indexを1002に変更 */
+  z-index: 1002;
 
   @keyframes fadeIn {
     to {
@@ -51,6 +53,16 @@ const ModalContent = styled.div`
   transform: scale(0.8);
   animation: scaleIn 0.3s ease-in-out forwards;
   color: var(--privacy-service-text-color);
+  position: relative;
+
+  @media (max-width: 768px) {
+    max-width: 90%;
+    padding: 15px;
+  }
+  @media (max-width: 480px) {
+    max-width: 95%;
+    padding: 10px;
+  }
 
   @keyframes scaleIn {
     to {
@@ -65,9 +77,40 @@ const CloseButton = styled.button`
   right: 10px;
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
   color: var(--text-color);
+  transition: color 0.3s;
+
+  &:hover {
+    color: var(--button-hover);
+  }
+
+  @media (max-width: 480px) {
+    top: 8px;
+    right: 8px;
+    font-size: 20px;
+  }
 `;
 
-export default TermsOfServiceModal;
+const Title = styled.h2`
+  margin-top: 0;
+  text-align: center;
+  font-size: 1.8rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.6rem;
+  }
+  @media (max-width: 480px) {
+    font-size: 1.4rem;
+  }
+`;
+
+const Text = styled.p`
+  font-size: 1rem;
+  text-align: center;
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
+`;

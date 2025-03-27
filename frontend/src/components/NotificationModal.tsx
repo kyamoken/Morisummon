@@ -1,4 +1,3 @@
-// NotificationModal.tsx
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { ky } from '@/utils/api';
@@ -76,11 +75,28 @@ const ModalContent = styled.div`
   box-shadow: var(--box-shadow);
   position: relative;
   color: white;
+
+  @media (max-width: 768px) {
+    width: 90%;
+    padding: 15px;
+  }
+  @media (max-width: 480px) {
+    width: 95%;
+    padding: 10px;
+  }
 `;
 
 const Title = styled.h2`
   margin-top: 0;
   text-align: center;
+  font-size: 1.8rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.6rem;
+  }
+  @media (max-width: 480px) {
+    font-size: 1.4rem;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -93,8 +109,15 @@ const CloseButton = styled.button`
   cursor: pointer;
   color: white;
   transition: color 0.3s;
+
   &:hover {
     color: var(--button-hover);
+  }
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+    top: 8px;
+    right: 8px;
   }
 `;
 
@@ -114,11 +137,20 @@ const NotificationItem = styled.li<{ $isRead: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 10px;
+
+  @media (max-width: 480px) {
+    padding: 10px;
+    gap: 8px;
+  }
 `;
 
 const NotificationText = styled.p`
   margin: 0;
   font-size: 14px;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
 
 const MarkAsReadButton = styled.button`
@@ -130,7 +162,13 @@ const MarkAsReadButton = styled.button`
   cursor: pointer;
   transition: background-color 0.3s;
   align-self: flex-end;
+
   &:hover {
     background-color: var(--button-hover);
+  }
+
+  @media (max-width: 480px) {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 `;

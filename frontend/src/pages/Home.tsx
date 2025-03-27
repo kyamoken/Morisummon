@@ -97,34 +97,34 @@ const Home: React.FC = () => {
       <Header />
 
       <Content>
-        <h1>Morisummonへようこそ！</h1>
+        <h1>Welcome :)</h1>
         <ButtonContainer>
           {/* マッチング */}
-          <FloatingButton as={Link} to="/battle" style={{ gridArea: 'matching' }}>
+          <FloatingButton as={Link} to="/battle" style={{gridArea: 'matching'}}>
             <MatchingButtonInner>
-              <MatchingIcon src="/static/images/battle_icon.svg" alt="マッチングアイコン" />
+              <MatchingIcon src="/static/images/battle_icon.svg" alt="マッチングアイコン"/>
               <span>マッチング</span>
             </MatchingButtonInner>
           </FloatingButton>
 
           {/* デッキ */}
-          <FloatingButton as={Link} to="/deck" style={{ gridArea: 'deck' }}>
+          <FloatingButton as={Link} to="/deck" style={{gridArea: 'deck'}}>
             <ButtonInner>
-              <DeckIconStyled />
+              <DeckIconStyled/>
               <span>デッキ</span>
             </ButtonInner>
           </FloatingButton>
 
           {/* 図鑑 */}
-          <FloatingButton as={Link} to="/card-collection" style={{ gridArea: 'zukan' }}>
+          <FloatingButton as={Link} to="/card-collection" style={{gridArea: 'zukan'}}>
             <ButtonInner>
-              <BookIconStyled />
+              <BookIconStyled/>
               <span>図鑑</span>
             </ButtonInner>
           </FloatingButton>
 
           {/* フレンド */}
-          <FloatingButton as={Link} to="/friends" style={{ gridArea: 'friend' }}>
+          <FloatingButton as={Link} to="/friends" style={{gridArea: 'friend'}}>
             <ButtonInner>
               <FriendIconStyled>
                 <svg
@@ -135,7 +135,8 @@ const Home: React.FC = () => {
                   className="bi bi-people-fill"
                   viewBox="0 0 16 16"
                 >
-                  <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
+                  <path
+                    d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
                 </svg>
               </FriendIconStyled>
               <span>フレンド</span>
@@ -143,17 +144,17 @@ const Home: React.FC = () => {
           </FloatingButton>
 
           {/* ガチャ */}
-          <FloatingButton as={Link} to="/gacha" style={{ gridArea: 'gacha' }}>
+          <FloatingButton as={Link} to="/gacha" style={{gridArea: 'gacha'}}>
             <ButtonInner>
-              <GachaIcon src="/static/images/Gacha_icon.png" alt="ガチャアイコン" />
+              <GachaIcon src="/static/images/Gacha_icon.png" alt="ガチャアイコン"/>
               <span>ガチャ</span>
             </ButtonInner>
           </FloatingButton>
 
           {/* ログアウト */}
-          <FloatingDangerButton onClick={handleLogout} style={{ gridArea: 'logout' }}>
+          <FloatingDangerButton onClick={handleLogout} style={{gridArea: 'logout'}}>
             <ButtonInner>
-              <LogoutIconStyled />
+              <LogoutIconStyled/>
               <span>ログアウト</span>
             </ButtonInner>
           </FloatingDangerButton>
@@ -215,6 +216,14 @@ const ButtonContainer = styled.div`
   max-width: 600px;
   margin: 40px auto;
   justify-items: stretch;
+
+  @media (max-width: 768px) {
+    /* 縦並びに変更し、左右に余白を追加 */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 40px 20px;
+  }
 `;
 
 const ButtonInner = styled.div`
