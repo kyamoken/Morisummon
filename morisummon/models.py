@@ -56,13 +56,9 @@ class Card(models.Model):
         ('support', 'サポートカード'),
     ]
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES,default='character')
-
     # 技名（攻撃時のログ表示用）
     attack_name = models.CharField(max_length=255, blank=True, null=True)
-
-    # パック分類（どのガチャ／パックから出たか）
     pack = models.CharField(max_length=50, blank=True, null=True)
-
     # 特性（自由設定）
     ability = models.TextField(blank=True, null=True)
 

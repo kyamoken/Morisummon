@@ -1,10 +1,11 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from morisummon.models import Friendship, FriendRequest
 
 # Create your models here.
 class User(AbstractUser):
-    magic_stones = models.IntegerField(default=0)
+    magic_stones = models.IntegerField(default=100)
 
     def __str__(self):
         return self.username
