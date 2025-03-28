@@ -12,6 +12,7 @@ from battle.models import (
     BattleRoomStatus  # Enum
 )
 from .base import BaseMixin
+from accounts.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class BattleActionsMixin(BaseMixin):
         attack_needs_energy をチェックして足りない場合は攻撃不可とする。
         """
         room: BattleRoom = await self.get_room()
-        user = await self.get_user()
+        user: User = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
 
@@ -116,7 +117,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 攻撃に必要なエネルギー数を取得 # 追加
+        # 攻撃に必要なエネルギー数を取得
         required_energy = getattr(player.status.battle_card, "attack_needs_energy", 0)
         if player.status.battle_card.energy < required_energy:
             await self.send_json({
@@ -125,7 +126,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 必要エネルギーを消費 # 追加
+        # 必要エネルギーを消費（今回はコメントアウト）
         # player.status.battle_card.energy -= required_energy
 
         # 攻撃値を取得
@@ -174,6 +175,9 @@ class BattleActionsMixin(BaseMixin):
             if opponent.status.life <= 0:
                 room.status = BattleRoomStatus.FINISHED.value
                 room.winner = str(player.info.id)
+                # 勝利時に user.magic_stones を +10 する
+                user.magic_stones += 10
+                await database_sync_to_async(user.save)()
                 await self.channel_layer.group_send(
                     f"battle_rooms_{room.id}",
                     {
@@ -198,6 +202,9 @@ class BattleActionsMixin(BaseMixin):
                 else:
                     room.status = BattleRoomStatus.FINISHED.value
                     room.winner = str(player.info.id)
+                    # 勝利時に user.magic_stone を +10 する
+                    user.magic_stones += 10
+                    await database_sync_to_async(user.save)()
                     await self.channel_layer.group_send(
                         f"battle_rooms_{room.id}",
                         {
@@ -220,7 +227,7 @@ class BattleActionsMixin(BaseMixin):
         logger.debug("Received _action_attack message: %s", message)
 
         room: BattleRoom = await self.get_room()
-        user = await self.get_user()
+        user: User = await self.get_user()
         player = self.get_player(room, user)
         opponent = self.get_opponent(room, user)
 
@@ -246,7 +253,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 攻撃に必要なエネルギーチェック # 追加
+        # 攻撃に必要なエネルギーチェック
         required_energy = getattr(player.status.battle_card, "attack_needs_energy", 0)
         if player.status.battle_card.energy < required_energy:
             await self.send_json({
@@ -255,7 +262,7 @@ class BattleActionsMixin(BaseMixin):
             })
             return
 
-        # 必要エネルギーを消費 # 追加
+        # 必要エネルギーを消費（今回はコメントアウト）
         # player.status.battle_card.energy -= required_energy
 
         # ターゲットチェック
@@ -314,6 +321,9 @@ class BattleActionsMixin(BaseMixin):
             else:
                 room.status = "finished"
                 room.winner = str(player.info.id)
+                # 勝利時に user.magic_stone を +10 する
+                user.magic_stone += 10
+                await database_sync_to_async(user.save)()
                 await self.send_json({
                     "type": "info",
                     "message": "相手はカードがなくなりました。あなたの勝ちです！"
