@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   BattleContainer,
   OpponentArea,
@@ -10,6 +10,7 @@ import {
   PlayerBenchArea,
   PlayerMainArea,
   HandArea,
+  HandAreaScrollContainer,
   MainCard,
   BenchCard,
   HandCard,
@@ -67,9 +68,24 @@ const HPGauge: React.FC<{ hp: number; max_hp: number }> = ({ hp, max_hp }) => {
 const EnergyIcons: React.FC<{ energy: number }> = ({ energy }) => {
   if (!energy) return null;
   return (
-    <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: '2px' }}>
+    <div
+      style={{
+        position: 'absolute',
+        top: '50%',
+        right: 4,
+        transform: 'translateY(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px'
+      }}
+    >
       {Array.from({ length: energy }).map((_, i) => (
-        <img key={i} src="/static/images/ENERGY.png" alt="energy" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+        <img
+          key={i}
+          src="/static/images/ENERGY.png"
+          alt="energy"
+          style={{ width: '16px', height: '16px', objectFit: 'contain' }}
+        />
       ))}
     </div>
   );
@@ -89,6 +105,20 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   const [modalMode, setModalMode] = useState<ModalMode>('actionSelect');
   const [selectedAction, setSelectedAction] = useState<'attack' | 'retreat' | null>(null);
   const [selectedActionCard, setSelectedActionCard] = useState<CardInfo | null>(null);
+
+  // 手札スクロール領域のための ref
+  const handAreaRef = useRef<HTMLDivElement>(null);
+
+  // 手札が更新されるたびに自動スクロールする処理
+  useEffect(() => {
+    if (handAreaRef.current) {
+      handAreaRef.current.scrollTo({
+        top: handAreaRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [battleDetails?.you?.status?.hand_cards?.length]);
+
 
   const handleEnergyAssign = () => {
     setEnergyAssignMode(true);
@@ -367,29 +397,31 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
 
   /** 手札 */
   const renderPlayerHandArea = () => {
-    const handCards = battleDetails?.you.status.hand_cards || [];
+    const handCards = battleDetails?.you?.status?.hand_cards || [];
     return (
       <HandArea>
         <FieldTitle>手札</FieldTitle>
-        {handCards.map((card, i) => (
-          <HandCard
-            key={i}
-            onClick={() => {
-              if (energyAssignMode) {
-                toast('手札にはエネルギーを付与できません', { icon: '⚠️' });
-                return;
-              }
-              setSelectedCardIndex(i);
-            }}
-            className={selectedCardIndex === i ? 'selected' : ''}
-          >
-            {card.image ? (
-              <img src={card.image} alt={card.name} />
-            ) : (
-              <span>{card.name || `カード${i + 1}`}</span>
-            )}
-          </HandCard>
-        ))}
+        <HandAreaScrollContainer ref={handAreaRef}>
+          {handCards.map((card, i) => (
+            <HandCard
+              key={i}
+              onClick={() => {
+                if (energyAssignMode) {
+                  toast('手札にはエネルギーを付与できません', { icon: '⚠️' });
+                  return;
+                }
+                setSelectedCardIndex(i);
+              }}
+              className={selectedCardIndex === i ? 'selected' : ''}
+            >
+              {card.image ? (
+                <img src={card.image} alt={card.name} style={{ maxWidth: '100%', height: 'auto' }} />
+              ) : (
+                <span>{card.name || `カード${i + 1}`}</span>
+              )}
+            </HandCard>
+          ))}
+        </HandAreaScrollContainer>
       </HandArea>
     );
   };
@@ -443,9 +475,9 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
       />
       <BubblesBackground />
       <BattleContainer>
-        {/* <TopBar> */}
-        {/*   <div>ターン数: {battleDetails.turn}</div> */}
-        {/* </TopBar> */}
+        {/* <TopBar>
+          <div>ターン数: {battleDetails.turn}</div>
+        </TopBar> */}
         <OpponentArea>
           <OpponentInfoArea>
             <div>相手: {battleDetails.opponent.info.name}</div>

@@ -17,7 +17,6 @@ export const BattleContainer = styled.div`
   }
 `;
 
-
 /* 相手エリア */
 export const OpponentArea = styled.div`
   grid-row: 2;
@@ -96,12 +95,30 @@ export const PlayerInfoArea = styled.div`
 export const HandArea = styled.div`
   grid-area: hand;
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   margin-top: 10px;
 `;
+
+// 手札のカード群を固定高さのスクロール可能なコンテナに配置する
+export const HandAreaScrollContainer = styled.div`
+  max-height: 200px; /* 高さは必要に応じて調整 */
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+
+  /* Chrome, Safari, Opera 用: スクロールバー非表示 */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  /* IE, Edge 用 */
+  -ms-overflow-style: none;
+  /* Firefox 用 */
+  scrollbar-width: none;
+`;
+
 
 export const FieldTitle = styled.h3`
   margin: 0;
@@ -298,6 +315,8 @@ export const ActionButtons = styled.div`
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    line-height: 1.2;
+    white-space: nowrap;
     &:hover {
       opacity: 0.9;
     }
