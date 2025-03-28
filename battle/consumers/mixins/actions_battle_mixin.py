@@ -126,7 +126,7 @@ class BattleActionsMixin(BaseMixin):
             return
 
         # 必要エネルギーを消費 # 追加
-        player.status.battle_card.energy -= required_energy
+        # player.status.battle_card.energy -= required_energy
 
         # 攻撃値を取得
         atk_value = getattr(player.status.battle_card, "attack", None)
@@ -256,7 +256,7 @@ class BattleActionsMixin(BaseMixin):
             return
 
         # 必要エネルギーを消費 # 追加
-        player.status.battle_card.energy -= required_energy
+        # player.status.battle_card.energy -= required_energy
 
         # ターゲットチェック
         target_id = message.get("target_id")
