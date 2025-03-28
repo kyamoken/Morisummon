@@ -12,19 +12,11 @@ export const BattleContainer = styled.div`
   background-color: var(--background-color);
   color: #fff;
   padding: 10px;
+  @media (max-width: 768px) {
+    padding: 5px;
+  }
 `;
 
-export const TopBar = styled.div`
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0 10px;
-  background-color: var(--primary-color);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  font-weight: bold;
-`;
 
 /* 相手エリア */
 export const OpponentArea = styled.div`

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   BattleContainer,
-  TopBar,
   OpponentArea,
   PlayerArea,
   OpponentInfoArea,
@@ -444,9 +443,9 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
       />
       <BubblesBackground />
       <BattleContainer>
-        <TopBar>
-          <div>ターン数: {battleDetails.turn}</div>
-        </TopBar>
+        {/* <TopBar> */}
+        {/*   <div>ターン数: {battleDetails.turn}</div> */}
+        {/* </TopBar> */}
         <OpponentArea>
           <OpponentInfoArea>
             <div>相手: {battleDetails.opponent.info.name}</div>
