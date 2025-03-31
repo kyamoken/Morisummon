@@ -308,6 +308,7 @@ export const ActionButtons = styled.div`
   display: flex;
   gap: 8px;
   margin-top: 8px;
+
   button {
     padding: 6px 12px;
     background-color: var(--primary-color);
@@ -317,8 +318,17 @@ export const ActionButtons = styled.div`
     cursor: pointer;
     line-height: 1.2;
     white-space: nowrap;
+
     &:hover {
       opacity: 0.9;
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+
+    button {
+      width: 100%;
     }
   }
 `;

@@ -272,6 +272,7 @@ const ChatForm = styled.form`
   gap: 8px;
   width: 100%;
   padding: 10px;
+
   input.message-input {
     flex: 1;
     padding: 8px;
@@ -282,6 +283,7 @@ const ChatForm = styled.form`
       outline: solid 3px rgba(68, 155, 222, 0.4);
     }
   }
+
   button[type='submit'] {
     padding: 8px 16px;
     background-color: var(--primary-color);
@@ -289,6 +291,7 @@ const ChatForm = styled.form`
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
+    white-space: nowrap;
     &:hover {
       background-color: var(--button-hover);
     }
@@ -296,7 +299,22 @@ const ChatForm = styled.form`
       outline: solid 3px rgba(68, 155, 222, 0.4);
     }
   }
+
+  /* スマホなど画面幅が狭い場合の調整 */
+  @media (max-width: 600px) {
+    input.message-input {
+      flex: none;
+      /* ボタンの幅（60px）＋ギャップ（8px）を引いた値に設定 */
+      width: calc(100% - 68px);
+    }
+    button[type='submit'] {
+      width: 60px;
+      /* 余計な左右のパディングを減らして、ボタンが二文字分に収まるように調整 */
+      padding: 8px 0;
+    }
+  }
 `;
+
 
 const ChatItems = styled.div`
   display: flex;

@@ -1,5 +1,4 @@
-// friend.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useLayoutEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { ky } from '@/utils/api';
 import Header from '@/components/Header';
@@ -192,7 +191,8 @@ const Friends: React.FC = () => {
     }
   };
 
-  useEffect(() => {
+  // 初回ロード時にデータを取得
+  React.useEffect(() => {
     fetchFriends();
     fetchFriendRequests();
   }, []);
@@ -251,7 +251,8 @@ const Friends: React.FC = () => {
               {friends.length > 0 ? (
                 friends.map((friend) => (
                   <FriendItem key={friend.id}>
-                    <FriendName>{friend.username}</FriendName>
+                    {/* 友達名部分は AutoFitFriendName コンポーネントで自動調整 */}
+                    <AutoFitFriendName username={friend.username} />
                     <FriendButtonGroup>
                       <ActionFloatingButton onClick={() => handleInitiateExchange(friend.id)}>
                         カード交換
@@ -321,6 +322,57 @@ const Friends: React.FC = () => {
 };
 
 export default Friends;
+
+/* ===================== AutoFitFriendName コンポーネント ===================== */
+const AutoFitFriendName: React.FC<{
+  username: string;
+  maxFontSize?: number;
+  minFontSize?: number;
+}> = ({ username, maxFontSize = 16, minFontSize = 10 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [fontSize, setFontSize] = useState(maxFontSize);
+
+  useLayoutEffect(() => {
+    const adjustFontSize = () => {
+      if (containerRef.current && textRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        let currentFontSize = maxFontSize;
+        textRef.current.style.fontSize = `${currentFontSize}px`;
+        // テキストがはみ出している間、フォントサイズを1pxずつ下げる
+        while (textRef.current.scrollWidth > containerWidth && currentFontSize > minFontSize) {
+          currentFontSize -= 1;
+          textRef.current.style.fontSize = `${currentFontSize}px`;
+        }
+        setFontSize(currentFontSize);
+      }
+    };
+
+    adjustFontSize();
+    window.addEventListener('resize', adjustFontSize);
+    return () => window.removeEventListener('resize', adjustFontSize);
+  }, [username, maxFontSize, minFontSize]);
+
+  return (
+    <NameContainer ref={containerRef}>
+      <NameText ref={textRef} style={{ fontSize: `${fontSize}px` }}>
+        {username}
+      </NameText>
+    </NameContainer>
+  );
+};
+
+const NameContainer = styled.div`
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+`;
+
+const NameText = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
 
 /* ===================== Styled Components ===================== */
 const FriendsContainer = styled.div`
@@ -415,13 +467,17 @@ const SectionTitle = styled.h2`
   }
 `;
 
+/* 入力欄と送信ボタンが並ぶ行 */
 const InputRow = styled.div`
   display: flex;
   gap: 10px;
+  flex-wrap: nowrap;
+  align-items: center;
 `;
 
 const StyledInput = styled.input`
   flex: 1;
+  min-width: 0;
   padding: 12px;
   border: none;
   border-radius: 8px;
@@ -445,6 +501,7 @@ const RequestText = styled.span`
 const RequestButtonGroup = styled.div`
   display: flex;
   gap: 8px;
+  flex-wrap: nowrap;
 `;
 
 const NoRequestText = styled.p`
@@ -454,24 +511,21 @@ const NoRequestText = styled.p`
 
 const FriendItem = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   background-color: rgba(255, 255, 255, 0.15);
   margin-bottom: 10px;
   padding: 10px;
   border-radius: 8px;
-`;
-
-const FriendName = styled.span`
-  font-size: 1rem;
+  gap: 8px;
 `;
 
 const FriendButtonGroup = styled.div`
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 `;
 
-/* モーダル系 */
 const ExchangeModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -520,18 +574,31 @@ const ButtonGroup = styled.div`
 `;
 
 /* ========== FloatingButton 拡張ボタン ========== */
+
 const SendFloatingButton = styled(FloatingButton)`
-  padding: 12px 16px;
+  width: 70px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
   background-color: #00b894;
   &:hover {
     background-color: #019875;
   }
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+    width: 60px;
+  }
 `;
 
 const ActionFloatingButton = styled(FloatingButton)`
-  padding: 8px 14px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
   background-color: #3498db;
   &:hover {
     background-color: #2980b9;
@@ -539,8 +606,10 @@ const ActionFloatingButton = styled(FloatingButton)`
 `;
 
 const RejectFloatingButton = styled(FloatingButton)`
-  padding: 8px 14px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
   background-color: #e74c3c;
   &:hover {
     background-color: #c0392b;
@@ -548,8 +617,10 @@ const RejectFloatingButton = styled(FloatingButton)`
 `;
 
 const CustomFloatingDangerButton = styled(FloatingDangerButton)`
-  padding: 8px 14px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
   background-color: #e74c3c;
   &:hover {
     background-color: #c0392b;
@@ -557,8 +628,8 @@ const CustomFloatingDangerButton = styled(FloatingDangerButton)`
 `;
 
 const ConfirmFloatingButton = styled(FloatingButton)`
-  padding: 8px 14px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 12px;
   background-color: #27ae60;
   &:hover {
     background-color: #1e8e50;
@@ -566,8 +637,8 @@ const ConfirmFloatingButton = styled(FloatingButton)`
 `;
 
 const CloseFloatingButton = styled(FloatingButton)`
-  padding: 8px 14px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 12px;
   background-color: #3498db;
   &:hover {
     background-color: #2980b9;
