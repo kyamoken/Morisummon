@@ -20,25 +20,31 @@ const Deck: React.FC = () => {
   };
 
   const handleSaveDeck = () => {
+    // 空のスロットがある場合はエラートーストを表示して保存処理を中断
+    if (deckManager.editingDeck.some((card) => card === null)) {
+      toast.error("全ての枠にカードを配置してください！");
+      return;
+    }
     deckManager
       .saveDeck()
       .then(() => {
-        toast.success('デッキが保存されました');
+        toast.success("デッキが保存されました");
       })
       .catch(async (error) => {
-        console.log('Error caught:', error);
+        console.log("Error caught:", error);
         try {
           const errorData = error.response ? await error.response.json() : null;
-          console.log('Error Data:', errorData);
-
-          if (errorData?.error === 'duplicate_card') {
-            toast.error(errorData.message || '同一カードを複数枚追加することはできません');
+          console.log("Error Data:", errorData);
+          if (errorData?.error === "duplicate_card") {
+            toast.error(
+              errorData.message || "同一カードを複数枚追加することはできません"
+            );
           } else {
-            toast.error('保存に失敗しました');
+            toast.error("保存に失敗しました");
           }
         } catch (err) {
-          console.error('Unexpected error:', err);
-          toast.error('エラーが発生しました');
+          console.error("Unexpected error:", err);
+          toast.error("エラーが発生しました");
         }
       });
   };
@@ -57,9 +63,9 @@ const Deck: React.FC = () => {
               {deckManager.editingDeck.map((card, index) => (
                 <CardSlot key={index} onClick={() => handleRemoveCardFromDeck(index)}>
                   {card?.image ? (
-                    <CardImage src={card.image} alt={card.name || 'カード画像'} />
+                    <CardImage src={card.image} alt={card.name || "カード画像"} />
                   ) : (
-                    <CardName>{card?.name || '未設定'}</CardName>
+                    <CardName>{card?.name || "未設定"}</CardName>
                   )}
                 </CardSlot>
               ))}
@@ -67,17 +73,24 @@ const Deck: React.FC = () => {
             {cards && (
               <ScrollableArea>
                 <CardList>
-                  {cards.map((item, index) => (
-                    <CardItem key={index} onClick={() => handleAddCardToDeck(item.card)}>
-                      {item.card.image ? (
-                        <CardImage src={item.card.image} alt={item.card.name} />
-                      ) : (
-                        <CardText>
-                          {item.card.name} ({item.amount})
-                        </CardText>
-                      )}
-                    </CardItem>
-                  ))}
+                  {cards
+                    .filter(
+                      (item) =>
+                        !deckManager.editingDeck.some(
+                          (deckCard) => deckCard && deckCard.id === item.card.id
+                        )
+                    )
+                    .map((item, index) => (
+                      <CardItem key={index} onClick={() => handleAddCardToDeck(item.card)}>
+                        {item.card.image ? (
+                          <CardImage src={item.card.image} alt={item.card.name} />
+                        ) : (
+                          <CardText>
+                            {item.card.name} ({item.amount})
+                          </CardText>
+                        )}
+                      </CardItem>
+                    ))}
                 </CardList>
               </ScrollableArea>
             )}
@@ -123,7 +136,7 @@ const DeckContainer = styled.div`
   background: linear-gradient(270deg, #383875, #6f6fa8, #383875);
   background-size: 600% 600%;
   animation: gradientAnimation 15s ease infinite;
-  padding-top: 120px; /* ヘッダー分のスペース */
+  padding-top: 120px;
 
   @keyframes gradientAnimation {
     0% { background-position: 0% 50%; }
@@ -141,7 +154,6 @@ const Content = styled.div`
   margin: 0 auto;
 `;
 
-// デッキエリアのグリッド：大画面は6列、1024px以下で4列、768px以下で3列、480px以下で2列に変更
 const DeckArea = styled.div`
   display: grid;
   grid-template-columns: repeat(6, 1fr);

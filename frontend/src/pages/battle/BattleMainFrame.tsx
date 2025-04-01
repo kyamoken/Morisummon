@@ -430,7 +430,7 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   const renderReadyButton = () => {
     if (!battleDetails?.you.status.battle_card) return null;
     if (battleDetails.you.status.setup_done) {
-      return <ReadyButton disabled>準備完了待機中</ReadyButton>;
+      return <ReadyButton disabled>待機中</ReadyButton>;
     }
     return (
       <ReadyButton onClick={() => sendJsonMessage({ type: 'action.setup_complete' })}>

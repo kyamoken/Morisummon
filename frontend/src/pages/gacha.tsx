@@ -46,21 +46,19 @@ const Gacha: React.FC = () => {
 
   return (
     <GachaContainer>
-      {/* 背景バブル */}
       <BubblesBackground />
       <Content>
         <Header />
         <h1>ガチャページ</h1>
-        {/* パック選択部分：左右の矢印で切り替え */}
         <PackSelector>
           <ArrowButton onClick={handlePrevPack}>◀</ArrowButton>
           <PackIcon src={packIcons[selectedPack]} alt={selectedPack} />
           <ArrowButton onClick={handleNextPack}>▶</ArrowButton>
         </PackSelector>
-
         <Button onClick={handleGacha} disabled={isAnimating || !selectedPack}>
           {isAnimating ? 'ガチャ中...' : 'ガチャを引く'}
         </Button>
+        <CostLabel>消費魔法石：10個</CostLabel>
         {!!result && (
           <Modal>
             <CardContainer>
@@ -184,6 +182,12 @@ const Button = styled.button`
     background-color: gray;
     cursor: not-allowed;
   }
+`;
+
+const CostLabel = styled.div`
+  font-size: 0.8rem;
+  color: #ccc;
+  margin-top: 5px;
 `;
 
 const Modal = styled.div`

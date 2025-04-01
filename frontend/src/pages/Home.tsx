@@ -204,6 +204,9 @@ const Content = styled.div`
 `;
 
 const ButtonContainer = styled.div`
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 0 20px; /* 画面端に一定の余白を確保 */
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: repeat(4, auto);
@@ -213,18 +216,19 @@ const ButtonContainer = styled.div`
     "matching friend"
     "gacha logout";
   gap: 20px;
-  max-width: 600px;
-  margin: 40px auto;
   justify-items: stretch;
 
   @media (max-width: 768px) {
-    /* 縦並びに変更し、左右に余白を追加 */
+    /* グリッドからフレックスレイアウトに切り替え */
     display: flex;
     flex-direction: column;
     gap: 20px;
-    margin: 40px 20px;
+    margin: 40px auto; /* コンテナは中央寄せ */
+    padding: 0 20px; /* 画面端に余白を維持 */
+    align-items: stretch; /* 子要素の幅を統一 */
   }
 `;
+
 
 const ButtonInner = styled.div`
   display: flex;
