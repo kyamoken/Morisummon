@@ -7,8 +7,8 @@ import BubblesBackground from '@/components/BubblesBackground';
 const availablePacks = ["MorisCardPack", "MonsterPack01"];
 
 const packIcons: { [key: string]: string } = {
-  "MorisCardPack": "../static/images/GachaBanner01.png",
-  "MonsterPack01": "../static/images/sawakiLOGO.png"
+  "MorisCardPack": "../static/images/Gacha01.png",
+  "MonsterPack01": "../static/images/Gacha02.png"
 };
 
 const Gacha: React.FC = () => {
