@@ -30,6 +30,11 @@
   --notification-modal-background: #3a3a54;
 }
 
+body {
+  overscroll-behavior: none;
+}
+
+
 .light-theme {
   --primary-color: #007bff;
   --background-color: #b0b0e7;

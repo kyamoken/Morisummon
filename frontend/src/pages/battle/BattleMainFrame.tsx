@@ -167,6 +167,22 @@ const BattleMainFrame: React.FC<Props> = ({ websocket }) => {
   };
 
   useEffect(() => {
+    const preventPullToRefresh = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      if (touch.clientY < 10) {
+        e.preventDefault(); // ← コレが重要！
+      }
+    };
+
+    document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', preventPullToRefresh);
+    };
+  }, []);
+
+  useEffect(() => {
     window.addEventListener('beforeunload', handleWindowUnload);
     return () => window.removeEventListener('beforeunload', handleWindowUnload);
   }, []);
