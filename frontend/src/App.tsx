@@ -29,7 +29,6 @@ function App() {
   const cardIdRef = useRef(0);
 
   useEffect(() => {
-    // 使用するカード画像の配列（card01.png～card07.png）
     const cardImages = [
       '/static/images/cards/card01.png',
       '/static/images/cards/card02.png',
@@ -38,6 +37,15 @@ function App() {
       '/static/images/cards/card05.png',
       '/static/images/cards/card06.png',
       '/static/images/cards/card07.png',
+      '/static/images/cards/card08.png',
+      '/static/images/cards/card09.png',
+      '/static/images/cards/card10.png',
+      '/static/images/cards/card11.png',
+      '/static/images/cards/card12.png',
+      '/static/images/cards/card13.png',
+      '/static/images/cards/card14.png',
+      '/static/images/cards/card15.png',
+      '/static/images/cards/card16.png',
     ];
 
     // グリッド設定（4×4 のグリッド）
@@ -128,11 +136,11 @@ function App() {
       <Main>
         {/* タイトルとサブタイトル */}
         <TitleSection>
-          <TatsuyaImageLeft src="/static/images/Ball_green.png" alt="Tatsuya Left" />
+          <TatsuyaImageLeft src="/static/images/green_kuma.png" alt="Tatsuya Left" />
           <AnimatedTitle text="Morisummon" />
           {/* <BouncingTitle text="Morisummon" /> */}
           <Subtitle>パクリじゃないです。オマージュです。</Subtitle>
-          <TatsuyaImageRight src="/static/images/Ball_green.png" alt="Tatsuya Right" />
+          <TatsuyaImageRight src="/static/images/red_kuma.png" alt="Tatsuya Right" />
         </TitleSection>
 
         <ButtonsContainer>
@@ -169,7 +177,7 @@ function App() {
           <span onClick={() => setPrivacyPolicyOpen(true)}>プライバシーポリシー</span> |{' '}
           <span onClick={() => setTermsOfServiceOpen(true)}>利用規約</span> | お問い合わせ: kamoken0531@gmail.com
         </p>
-        <p>© 2025 ボケモン. Developed by Kyamoken</p>
+        <p>2025 Developed by Kyamoken</p>
       </Footer>
 
       <PrivacyPolicyModal isOpen={isPrivacyPolicyOpen} onClose={() => setPrivacyPolicyOpen(false)} />

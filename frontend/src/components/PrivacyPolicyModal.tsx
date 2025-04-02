@@ -14,7 +14,18 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <CloseButton onClick={onClose}>×</CloseButton>
         <Title>プライバシーポリシー</Title>
-        <Text>あなたがこれを見ているということはすでに同意しているということです。</Text>
+        <Text>
+          <h3>第1条（収集する情報）</h3>
+          <p>本サービスは、ユーザー登録時に入力されるユーザー名、パスワード、アクセスログ（IPアドレス）を収集します。</p>
+          <h3>第2条（情報の利用目的）</h3>
+          <p>収集した情報は、ユーザー認証、サービス提供、問い合わせ対応、サービス改善の目的で利用します。</p>
+          <h3>第3条（情報の第三者提供）</h3>
+          <p>法令に基づく場合を除き、収集した個人情報をユーザーの同意なく第三者に提供することはありません。</p>
+          <h3>第4条（情報の管理）</h3>
+          <p>収集した情報は適切に管理し、不正アクセスや漏洩防止に努めます。</p>
+          <h3>第5条（プライバシーポリシーの変更）</h3>
+          <p>本ポリシーは必要に応じて変更する場合があり、変更後はサイト上で告知します。</p>
+        </Text>
       </ModalContent>
     </ModalOverlay>
   );
@@ -54,12 +65,13 @@ const ModalContent = styled.div`
   animation: scaleIn 0.3s ease-in-out forwards;
   color: var(--privacy-service-text-color);
   position: relative;
+  max-height: 80vh; /* モーダルの最大高さを設定 */
+  overflow-y: auto; /* 縦方向のスクロールを有効にする */
 
   @media (max-width: 768px) {
     max-width: 90%;
     padding: 15px;
   }
-
   @media (max-width: 480px) {
     max-width: 95%;
     padding: 10px;
@@ -102,17 +114,25 @@ const Title = styled.h2`
   @media (max-width: 768px) {
     font-size: 1.6rem;
   }
-
   @media (max-width: 480px) {
     font-size: 1.4rem;
   }
 `;
 
-const Text = styled.p`
+const Text = styled.div`
   font-size: 1rem;
-  text-align: center;
+  text-align: left;
 
   @media (max-width: 480px) {
     font-size: 0.9rem;
+  }
+
+  h3 {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+  }
+
+  p {
+    margin: 0.5rem 0;
   }
 `;
