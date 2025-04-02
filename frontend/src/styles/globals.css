@@ -66,6 +66,11 @@ body {
   user-select: none;
 }
 
+html, body {
+  touch-action: manipulation; /* ダブルタップでのズームを抑制する */
+  overscroll-behavior: none;  /* スクロール端のバウンスを防ぐ */
+}
+
 input {
   background-color: #b6b6b6;
 }

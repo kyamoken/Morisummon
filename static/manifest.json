@@ -3,7 +3,7 @@
   "short_name": "Morisummon",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#303065",
   "theme_color": "#5f27cd",
   "icons": [
     {
