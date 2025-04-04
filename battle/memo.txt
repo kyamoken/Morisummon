@@ -14,7 +14,6 @@ Battle
 .player.status.protected 本人しか確認できない状態
 .player.status.hidden バックエンドでのみ処理する非公開状態
 
-
 .key   # public    双方に公開
 ._key  # protected 本人しか確認できない
 
