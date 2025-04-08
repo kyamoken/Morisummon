@@ -7,6 +7,10 @@ from morisummon.models import Friendship, FriendRequest
 class User(AbstractUser):
     magic_stones = models.IntegerField(default=100)
 
+    # ログインボーナス
+    login_bonus_last_date = models.DateField(null=True, blank=True)
+    login_bonus_streak = models.IntegerField(default=0)
+
     def __str__(self):
         return self.username
 

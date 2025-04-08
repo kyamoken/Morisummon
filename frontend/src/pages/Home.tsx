@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Link } from 'react-router';
 import Header from '@/components/Header';
 import { FloatingButton, FloatingDangerButton } from '@/components/FloatingButton';
+import LoginBonus from '@/components/LoginBonus';
 import useAuth from '@/hooks/useAuth';
 import BubblesBackground from '@/components/BubblesBackground';
 
@@ -95,6 +96,7 @@ const Home: React.FC = () => {
     <HomeContainer>
       <BubblesBackground />
       <Header />
+      <LoginBonus />
 
       <Content>
         <h1>Welcome :)</h1>
