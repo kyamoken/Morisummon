@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import Card, Deck, UserCard, ChatGroup, ChatMessage, FriendRequest, Friendship
 
+admin.site.site_header = "Morisummon Admin"
+
 class UserCardInline(admin.TabularInline):
     model = UserCard
     extra = 0
