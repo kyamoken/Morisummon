@@ -139,7 +139,7 @@ function App() {
           <TatsuyaImageLeft src="/static/images/green_kuma.png" alt="Tatsuya Left" />
           <AnimatedTitle text="Morisummon" />
           {/* <BouncingTitle text="Morisummon" /> */}
-          <Subtitle>パクリじゃないです。オマージュです。</Subtitle>
+          <Subtitle>某カードゲームにインスパイアされて作りました。</Subtitle>
           <TatsuyaImageRight src="/static/images/red_kuma.png" alt="Tatsuya Right" />
         </TitleSection>
 
